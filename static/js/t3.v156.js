@@ -1,12 +1,13 @@
 (function(){
+  const t=(window.i18n)||((key)=>key);
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
   const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
   const box=document.getElementById("t3");
   const area=el("div","relative w-full max-w-xl mx-auto h-40 rounded-xl border bg-white overflow-hidden select-none dark:bg-slate-800");
-  const hint=el("div","absolute inset-0 grid place-items-center pointer-events-none text-xs text-gray-400","Amène le curseur ici, puis clique Démarrer");
+  const hint=el("div","absolute inset-0 grid place-items-center pointer-events-none text-xs text-gray-400",t("t3.hint"));
   area.append(hint);
   const target=el("div","absolute w-10 h-10 rounded-full border-2"); target.style.borderColor="#10b981"; target.style.background="#ecfdf5"; area.append(target);
-  const btnWrap=el("div","flex items-center justify-center mt-3",""); const btn=el("button","px-4 py-2 rounded-xl bg-black text-white","Démarrer"); btnWrap.append(btn);
+  const btnWrap=el("div","flex items-center justify-center mt-3",""); const btn=el("button","px-4 py-2 rounded-xl bg-black text-white",t("t3.button_start")); btnWrap.append(btn);
   box.append(area,btnWrap);
 
   const rand=(a,b)=>a + Math.random()*(b-a);
@@ -68,17 +69,17 @@
     if (d<=params.captureRadius){ target.style.borderColor="#065f46"; target.style.background="#d1fae5"; } else { target.style.borderColor="#10b981"; target.style.background="#ecfdf5"; }
 
     if (elapsed>=params.duration){
-      running=false; cancelAnimationFrame(raf); btn.disabled=true; btn.textContent="Terminé ✔"; finish(); return;
+      running=false; cancelAnimationFrame(raf); btn.disabled=true; btn.textContent=t("t3.button_done"); finish(); return;
     }
     raf=requestAnimationFrame(anim);
   }
 
   async function startRun(){
     if(finished || running) return;
-    running=true; btn.disabled=true; btn.textContent="Chargement…";
+    running=true; btn.disabled=true; btn.textContent=t("t3.button_loading");
     const settings = await fetchSettings();
     params = withDefaults(settings||{});
-    samples=[]; btn.textContent="En cours…";
+    samples=[]; btn.textContent=t("t3.button_running");
     start=performance.now(); raf=requestAnimationFrame(anim);
   }
 
@@ -110,7 +111,7 @@
       const denom=Math.max(1, (params.duration||10000) - base);
       const score=Math.max(0, Math.min(100, Math.round(100 * (1 - (timeToCatch - base) / denom) )));
       localStorage.setItem("jsd:prs", JSON.stringify({ time_to_catch_ms: timeToCatch, score }));
-      btn.disabled=true; btn.textContent="Attrapé ! ✔";
+      btn.disabled=true; btn.textContent=t("t3.button_caught");
       finish(); return true;
     }
     return false;

@@ -1,9 +1,10 @@
 (function(){
   const G = 9.80665; // m/s^2 per g
+  const t=(window.i18n)||((key,vars)=>key);
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
   const box=document.getElementById("t4");
-  const info=el("div","text-sm text-gray-500","Tiens le téléphone à plat, bras tendus, 8s. Appuie sur Démarrer.");
-  const btn=el("button","px-4 py-2 rounded-xl bg-black text-white","Démarrer 8s");
+  const info=el("div","text-sm text-gray-500",t("t4.sensor_instruction",{seconds:8}));
+  const btn=el("button","px-4 py-2 rounded-xl bg-black text-white",t("t4.button_label",{seconds:8}));
   const dbg=el("pre","text-[11px] leading-tight bg-gray-50 dark:bg-slate-900/40 p-2 rounded border border-white/20 overflow-x-auto","");
   dbg.style.whiteSpace="pre-wrap";
   const fallbackWrap=el("div","hidden mt-3");
@@ -26,8 +27,8 @@
   settingsPromise.then(s=>{
     ST=s;
     const seconds=Math.max(1,Math.round(ST.duration/1000));
-    info.textContent=`Tiens le téléphone à plat, bras tendus, ${seconds}s. Appuie sur Démarrer.`;
-    btn.textContent=`Démarrer ${seconds}s`;
+    info.textContent=t("t4.sensor_instruction",{seconds});
+    btn.textContent=t("t4.button_label",{seconds});
     updateDbg();
   });
 
@@ -119,7 +120,7 @@
     const durationMs=Math.round(Math.max(0, performance.now()-measureStart));
     localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:durationMs, std_g:std, score:s }));
     localStorage.setItem('jsd:done:t4','1');
-    btn.textContent='Terminé ✔';
+    btn.textContent=t('t4.fallback_status_done');
     document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
     setTimeout(()=>location.href='/results', 600);
   }
@@ -128,7 +129,7 @@
     if (finished) return;
     fallbackMode=true;
     const seconds=Math.max(1,Math.round(ST.duration/1000));
-    info.textContent=`Fallback : maintiens un doigt au centre du cercle pendant ${seconds}s.`;
+    info.textContent=t('t4.fallback_instruction',{seconds});
     btn.classList.add('hidden');
     const area=el('div','relative w-full max-w-xs h-72 mx-auto mt-2 rounded-2xl border bg-white dark:bg-slate-800 overflow-hidden select-none');
     Object.assign(area.style, {
@@ -139,7 +140,7 @@
       msUserSelect:'none'
     });
     const circle=el('div','absolute rounded-full border-2'); circle.style.width='140px'; circle.style.height='140px'; circle.style.left='50%'; circle.style.top='50%'; circle.style.transform='translate(-50%,-50%)'; circle.style.borderColor='#0ea5e9'; circle.style.background='rgba(14,165,233,0.06)';
-    const status=el('div','mt-2 text-center text-sm','Pose ton doigt pour démarrer');
+    const status=el('div','mt-2 text-center text-sm',t('t4.fallback_status_ready'));
     area.append(circle); fallbackWrap.append(area, status); fallbackWrap.classList.remove('hidden');
 
     let running=false, points=[]; let center=null; let timer=null; let fallbackStart=0;
@@ -147,7 +148,7 @@
     function finishTouch(){
       if (finished) return;
       running=false; clearTimeout(timer);
-      if (points.length<32){ status.textContent='Mesure trop courte. Recommence.'; return; }
+      if (points.length<32){ status.textContent=t('t4.fallback_status_short'); return; }
       const dists=points.map(p=>dist(p, center));
       const mean=dists.reduce((a,b)=>a+b,0)/dists.length;
       const variance=dists.reduce((a,b)=>a+Math.pow(b-mean,2),0)/dists.length;
@@ -157,7 +158,7 @@
       const durationMs=Math.round(Math.max(0, performance.now()-fallbackStart));
       localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:durationMs, std_px:stdPx, score }));
       localStorage.setItem('jsd:done:t4','1');
-      status.textContent='Terminé ✔';
+      status.textContent=t('t4.fallback_status_done');
       document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
       setTimeout(()=>location.href='/results', 600);
     }
@@ -172,7 +173,7 @@
       center={x:r.width/2, y:r.height/2};
       points=[{x:e.clientX-r.left, y:e.clientY-r.top, ts:performance.now()}];
       fallbackStart=performance.now();
-      running=true; status.textContent='Mesure en cours…';
+      running=true; status.textContent=t('t4.fallback_status_running');
       timer=setTimeout(finishTouch, ST.duration);
     }, {passive:false});
     area.addEventListener('pointermove',(e)=>{
@@ -189,10 +190,10 @@
     started=true; events=0; lastTs=0; values=[]; note=''; src={dm:false,do:false};
     fallbackMode=false;
     gEst={x:0,y:0,z:0}; gInit=false;
-    btn.textContent='Mesure en cours…';
+    btn.textContent=t('t4.button_measuring');
 
     if (location.protocol!=='https:' && !['localhost','127.0.0.1'].includes(location.hostname)){
-      started=false; btn.textContent='Bloqué en HTTP — passe en HTTPS'; return;
+      started=false; btn.textContent=t('t4.button_blocked_http'); return;
     }
 
     try {

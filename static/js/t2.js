@@ -1,14 +1,8 @@
 (function(){
-  const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
+  const t=(window.i18n)||((key)=>key);
+  const el=(tag,cls,html)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e;};
   const box=document.getElementById("t2");
-  const lang=(localStorage.getItem("jsd:lang")||"fr").toLowerCase();
   const CSS_COLORS=["red","blue","green","gold","purple","black"];
-  const LABELS={
-    fr:["ROUGE","BLEU","VERT","JAUNE","VIOLET","NOIR"],
-    en:["RED","BLUE","GREEN","YELLOW","PURPLE","BLACK"],
-    it:["ROSSO","BLU","VERDE","GIALLO","VIOLA","NERO"]
-  };
-  const labels=LABELS[lang]||LABELS.fr;
 
   const word=el("div","h-24 flex items-center justify-center text-4xl font-extrabold select-none","");
   const grid=el("div","grid grid-cols-3 gap-2");
@@ -21,7 +15,8 @@
   function nextItem(){
     const wIdx=Math.floor(Math.random()*CSS_COLORS.length);
     const cIdx=Math.floor(Math.random()*CSS_COLORS.length);
-    word.textContent=labels[wIdx];
+    const colorKey=CSS_COLORS[wIdx];
+    word.textContent=t(`colors.${colorKey}`);
     word.style.color=CSS_COLORS[cIdx];
     word.dataset.trueColor=CSS_COLORS[cIdx];
     startedAt=performance.now();
@@ -57,9 +52,9 @@
     requestAnimationFrame(()=>{ nextItem(); lock=false; });
   }
 
-  CSS_COLORS.forEach((cssColor,i)=>{
+  CSS_COLORS.forEach((cssColor)=>{
     const b=el("button","p-3 rounded-xl border bg-white hover:bg-gray-50 active:scale-95 dark:bg-slate-800 dark:border-slate-700");
-    b.innerHTML=`<span class="font-semibold" style="color:${cssColor}">${labels[i]}</span>`;
+    b.innerHTML='<span class="font-semibold" style="color:'+cssColor+'">'+t(`colors.${cssColor}`)+'</span>';
     b.addEventListener("click", ()=>choose(cssColor));
     grid.append(b);
   });

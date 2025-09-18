@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-4">
-  <h2 class="text-xl font-bold">Résultats</h2>
+  <h2 class="text-xl font-bold" data-i18n="results.heading">Résultats</h2>
   <div id="results"></div>
 </div>
 <script defer src="{{ url_for('static', filename='js/results.js') }}"></script>
