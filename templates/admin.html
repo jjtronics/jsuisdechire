@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-6">
+  <h1 class="text-2xl font-black">Admin · Calibration</h1>
+  <p class="text-sm text-gray-600 dark:text-slate-300">Protège cette page via ton reverse proxy (HTTP auth). Les paramètres sont stockés en base et appliqués aux tests au chargement.</p>
+
+  <div id="formWrap" class="grid md:grid-cols-2 gap-6"></div>
+
+  <div class="flex flex-wrap gap-3">
+    <button id="saveBtn" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700">Enregistrer</button>
+    <button id="clearBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20">Vider les scores</button>
+    <span id="msg" class="text-sm text-gray-500"></span>
+  </div>
+</div>
+
+<script>
+const FIELDS = [
+  {k:'prs_timeSpeed', label:'T3·timeSpeed (vitesse globale)', type:'number', step:'0.05', min:'0.1', max:'5'},
+  {k:'prs_duration_ms', label:'T3·durée (ms)', type:'number', step:'100', min:'2000', max:'30000'},
+  {k:'prs_captureRadius', label:'T3·rayon capture (px)', type:'number', step:'1', min:'8', max:'200'},
+  {k:'prs_jitterAmp', label:'T3·jitter', type:'number', step:'0.01', min:'0', max:'0.3'},
+
+  {k:'bal_mode', label:'T4·mode', type:'select', options:[['mag','Magnitude (incl. gravité)'], ['lin','Accélération linéaire']]},
+  {k:'bal_duration_ms', label:'T4·durée (ms)', type:'number', step:'100', min:'3000', max:'30000'},
+  {k:'bal_low_good', label:'T4·seuil haut (100) (g)', type:'number', step:'0.01', min:'0.01', max:'2'},
+  {k:'bal_high_bad', label:'T4·seuil bas (0) (g)', type:'number', step:'0.01', min:'0.02', max:'3'},
+];
+
+const wrap = document.getElementById('formWrap');
+const msg = document.getElementById('msg');
+const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!==undefined) e.innerHTML=h; return e;};
+
+function fieldRow(f, val){
+  const card=el('div','rounded-xl border p-4 bg-white/70 dark:bg-slate-800/60');
+  if(f.type==='select'){
+    const sel = el('select','w-full rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700');
+    (f.options||[]).forEach(([v,l])=>{ const o=el('option','',l); o.value=v; sel.append(o); });
+    sel.value = String(val ?? '');
+    sel.dataset.key = f.k;
+    card.append(el('div','text-sm text-gray-500 mb-1', f.label), sel);
+  } else {
+    const inp = el('input','w-full rounded-lg border px-3 py-2 bg-white/80 dark:bg-slate-800 dark:border-slate-700');
+    inp.type=f.type; if(f.step) inp.step=f.step; if(f.min) inp.min=f.min; if(f.max) inp.max=f.max;
+    inp.value = String(val ?? '');
+    inp.dataset.key = f.k;
+    card.append(el('div','text-sm text-gray-500 mb-1', f.label), inp);
+  }
+  return card;
+}
+
+async function load(){
+  const r = await fetch('/api/settings'); const s = await r.json();
+  wrap.innerHTML=''; FIELDS.forEach(f=>wrap.append(fieldRow(f, s[f.k])));
+}
+async function save(){
+  const data={};
+  wrap.querySelectorAll('input,select').forEach(elm=>{
+    let v = elm.value;
+    if (elm.type==='number'){ const raw=(v||'').toString().trim().replace(',', '.'); const num=parseFloat(raw); v=isNaN(num)?null:num; }
+    data[elm.dataset.key] = v;
+  });
+  const r = await fetch('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const j = await r.json();
+  msg.textContent = j.ok ? 'Paramètres enregistrés ✔' : 'Erreur';
+}
+async function clearScores(){
+  if (!confirm('Supprimer tous les scores ?')) return;
+  const r = await fetch('/api/admin/clear',{method:'POST'}); const j=await r.json();
+  msg.textContent = j.ok ? 'Scores supprimés ✔' : 'Erreur';
+}
+
+document.getElementById('saveBtn').addEventListener('click', save);
+document.getElementById('clearBtn').addEventListener('click', clearScores);
+load();
+</script>
+{% endblock %}

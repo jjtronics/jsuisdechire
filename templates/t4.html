@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-4">
+  <h2 class="text-xl font-bold">Test 4 · Équilibre (mobile)</h2>
+  <div id="t4"></div>
+  <div class="flex justify-between">
+    <a href="/t3" class="px-4 py-2 rounded-xl border">Retour</a>
+    <a id="next" href="/results" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none">Voir les résultats</a>
+  </div>
+</div>
+<script defer src="{{ url_for('static', filename='js/t4.v157.js') }}"></script>
+{% endblock %}

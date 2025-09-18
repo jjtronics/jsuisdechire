@@ -1,0 +1,15 @@
+(function(){
+  const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
+  const area=document.getElementById("t1").appendChild(el("div","h-36 rounded-xl flex items-center justify-center text-lg font-semibold cursor-pointer select-none transition-colors bg-gray-100 dark:bg-slate-800","Clique pour démarrer"));
+  area.parentElement.appendChild(el("div","text-sm text-gray-500","Clique quand le fond devient VERT. Si tu cliques trop tôt, c'est raté."));
+  let phase="intro",trial=0,values=[],start=0,timer=null, finished=false; const N=5;
+  function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.type="triangle";o.frequency.value=880;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(0.001,c.currentTime);g.gain.exponentialRampToValueAtTime(0.2,c.currentTime+0.01);o.start();setTimeout(()=>{g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.02);o.stop(c.currentTime+0.03);},100);}catch(e){}}
+  function schedule(){phase="wait"; area.classList.remove("bg-green-500","text-white"); area.classList.add("bg-yellow-200"); area.textContent="Patience…"; timer=setTimeout(()=>{phase="go"; start=performance.now(); area.classList.remove("bg-yellow-200","dark:bg-slate-800","bg-gray-100"); area.classList.add("bg-green-500","text-white"); area.style.backgroundColor="#22c55e"; area.style.color="white"; area.textContent="GO !"; beep();}, 1000+Math.random()*2500);}
+  function done(){ finished=true; clearTimeout(timer); const med=values.slice(-N).slice().sort((a,b)=>a-b)[Math.floor((N-1)/2)]; const mean=values.slice(-N).reduce((a,b)=>a+b,0)/N; localStorage.setItem("jsd:rxn", JSON.stringify({trials:N, values:values.slice(-N), median:med, mean, score:Math.max(0,Math.min(100,(1-(med-250)/(500-250))*100))})); localStorage.setItem("jsd:done:t1","1"); document.getElementById("next").classList.remove("opacity-50","pointer-events-none"); area.classList.add("opacity-60"); area.style.cursor="default"; area.textContent="Terminé ✔"; setTimeout(()=>location.href="/t2", 600); }
+  area.addEventListener("click",()=>{
+    if(finished) return;
+    if(phase==="intro"){ if(trial>=N) return; schedule(); }
+    else if(phase==="wait"){ clearTimeout(timer); values.push(1000+Math.random()*500); trial=Math.min(trial+1,N); phase="intro"; area.className="h-36 rounded-xl flex items-center justify-center text-lg font-semibold cursor-pointer select-none transition-colors bg-gray-100 dark:bg-slate-800"; area.style.backgroundColor=""; area.style.color=""; area.textContent=`Clique pour démarrer (${trial}/${N})`; if(trial>=N) done(); }
+    else if(phase==="go"){ const rt=performance.now()-start; values.push(rt); trial=Math.min(trial+1,N); phase="intro"; area.className="h-36 rounded-xl flex items-center justify-center text-lg font-semibold cursor-pointer select-none transition-colors bg-gray-100 dark:bg-slate-800"; area.style.backgroundColor=""; area.style.color=""; area.textContent=`Clique pour démarrer (${trial}/${N})`; if(trial>=N) done(); }
+  });
+})();

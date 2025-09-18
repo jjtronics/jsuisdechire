@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid gap-6">
+  <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
+    <h1 class="text-3xl font-black mb-2">Un check fun & sérieux pour savoir si tu dois poser le verre</h1>
+    <p class="text-sm text-gray-600 dark:text-slate-300">Local, anonyme, gratuit. Résultats indicatifs uniquement.</p>
+    <ul class="mt-4 text-sm list-disc pl-5 space-y-1 text-gray-600 dark:text-slate-300">
+      <li>4 mini-tests rapides (réaction, couleurs, poursuite, équilibre)</li>
+      <li>Aucune donnée envoyée sans ton accord</li>
+      <li>À la fin : tu peux enregistrer ton score localement</li>
+    </ul>
+    <div class="mt-5 flex gap-2">
+      <a href="/t1" class="px-4 py-2 rounded-xl bg-black text-white">Commencer</a>
+      <a href="/leaderboard" class="px-4 py-2 rounded-xl border">Voir le classement</a>
+    </div>
+  </section>
+</div>
+{% endblock %}
