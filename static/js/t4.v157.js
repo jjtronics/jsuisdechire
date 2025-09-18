@@ -9,13 +9,27 @@
   const fallbackWrap=el("div","hidden mt-3");
   box.append(info,btn,dbg,fallbackWrap);
 
+  async function fetchSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});return await r.json();}catch(e){return {};}}
+  function norm(v,d){if(v==null)return d;const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?d:n;}
+  function defs(s){const duration=Math.max(1000,norm(s.bal_duration_ms,8000));return{mode:s.bal_mode||'lin',duration,low_good:norm(s.bal_low_good,0.30),high_bad:norm(s.bal_high_bad,0.50)};}
+
   let started=false, finished=false, events=0, lastTs=0, values=[], note="", src={dm:false, do:false};
-  let watchdog=null, endTimer=null, fallbackMode=false;
+  let watchdog=null, endTimer=null, fallbackMode=false, measureStart=0;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 
   // Gravity estimate for devices without e.acceleration (we only get includingGravity)
   let gEst = {x:0,y:0,z:0}, gInit=false;
   const alpha = 0.98; // low-pass factor for gravity
+
+  let ST=defs({});
+  const settingsPromise=(async()=>{const raw=await fetchSettings();return defs(raw);})().catch(()=>defs({}));
+  settingsPromise.then(s=>{
+    ST=s;
+    const seconds=Math.max(1,Math.round(ST.duration/1000));
+    info.textContent=`Tiens le téléphone à plat, bras tendus, ${seconds}s. Appuie sur Démarrer.`;
+    btn.textContent=`Démarrer ${seconds}s`;
+    updateDbg();
+  });
 
   function updateDbg(extra=""){
     const lines=[
@@ -25,6 +39,7 @@
       `Events: ${events}`,
       `LastEvent(ms): ${Math.round(lastTs)}`,
       `Src: dm=${src.dm} do=${src.do}`,
+      `Mode: ${ST.mode} dur=${ST.duration}ms low=${ST.low_good} high=${ST.high_bad}`,
       note?`Note: ${note}`:""
     ]; if(extra) lines.push(extra);
     dbg.textContent=lines.filter(Boolean).join("\\n");
@@ -37,26 +52,34 @@
     const accIG = e.accelerationIncludingGravity;
     let magG = null;
 
-    if (acc && acc.x!=null && acc.y!=null && acc.z!=null){
-      // Use linear acceleration directly, convert to g
-      const m = Math.hypot(acc.x||0, acc.y||0, acc.z||0) / G;
-      magG = m;
-      note = "mode:acc";
-    } else if (accIG && accIG.x!=null && accIG.y!=null && accIG.z!=null){
-      // Estimate gravity and subtract (linear = includingGravity - gravity_estimate)
-      if (!gInit){
-        gEst = {x: accIG.x, y: accIG.y, z: accIG.z};
-        gInit = true;
-      } else {
-        gEst = {
-          x: alpha*gEst.x + (1-alpha)*accIG.x,
-          y: alpha*gEst.y + (1-alpha)*accIG.y,
-          z: alpha*gEst.z + (1-alpha)*accIG.z
-        };
+    if (ST.mode === 'lin'){
+      if (acc && acc.x!=null && acc.y!=null && acc.z!=null){
+        // Use linear acceleration directly, convert to g
+        const m = Math.hypot(acc.x||0, acc.y||0, acc.z||0) / G;
+        magG = m;
+        note = "mode:acc";
+      } else if (accIG && accIG.x!=null && accIG.y!=null && accIG.z!=null){
+        // Estimate gravity and subtract (linear = includingGravity - gravity_estimate)
+        if (!gInit){
+          gEst = {x: accIG.x, y: accIG.y, z: accIG.z};
+          gInit = true;
+        } else {
+          gEst = {
+            x: alpha*gEst.x + (1-alpha)*accIG.x,
+            y: alpha*gEst.y + (1-alpha)*accIG.y,
+            z: alpha*gEst.z + (1-alpha)*accIG.z
+          };
+        }
+        const lin = { x: accIG.x - gEst.x, y: accIG.y - gEst.y, z: accIG.z - gEst.z };
+        magG = Math.hypot(lin.x, lin.y, lin.z) / G;
+        note = "mode:accIG-HPF";
       }
-      const lin = { x: accIG.x - gEst.x, y: accIG.y - gEst.y, z: accIG.z - gEst.z };
-      magG = Math.hypot(lin.x, lin.y, lin.z) / G;
-      note = "mode:accIG-HPF";
+    } else {
+      const srcAcc = accIG || acc;
+      if (srcAcc && srcAcc.x!=null && srcAcc.y!=null && srcAcc.z!=null){
+        magG = Math.hypot(srcAcc.x||0, srcAcc.y||0, srcAcc.z||0) / G;
+        note = accIG ? "mode:accIG-total" : "mode:acc-total";
+      }
     }
     if (magG!=null) pushVal(magG);
   }
@@ -86,14 +109,15 @@
     const variance=values.reduce((a,b)=>a+Math.pow(b-mean,2),0)/Math.max(1,values.length);
     const std=Math.sqrt(variance);
 
-    // Score mapping: 0.30g -> 100, 0.50g -> 0 (linear)
+    const low=ST.low_good, high=ST.high_bad;
     let s;
-    if (std <= 0.30) { s = 100; }
-    else if (std >= 0.50) { s = 0; }
-    else { s = (0.50 - std) / (0.50 - 0.30) * 100; }
+    if (std <= low) { s = 100; }
+    else if (std >= high) { s = 0; }
+    else { s = (high - std) / Math.max(1e-6, (high - low)) * 100; }
 
     s = Math.max(0, Math.min(100, Math.round(s)));
-    localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:8000, std_g:std, score:s }));
+    const durationMs=Math.round(Math.max(0, performance.now()-measureStart));
+    localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:durationMs, std_g:std, score:s }));
     localStorage.setItem('jsd:done:t4','1');
     btn.textContent='Terminé ✔';
     document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
@@ -103,7 +127,8 @@
   function startFallback(){
     if (finished) return;
     fallbackMode=true;
-    info.textContent='Fallback : maintiens un doigt au centre du cercle pendant 8s.';
+    const seconds=Math.max(1,Math.round(ST.duration/1000));
+    info.textContent=`Fallback : maintiens un doigt au centre du cercle pendant ${seconds}s.`;
     btn.classList.add('hidden');
     const area=el('div','relative w-full max-w-xs h-72 mx-auto mt-2 rounded-2xl border bg-white dark:bg-slate-800 overflow-hidden select-none');
     Object.assign(area.style, {
@@ -117,7 +142,7 @@
     const status=el('div','mt-2 text-center text-sm','Pose ton doigt pour démarrer');
     area.append(circle); fallbackWrap.append(area, status); fallbackWrap.classList.remove('hidden');
 
-    let running=false, points=[]; let center=null; let timer=null;
+    let running=false, points=[]; let center=null; let timer=null; let fallbackStart=0;
     const dist=(a,b)=>Math.hypot(a.x-b.x, a.y-b.y);
     function finishTouch(){
       if (finished) return;
@@ -129,7 +154,8 @@
       const stdPx=Math.sqrt(variance);
       const score=Math.max(0, Math.min(100, Math.round(100*(1-(stdPx-4)/(20-4)))));
       finished=true;
-      localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:8000, std_px:stdPx, score }));
+      const durationMs=Math.round(Math.max(0, performance.now()-fallbackStart));
+      localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:durationMs, std_px:stdPx, score }));
       localStorage.setItem('jsd:done:t4','1');
       status.textContent='Terminé ✔';
       document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
@@ -145,8 +171,9 @@
       const r=area.getBoundingClientRect();
       center={x:r.width/2, y:r.height/2};
       points=[{x:e.clientX-r.left, y:e.clientY-r.top, ts:performance.now()}];
+      fallbackStart=performance.now();
       running=true; status.textContent='Mesure en cours…';
-      timer=setTimeout(finishTouch, 8000);
+      timer=setTimeout(finishTouch, ST.duration);
     }, {passive:false});
     area.addEventListener('pointermove',(e)=>{
       if(!running) return;
@@ -160,10 +187,18 @@
   async function start(){
     if (started || finished) return;
     started=true; events=0; lastTs=0; values=[]; note=''; src={dm:false,do:false};
+    fallbackMode=false;
+    gEst={x:0,y:0,z:0}; gInit=false;
     btn.textContent='Mesure en cours…';
 
     if (location.protocol!=='https:' && !['localhost','127.0.0.1'].includes(location.hostname)){
       started=false; btn.textContent='Bloqué en HTTP — passe en HTTPS'; return;
+    }
+
+    try {
+      ST=await settingsPromise;
+    } catch(e){
+      ST=defs({});
     }
 
     if (isIOS){
@@ -178,6 +213,7 @@
     }
 
     attachBasic();
+    measureStart=performance.now();
 
     const t0=performance.now();
     watchdog=setInterval(()=>{
@@ -192,7 +228,7 @@
       if (finished || fallbackMode) return;
       if (events > 0) sensorsSuccess();
       else { stopAll('timeout-noevents'); startFallback(); }
-    }, 8000);
+    }, ST.duration);
   }
 
   btn.addEventListener('click', start);
