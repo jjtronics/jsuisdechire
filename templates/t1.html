@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-4">
-  <h2 class="text-xl font-bold">Test 1 · Réaction</h2>
+  <h2 class="text-xl font-bold" data-i18n="t1.heading">Test 1 · Réaction</h2>
   <div id="t1"></div>
-  <div class="flex justify-end"><a id="next" href="/t2" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none">Suivant</a></div>
+  <div class="flex justify-end"><a id="next" href="/t2" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.next">Suivant</a></div>
 </div>
 <script defer src="{{ url_for('static', filename='js/t1.js') }}"></script>
 {% endblock %}
