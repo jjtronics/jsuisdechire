@@ -1,19 +1,89 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  .sort-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+  }
+
+  .sort-button:focus-visible {
+    outline: 2px solid rgb(244 63 94 / 0.7);
+    outline-offset: 2px;
+  }
+
+  .sort-indicator {
+    font-size: 0.65rem;
+    opacity: 0.6;
+    transform: translateY(-0.05rem);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .sort-indicator {
+      transition: opacity 0.15s ease;
+    }
+  }
+
+  th[data-sort-key] .sort-button:hover .sort-indicator {
+    opacity: 0.9;
+  }
+</style>
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
   <h1 class="text-2xl font-black mb-4" data-i18n="leaderboard.heading">Classement</h1>
   <div class="w-full overflow-x-auto">
-  <table class="min-w-full text-xs sm:text-sm">
+  <table class="min-w-full text-xs sm:text-sm" data-sortable>
     <thead class="text-left text-gray-500 dark:text-slate-300">
       <tr>
-        <th class="py-2" data-i18n="leaderboard.rank">#</th>
-        <th data-i18n="leaderboard.name">Nom</th>
-        <th data-i18n="leaderboard.score">Score</th>
-        <th data-i18n="leaderboard.reaction">Réaction</th>
-        <th data-i18n="leaderboard.stroop">Stroop</th>
-        <th data-i18n="leaderboard.pursuit">Poursuite</th>
-        <th data-i18n="leaderboard.balance">Équilibre</th>
-        <th data-i18n="leaderboard.date">Date</th>
+        <th scope="col" class="py-2" data-i18n="leaderboard.rank">#</th>
+        <th scope="col" data-sort-key="nickname" data-sort-type="text" aria-sort="none">
+          <button type="button" class="sort-button">
+            <span data-i18n="leaderboard.name">Nom</span>
+            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
+          </button>
+        </th>
+        <th scope="col" data-sort-key="total_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
+          <button type="button" class="sort-button">
+            <span data-i18n="leaderboard.score">Total</span>
+            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
+          </button>
+        </th>
+        <th scope="col" data-sort-key="rxn_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
+          <button type="button" class="sort-button">
+            <span data-i18n="leaderboard.reaction">Réaction</span>
+            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
+          </button>
+        </th>
+        <th scope="col" data-sort-key="str_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
+          <button type="button" class="sort-button">
+            <span data-i18n="leaderboard.stroop">Stroop</span>
+            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
+          </button>
+        </th>
+        <th scope="col" data-sort-key="prs_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
+          <button type="button" class="sort-button">
+            <span data-i18n="leaderboard.pursuit">Poursuite</span>
+            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
+          </button>
+        </th>
+        <th scope="col" data-sort-key="bal_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
+          <button type="button" class="sort-button">
+            <span data-i18n="leaderboard.balance">Équilibre</span>
+            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
+          </button>
+        </th>
+        <th scope="col" data-sort-key="created_at" data-sort-type="number" data-default-order="desc" aria-sort="none">
+          <button type="button" class="sort-button">
+            <span data-i18n="leaderboard.date">Date</span>
+            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
+          </button>
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -21,12 +91,12 @@
       <tr class="border-t border-white/20">
         <td class="py-2">{{ loop.index }}</td>
         <td>{{ r['nickname'] or '—' }}</td>
-        <td class="font-semibold">{{ r['total_score']|round(1) if r['total_score'] is not none else '—' }}</td>
-        <td>{{ r['rxn_score']|round(1) if r['rxn_score'] is not none else '—' }}</td>
-        <td>{{ r['str_score']|round(1) if r['str_score'] is not none else '—' }}</td>
-        <td>{{ r['prs_score']|round(1) if r['prs_score'] is not none else '—' }}</td>
-        <td>{{ r['bal_score']|round(1) if r['bal_score'] is not none else '—' }}</td>
-        <td>
+        <td class="font-semibold" data-sort-value="{{ r['total_score'] if r['total_score'] is not none else '' }}">{{ r['total_score']|round(1) if r['total_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['rxn_score'] if r['rxn_score'] is not none else '' }}">{{ r['rxn_score']|round(1) if r['rxn_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['str_score'] if r['str_score'] is not none else '' }}">{{ r['str_score']|round(1) if r['str_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['prs_score'] if r['prs_score'] is not none else '' }}">{{ r['prs_score']|round(1) if r['prs_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['bal_score'] if r['bal_score'] is not none else '' }}">{{ r['bal_score']|round(1) if r['bal_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['created_at'] }}">
           <time
             class="js-local-time"
             data-timestamp="{{ r['created_at'] }}"
@@ -52,6 +122,100 @@
       const date = new Date(ts * 1000);
       el.textContent = fmt.format(date);
       el.setAttribute('datetime', date.toISOString());
+    });
+
+    const table = document.querySelector('[data-sortable]');
+    if (!table) {
+      return;
+    }
+
+    const tbody = table.querySelector('tbody');
+    const headers = Array.from(table.querySelectorAll('th[data-sort-key]'));
+
+    const resetIndicators = () => {
+      headers.forEach((header) => {
+        header.dataset.sortDirection = '';
+        header.setAttribute('aria-sort', 'none');
+        const indicator = header.querySelector('[data-sort-indicator]');
+        if (indicator) {
+          indicator.textContent = '↕';
+        }
+      });
+    };
+
+    const parseValue = (cell, type) => {
+      if (!cell) {
+        return { raw: '', value: null };
+      }
+      const raw = (cell.dataset.sortValue ?? cell.textContent).trim();
+      if (raw === '') {
+        return { raw: '', value: null };
+      }
+      if (type === 'number') {
+        const num = Number(raw);
+        return { raw, value: Number.isFinite(num) ? num : null };
+      }
+      const cleaned = raw === '—' ? '' : raw;
+      const normalized = cleaned ? cleaned.toLocaleLowerCase() : null;
+      return { raw: cleaned, value: normalized };
+    };
+
+    const updateRanks = () => {
+      Array.from(tbody.rows).forEach((row, index) => {
+        const cell = row.cells[0];
+        if (cell) {
+          cell.textContent = index + 1;
+        }
+      });
+    };
+
+    headers.forEach((header) => {
+      const button = header.querySelector('.sort-button');
+      if (!button) {
+        return;
+      }
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        const index = header.cellIndex;
+        const type = header.dataset.sortType || 'text';
+        const currentDirection = header.dataset.sortDirection;
+        const defaultOrder = header.dataset.defaultOrder || (type === 'text' ? 'asc' : 'desc');
+        const nextDirection = currentDirection
+          ? (currentDirection === 'asc' ? 'desc' : 'asc')
+          : defaultOrder;
+
+        resetIndicators();
+        header.dataset.sortDirection = nextDirection;
+        header.setAttribute('aria-sort', nextDirection === 'asc' ? 'ascending' : 'descending');
+        const indicator = header.querySelector('[data-sort-indicator]');
+        if (indicator) {
+          indicator.textContent = nextDirection === 'asc' ? '↑' : '↓';
+        }
+
+        const rows = Array.from(tbody.rows);
+        rows.sort((rowA, rowB) => {
+          const a = parseValue(rowA.cells[index], type).value;
+          const b = parseValue(rowB.cells[index], type).value;
+          if (a === null && b === null) {
+            return 0;
+          }
+          if (a === null) {
+            return nextDirection === 'asc' ? 1 : -1;
+          }
+          if (b === null) {
+            return nextDirection === 'asc' ? -1 : 1;
+          }
+          if (type === 'text') {
+            return nextDirection === 'asc'
+              ? a.localeCompare(b, undefined, { sensitivity: 'base' })
+              : b.localeCompare(a, undefined, { sensitivity: 'base' });
+          }
+          return nextDirection === 'asc' ? a - b : b - a;
+        });
+
+        rows.forEach((row) => tbody.appendChild(row));
+        updateRanks();
+      });
     });
   });
 </script>
