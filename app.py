@@ -11,10 +11,10 @@ DEFAULT_SETTINGS = {
     "prs_duration_ms": 10000,
     "prs_captureRadius": 36,
     "prs_jitterAmp": 0.05,
-    "bal_mode": "mag",
+    "bal_mode": "lin",
     "bal_duration_ms": 8000,
-    "bal_low_good": 0.30,
-    "bal_high_bad": 0.50,
+    "bal_low_good": 0.02,
+    "bal_high_bad": 0.10,
 }
 
 def get_db():
