@@ -9,27 +9,32 @@
     if(str){score+=str.score*w.str; wsum+=w.str;}
     if(prs){score+=prs.score*w.prs; wsum+=w.prs;}
     if(bal){score+=bal.score*w.bal; wsum+=w.bal;}
-    return Math.round(score/(wsum||1));
+    return score/(wsum||1);
   }
   const total=compute();
+  const formatScore=(value)=>{
+    const num=Number(value);
+    if(!Number.isFinite(num)){ return "—"; }
+    return num.toFixed(1);
+  };
   const head=el("div","flex items-center gap-2 text-2xl","");
   head.append(el("span","",t("results.total_label")+" "));
-  const n=el("span","font-black",String(total)); head.append(n,el("span","","/100")); box.append(head);
+  const n=el("span","font-black",formatScore(total)); head.append(n,el("span","","/100")); box.append(head);
   const details=el("div","mt-3 grid gap-2 text-sm");
-  if(rxn) details.append(el("div","",t("results.reaction_detail",{median:Math.round(rxn.median), mean:Math.round(rxn.mean), score:Math.round(rxn.score)})));
-  if(str) details.append(el("div","",t("results.stroop_detail",{accuracy:Math.round((str.accuracy||0)*100), rt:Math.round(str.mean), score:Math.round(str.score)})));
+  if(rxn) details.append(el("div","",t("results.reaction_detail",{median:Math.round(rxn.median), mean:Math.round(rxn.mean), score:formatScore(rxn.score)})));
+  if(str) details.append(el("div","",t("results.stroop_detail",{accuracy:Math.round((str.accuracy||0)*100), rt:Math.round(str.mean), score:formatScore(str.score)})));
   if(prs){
     if(prs.time_to_catch_ms){
-      details.append(el("div","",t("results.pursuit_detail_time",{score:Math.round(prs.score), time:Math.round(prs.time_to_catch_ms)})));
+      details.append(el("div","",t("results.pursuit_detail_time",{score:formatScore(prs.score), time:Math.round(prs.time_to_catch_ms)})));
     } else if(prs.mean_error_px){
-      details.append(el("div","",t("results.pursuit_detail_mean",{score:Math.round(prs.score), error:prs.mean_error_px.toFixed(1)})));
+      details.append(el("div","",t("results.pursuit_detail_mean",{score:formatScore(prs.score), error:prs.mean_error_px.toFixed(1)})));
     } else {
-      details.append(el("div","",t("results.pursuit_detail_base",{score:Math.round(prs.score)})));
+      details.append(el("div","",t("results.pursuit_detail_base",{score:formatScore(prs.score)})));
     }
   }
   if(bal){
-    if(bal.mode==="sensors"){ details.append(el("div","",t("results.balance_sensors_detail",{std:(bal.std_g?.toFixed(3)??"0"), score:Math.round(bal.score)}))); }
-    else if(bal.mode==="touch"){ details.append(el("div","",t("results.balance_touch_detail",{std:(bal.std_px?.toFixed(1)??"0"), score:Math.round(bal.score)}))); }
+    if(bal.mode==="sensors"){ details.append(el("div","",t("results.balance_sensors_detail",{std:(bal.std_g?.toFixed(3)??"0"), score:formatScore(bal.score)}))); }
+    else if(bal.mode==="touch"){ details.append(el("div","",t("results.balance_touch_detail",{std:(bal.std_px?.toFixed(1)??"0"), score:formatScore(bal.score)}))); }
   }
   if(!bal && localStorage.getItem("jsd:skip:t4")==="1") details.append(el("div","text-amber-700",t("results.balance_skipped")));
   box.append(details);

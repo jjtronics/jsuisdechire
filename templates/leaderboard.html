@@ -2,7 +2,8 @@
 {% block content %}
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
   <h1 class="text-2xl font-black mb-4" data-i18n="leaderboard.heading">Classement</h1>
-  <table class="w-full text-sm overflow-x-auto">
+  <div class="w-full overflow-x-auto">
+  <table class="min-w-full text-xs sm:text-sm">
     <thead class="text-left text-gray-500 dark:text-slate-300">
       <tr>
         <th class="py-2" data-i18n="leaderboard.rank">#</th>
@@ -20,11 +21,11 @@
       <tr class="border-t border-white/20">
         <td class="py-2">{{ loop.index }}</td>
         <td>{{ r['nickname'] or '—' }}</td>
-        <td class="font-semibold">{{ r['total_score'] or '—' }}</td>
-        <td>{{ r['rxn_score'] if r['rxn_score'] is not none else '—' }}</td>
-        <td>{{ r['str_score'] if r['str_score'] is not none else '—' }}</td>
-        <td>{{ r['prs_score'] if r['prs_score'] is not none else '—' }}</td>
-        <td>{{ r['bal_score'] if r['bal_score'] is not none else '—' }}</td>
+        <td class="font-semibold">{{ r['total_score']|round(1) if r['total_score'] is not none else '—' }}</td>
+        <td>{{ r['rxn_score']|round(1) if r['rxn_score'] is not none else '—' }}</td>
+        <td>{{ r['str_score']|round(1) if r['str_score'] is not none else '—' }}</td>
+        <td>{{ r['prs_score']|round(1) if r['prs_score'] is not none else '—' }}</td>
+        <td>{{ r['bal_score']|round(1) if r['bal_score'] is not none else '—' }}</td>
         <td>
           <time
             class="js-local-time"
@@ -38,6 +39,7 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </div>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
