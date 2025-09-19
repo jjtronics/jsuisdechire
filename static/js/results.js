@@ -37,7 +37,8 @@
   const actions=el("div","flex flex-wrap gap-2 mt-4");
   const nick=el("input","px-3 py-2 rounded-xl border bg-white/80 dark:bg-slate-800 dark:border-slate-700",""); nick.placeholder=t("results.nickname_placeholder"); nick.value=localStorage.getItem("jsd:nick")||""; nick.addEventListener("input",()=>localStorage.setItem("jsd:nick",nick.value));
   const save=el("button","px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700",t("results.save_button"));
-  actions.append(nick,save); box.append(actions);
+  const share=el("button","px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800",t("results.share_button"));
+  actions.append(nick,save,share); box.append(actions);
 
   save.addEventListener("click", async ()=>{
     const payload = { nickname:nick.value||null, total_score: total, rxn, str, prs, bal };
@@ -46,5 +47,37 @@
       const j=await r.json();
       if(j.ok){ save.textContent=t("results.save_success"); save.disabled=true; }
     }catch(e){ console.error(e); }
+  });
+
+  share.addEventListener("click", async ()=>{
+    const message=t("results.share_message",{score:`${total}/100`});
+    const reset=()=>{ share.disabled=false; share.textContent=t("results.share_button"); };
+    share.disabled=true;
+    try{
+      if(navigator.share){
+        await navigator.share({text:message});
+        share.textContent=t("results.share_success");
+      } else if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(message);
+        share.textContent=t("results.share_copied");
+      } else {
+        const ta=document.createElement("textarea");
+        ta.value=message;
+        ta.setAttribute("readonly","");
+        ta.style.position="absolute";
+        ta.style.left="-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        share.textContent=t("results.share_copied");
+      }
+      setTimeout(reset,2500);
+    }catch(e){
+      if(e && e.name==="AbortError"){ reset(); return; }
+      console.error(e);
+      share.textContent=t("results.share_error");
+      setTimeout(reset,2500);
+    }
   });
 })();
