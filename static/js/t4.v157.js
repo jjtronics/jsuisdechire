@@ -31,7 +31,7 @@
     const low=norm(s.bal_low_good,0.02);
     let high=norm(s.bal_high_bad,0.10);
     const linTolRaw=norm(s.bal_lin_rel_tol,0.15);
-    const linTol=clamp01(linTolRaw,0.15);
+    const linTol=(Number.isFinite(linTolRaw) && linTolRaw>=0)?linTolRaw:0.15;
     if(!isFinite(high) || high<=low){
       high=low+0.02;
     }
@@ -125,7 +125,8 @@
         const diff = Math.abs((magAcc||0) - (magTotal||0));
         const denom = Math.max(magAcc||0, magTotal||0, 1e-6);
         const rel = Math.max(0, Math.min(1, diff / denom));
-        const tol = clamp01(ST.lin_rel_tol ?? 0.15,0.15);
+        const tolRaw = ST.lin_rel_tol ?? 0.15;
+        const tol = (Number.isFinite(tolRaw) && tolRaw>=0) ? tolRaw : 0.15;
         if (rel <= tol && magHP!=null){
           magG = magHP;
           note = "mode:accIG-HPF";
