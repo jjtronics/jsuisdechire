@@ -64,11 +64,13 @@
 
   function updateMotionIndicator(mag){
     if(!motionFill || !motionValue) return;
-    const low=Math.max(0, ST.low_good || 0);
-    const high=Math.max(low+1e-3, ST.high_bad || (low+0.08));
-    const ratio=Math.max(0, Math.min(1, (mag-low) / Math.max(1e-6, high-low)));
+    const minG = 1.01;
+    const maxG = 1.9;
+    const span = Math.max(1e-6, maxG - minG);
+    const ratio = clamp01((mag - minG) / span);
+    const hue = 120 * (1 - ratio);
     motionFill.style.width=`${Math.round(ratio*100)}%`;
-    motionFill.style.opacity=0.2 + 0.6*ratio;
+    motionFill.style.backgroundColor=`hsl(${Math.round(hue)}, 85%, 50%)`;
     motionValue.textContent=t('t4.motion_indicator_value',{value:mag.toFixed(2)});
   }
 
