@@ -22,14 +22,13 @@
   const n=el("span","font-black",formatScore(total)); head.append(n,el("span","","/100")); box.append(head);
   const summaryMessage=(()=>{
     if(!Number.isFinite(total)) return null;
-    const prettyScore=formatScore(total);
     if(total < 50){
-      return `Mais t'es carpet, pose tout de suite ton verre et va voir ta gueule dans un miroir (${prettyScore}/100).`;
+      return "Mais t'es carpet, pose tout de suite ton verre et va voir ta gueule dans un miroir";
     }
     if(total < 75){
-      return `${prettyScore}/100 ! C'est pas mal, mais tu devrais t'arrêter là.`;
+      return "50/100 à 75 ! C'est pas mal, mais tu devrais t'arrêter là";
     }
-    return `${prettyScore}/100 et plus ! Wahou, tu mérites un autre verre pour ce score ! Mais un dernier hein !`;
+    return "75/100 et plus ! Wahou, tu mérites un autre verre pour ce score ! Mais un dernier hein !";
   })();
   if(summaryMessage){
     box.append(el("div","mt-3 text-lg font-semibold text-rose-700 dark:text-rose-300",summaryMessage));
