@@ -23,12 +23,12 @@
   const summaryMessage=(()=>{
     if(!Number.isFinite(total)) return null;
     if(total < 50){
-      return "Mais t'es carpet, pose tout de suite ton verre et va voir ta gueule dans un miroir";
+      return t("results.summary_low");
     }
     if(total < 75){
-      return "50/100 à 75 ! C'est pas mal, mais tu devrais t'arrêter là";
+      return t("results.summary_mid");
     }
-    return "75/100 et plus ! Wahou, tu mérites un autre verre pour ce score ! Mais un dernier hein !";
+    return t("results.summary_high");
   })();
   if(summaryMessage){
     box.append(el("div","mt-3 text-lg font-semibold text-rose-700 dark:text-rose-300",summaryMessage));
