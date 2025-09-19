@@ -2,7 +2,6 @@
   const t=(window.i18n)||((key,vars)=>key);
   const el=(tag,cls,html)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e;};
   const area=document.getElementById("t1").appendChild(el("div","h-36 rounded-xl flex items-center justify-center text-lg font-semibold cursor-pointer select-none transition-colors bg-gray-100 dark:bg-slate-800",t("t1.tap_to_start")));
-  area.parentElement.appendChild(el("div","text-sm text-gray-500",t("t1.instructions")));
   let phase="intro",trial=0,values=[],start=0,timer=null, finished=false; const N=5;
   function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.type="triangle";o.frequency.value=880;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(0.001,c.currentTime);g.gain.exponentialRampToValueAtTime(0.2,c.currentTime+0.01);o.start();setTimeout(()=>{g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.02);o.stop(c.currentTime+0.03);},100);}catch(e){}}
   function schedule(){phase="wait"; area.classList.remove("bg-green-500","text-white"); area.classList.add("bg-yellow-200"); area.textContent=t("t1.wait"); timer=setTimeout(()=>{phase="go"; start=performance.now(); area.classList.remove("bg-yellow-200","dark:bg-slate-800","bg-gray-100"); area.classList.add("bg-green-500","text-white"); area.style.backgroundColor="#22c55e"; area.style.color="white"; area.textContent=t("t1.go"); beep();}, 1000+Math.random()*2500);}

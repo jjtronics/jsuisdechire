@@ -15,9 +15,13 @@
       "home.cta_leaderboard": "Voir le classement",
 
       "t1.heading": "Test 1 · Réaction",
+      "t1.notice": "Prêt·e ? Dès que le fond passe au VERT, tape plus vite que ton ombre. Si tu tires trop tôt, on recommence !",
       "t2.heading": "Test 2 · Stroop",
+      "t2.notice": "Lis bien : clique sur la COULEUR écrite, pas sur la couleur affichée. Même pompette, ton cerveau peut y arriver.",
       "t3.heading": "Test 3 · Poursuite",
+      "t3.notice": "Clique sur Démarrer : le cercle part en cavale. Poursuis-le avec ta souris (ou ton doigt) et clique dessus avant qu'il ne s'échappe trop longtemps.",
       "t4.heading": "Test 4 · Équilibre (mobile)",
+      "t4.notice": "Téléphone dans la main, bras tendu : appuie sur Démarrer puis reste le plus immobile possible. Si tu bouges, le score se dandine aussi.",
 
       "common.back": "Retour",
       "common.next": "Suivant",
@@ -114,9 +118,13 @@
       "home.cta_leaderboard": "See the leaderboard",
 
       "t1.heading": "Test 1 · Reaction",
+      "t1.notice": "Ready? As soon as the background turns GREEN, tap faster than your shadow. Jumping the gun means a redo.",
       "t2.heading": "Test 2 · Stroop",
+      "t2.notice": "Read carefully: click the WRITTEN color, not the ink color. Even tipsy, your brain can handle it.",
       "t3.heading": "Test 3 · Pursuit",
+      "t3.notice": "Hit Start and the circle will bolt everywhere. Chase it with your mouse (or finger) and tap it before it gets away.",
       "t4.heading": "Test 4 · Balance (mobile)",
+      "t4.notice": "Phone in hand, arm stretched out: press Start and stay as still as possible. Wobbles = wobbly score.",
 
       "common.back": "Back",
       "common.next": "Next",
@@ -213,9 +221,13 @@
       "home.cta_leaderboard": "Vedi la classifica",
 
       "t1.heading": "Test 1 · Reazione",
+      "t1.notice": "Prontə? Quando lo sfondo diventa VERDE, tocca più veloce della tua ombra. Se parti in anticipo, si ricomincia!",
       "t2.heading": "Test 2 · Stroop",
+      "t2.notice": "Leggi bene: clicca sul NOME del colore, non su quello che vedi. Anche con qualche drink, il cervello ce la può fare.",
       "t3.heading": "Test 3 · Inseguimento",
+      "t3.notice": "Premi Avvia: il cerchio impazzisce ovunque. Inseguilo con mouse o dito e cliccalo prima che scappi.",
       "t4.heading": "Test 4 · Equilibrio (mobile)",
+      "t4.notice": "Telefono in mano, braccio teso: premi Avvia e resta il più fermo possibile. Se ti muovi, il punteggio barcolla.",
 
       "common.back": "Indietro",
       "common.next": "Avanti",
