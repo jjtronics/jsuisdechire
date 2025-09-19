@@ -104,6 +104,7 @@
       "admin.fields.bal_duration": "T4·durée (ms)",
       "admin.fields.bal_low_good": "T4·seuil haut (100) (g)",
       "admin.fields.bal_high_bad": "T4·seuil bas (0) (g)",
+      "admin.fields.bal_lin_rel_tol": "T4·tolérance rel. linéaire",
       "admin.fields.bal_mode.magnitude": "Magnitude (incl. gravité)",
       "admin.fields.bal_mode.linear": "Accélération linéaire"
     },
@@ -210,6 +211,7 @@
       "admin.fields.bal_duration": "T4·duration (ms)",
       "admin.fields.bal_low_good": "T4·high threshold (100) (g)",
       "admin.fields.bal_high_bad": "T4·low threshold (0) (g)",
+      "admin.fields.bal_lin_rel_tol": "T4·linear rel. tolerance",
       "admin.fields.bal_mode.magnitude": "Magnitude (incl. gravity)",
       "admin.fields.bal_mode.linear": "Linear acceleration"
     },
@@ -316,6 +318,7 @@
       "admin.fields.bal_duration": "T4·durata (ms)",
       "admin.fields.bal_low_good": "T4·soglia alta (100) (g)",
       "admin.fields.bal_high_bad": "T4·soglia bassa (0) (g)",
+      "admin.fields.bal_lin_rel_tol": "T4·tolleranza rel. lineare",
       "admin.fields.bal_mode.magnitude": "Magnitudo (incl. gravità)",
       "admin.fields.bal_mode.linear": "Accelerazione lineare"
     }
