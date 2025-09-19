@@ -10,7 +10,7 @@
   const motionLabel=el("p","text-xs font-medium text-slate-500 dark:text-slate-400",t("t4.motion_indicator_label"));
   const motionBar=el("div","h-2 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 overflow-hidden");
   const motionFill=el("div","h-full w-0 bg-rose-400/80 dark:bg-rose-400/90 transition-all duration-150 ease-out","");
-  const motionValue=el("p","text-xs font-mono text-slate-500 dark:text-slate-400 text-right",t("t4.motion_indicator_value",{value:"0.00"}));
+  const motionValue=el("p","text-xs font-mono text-slate-500 dark:text-slate-400 text-right",t("t4.motion_indicator_value",{value:"0.000"}));
   motionBar.append(motionFill);
   motionWrap.append(motionLabel,motionBar,motionValue);
   levelWrap.append(motionWrap);
@@ -20,12 +20,6 @@
 
   async function fetchSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});return await r.json();}catch(e){return {};}}
   function norm(v,d){if(v==null)return d;const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?d:n;}
-  function clamp01(v, fallback){
-    const hasV = Number.isFinite(v);
-    const hasFallback = Number.isFinite(fallback);
-    const base = hasV ? v : (hasFallback ? fallback : 0);
-    return Math.max(0, Math.min(1, base));
-  }
   function defs(s){
     const duration=Math.max(1000,norm(s.bal_duration_ms,8000));
     const low=norm(s.bal_low_good,0.02);
@@ -44,7 +38,8 @@
     };
   }
 
-  let started=false, finished=false, events=0, lastTs=0, values=[], note="", src={dm:false};
+  let started=false, finished=false, events=0, lastTs=0, note="", src={dm:false};
+  let stats={count:0, mean:0, m2:0};
   let watchdog=null, endTimer=null, fallbackMode=false, measureStart=0;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 
@@ -59,19 +54,32 @@
     const seconds=Math.max(1,Math.round(ST.duration/1000));
     info.textContent=t("t4.sensor_instruction",{seconds});
     btn.textContent=t("t4.button_label",{seconds});
+    updateMotionIndicator();
     updateStatus();
   });
 
-  function updateMotionIndicator(mag){
+  function resetStats(){
+    stats={count:0, mean:0, m2:0};
+  }
+
+  function currentStd(){
+    if (stats.count < 2) return 0;
+    return Math.sqrt(stats.m2 / stats.count);
+  }
+
+  function updateMotionIndicator(){
     if(!motionFill || !motionValue) return;
-    const minG = 1.01;
-    const maxG = 1.9;
-    const span = Math.max(1e-6, maxG - minG);
-    const ratio = clamp01((mag - minG) / span);
+    const std=currentStd();
+    const low=Number.isFinite(ST.low_good)?Math.max(0,ST.low_good):0;
+    const high=Number.isFinite(ST.high_bad)?Math.max(low+1e-3,ST.high_bad):low+0.05;
+    let ratio;
+    if (std <= low) ratio = 0;
+    else if (std >= high) ratio = 1;
+    else ratio = (std - low) / Math.max(1e-6, high - low);
     const hue = 120 * (1 - ratio);
     motionFill.style.width=`${Math.round(ratio*100)}%`;
     motionFill.style.backgroundColor=`hsl(${Math.round(hue)}, 85%, 50%)`;
-    motionValue.textContent=t('t4.motion_indicator_value',{value:mag.toFixed(2)});
+    motionValue.textContent=t('t4.motion_indicator_value',{value:std.toFixed(3)});
   }
 
   function updateStatus(extra=""){
@@ -82,12 +90,23 @@
       `Events: ${events}`,
       `LastEvent(ms): ${Math.round(lastTs)}`,
       `Src: dm=${src.dm}`,
+      `Std: ${currentStd().toFixed(4)}`,
       `Mode: ${ST.mode} dur=${ST.duration}ms low=${ST.low_good} high=${ST.high_bad}`,
       note?`Note: ${note}`:""
     ]; if(extra) lines.push(extra);
     status.textContent=lines.filter(Boolean).join("\n");
   }
-  function pushVal(v){ if(finished) return; values.push(v); events++; lastTs=performance.now(); }
+  function pushVal(v){
+    if(finished) return;
+    const prevMean=stats.mean;
+    stats.count+=1;
+    const delta=v-prevMean;
+    stats.mean+=delta/stats.count;
+    const delta2=v-stats.mean;
+    stats.m2+=delta*delta2;
+    events++;
+    lastTs=performance.now();
+  }
 
   function onDev(e){
     src.dm=true;
@@ -151,8 +170,8 @@
       }
     }
     if (magG!=null){
-      updateMotionIndicator(magG);
       pushVal(magG);
+      updateMotionIndicator();
     }
   }
 
@@ -173,10 +192,7 @@
     if (finished) return;
     finished=true;
     stopAll('finish');
-    // Std over linear acceleration magnitude in g
-    const mean=values.reduce((a,b)=>a+b,0)/Math.max(1,values.length);
-    const variance=values.reduce((a,b)=>a+Math.pow(b-mean,2),0)/Math.max(1,values.length);
-    const std=Math.sqrt(variance);
+    const std=currentStd();
 
     const low=ST.low_good, high=ST.high_bad;
     let s;
@@ -186,7 +202,8 @@
 
     s = Math.max(0, Math.min(100, Math.round(s)));
     const durationMs=Math.round(Math.max(0, performance.now()-measureStart));
-    localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:durationMs, std_g:std, score:s }));
+    const stdStored = Number.isFinite(std) ? Number(std.toFixed(4)) : null;
+    localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:durationMs, std_g:stdStored, score:s }));
     localStorage.setItem('jsd:done:t4','1');
     btn.textContent=t('t4.fallback_status_done');
     document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
@@ -256,11 +273,12 @@
 
   async function start(){
     if (started || finished) return;
-    started=true; events=0; lastTs=0; values=[]; note=''; src={dm:false};
+    started=true; events=0; lastTs=0; note=''; src={dm:false};
+    resetStats();
     fallbackMode=false;
     gEst={x:0,y:0,z:0}; gInit=false;
     btn.textContent=t('t4.button_measuring');
-    updateMotionIndicator(0);
+    updateMotionIndicator();
 
     if (location.protocol!=='https:' && !['localhost','127.0.0.1'].includes(location.hostname)){
       started=false; btn.textContent=t('t4.button_blocked_http'); return;
@@ -271,6 +289,7 @@
     } catch(e){
       ST=defs({});
     }
+    updateMotionIndicator();
 
     if (isIOS){
       try{
@@ -303,5 +322,6 @@
   }
 
   btn.addEventListener('click', start);
+  updateMotionIndicator();
   updateStatus();
 })();
