@@ -2,7 +2,14 @@
   const t=(window.i18n)||((key)=>key);
   const el=(tag,cls,html)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e;};
   const box=document.getElementById("t2");
-  const CSS_COLORS=["red","blue","green","gold","purple","black"];
+  const CSS_COLORS=[
+    {key:"red",css:"red"},
+    {key:"blue",css:"blue"},
+    {key:"green",css:"green"},
+    {key:"yellow",css:"gold"},
+    {key:"purple",css:"purple"},
+    {key:"black",css:"black"}
+  ];
 
   const word=el("div","h-24 flex items-center justify-center text-4xl font-extrabold select-none","");
   const grid=el("div","grid grid-cols-3 gap-2");
@@ -15,10 +22,11 @@
   function nextItem(){
     const wIdx=Math.floor(Math.random()*CSS_COLORS.length);
     const cIdx=Math.floor(Math.random()*CSS_COLORS.length);
-    const colorKey=CSS_COLORS[wIdx];
-    word.textContent=t(`colors.${colorKey}`);
-    word.style.color=CSS_COLORS[cIdx];
-    word.dataset.trueColor=CSS_COLORS[cIdx];
+    const wordColor=CSS_COLORS[wIdx];
+    const truthColor=CSS_COLORS[cIdx];
+    word.textContent=t(`colors.${wordColor.key}`);
+    word.style.color=truthColor.css;
+    word.dataset.trueColor=truthColor.css;
     startedAt=performance.now();
   }
 
@@ -52,10 +60,10 @@
     requestAnimationFrame(()=>{ nextItem(); lock=false; });
   }
 
-  CSS_COLORS.forEach((cssColor)=>{
+  CSS_COLORS.forEach((color)=>{
     const b=el("button","p-3 rounded-xl border bg-white hover:bg-gray-50 active:scale-95 dark:bg-slate-800 dark:border-slate-700");
-    b.innerHTML='<span class="font-semibold" style="color:'+cssColor+'">'+t(`colors.${cssColor}`)+'</span>';
-    b.addEventListener("click", ()=>choose(cssColor));
+    b.innerHTML='<span class="font-semibold" style="color:'+color.css+'">'+t(`colors.${color.key}`)+'</span>';
+    b.addEventListener("click", ()=>choose(color.css));
     grid.append(b);
   });
 
