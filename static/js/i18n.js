@@ -85,6 +85,10 @@
       "leaderboard.rank": "#",
       "leaderboard.name": "Nom",
       "leaderboard.score": "Score",
+      "leaderboard.reaction": "Réaction",
+      "leaderboard.stroop": "Stroop",
+      "leaderboard.pursuit": "Poursuite",
+      "leaderboard.balance": "Équilibre",
       "leaderboard.date": "Date",
       "leaderboard.empty": "Aucun score pour l'instant.",
 
@@ -192,6 +196,10 @@
       "leaderboard.rank": "#",
       "leaderboard.name": "Name",
       "leaderboard.score": "Score",
+      "leaderboard.reaction": "Reaction",
+      "leaderboard.stroop": "Stroop",
+      "leaderboard.pursuit": "Pursuit",
+      "leaderboard.balance": "Balance",
       "leaderboard.date": "Date",
       "leaderboard.empty": "No score yet.",
 
@@ -299,6 +307,10 @@
       "leaderboard.rank": "#",
       "leaderboard.name": "Nome",
       "leaderboard.score": "Punteggio",
+      "leaderboard.reaction": "Reazione",
+      "leaderboard.stroop": "Stroop",
+      "leaderboard.pursuit": "Inseguimento",
+      "leaderboard.balance": "Equilibrio",
       "leaderboard.date": "Data",
       "leaderboard.empty": "Nessun punteggio per ora.",
 
