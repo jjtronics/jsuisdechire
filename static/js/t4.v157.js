@@ -123,7 +123,8 @@
 
       if (hasAcc && hasAccIG){
         const diff = Math.abs((magAcc||0) - (magTotal||0));
-        const rel = magTotal ? diff / magTotal : diff;
+        const denom = Math.max(magAcc||0, magTotal||0, 1e-6);
+        const rel = Math.max(0, Math.min(1, diff / denom));
         const tol = clamp01(ST.lin_rel_tol ?? 0.15,0.15);
         if (rel <= tol && magHP!=null){
           magG = magHP;
