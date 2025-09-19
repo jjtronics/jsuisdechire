@@ -5,35 +5,37 @@
   const box=document.getElementById("t4");
   const info=el("div","text-sm text-gray-500",t("t4.sensor_instruction",{seconds:8}));
   const btn=el("button","px-4 py-2 rounded-xl bg-black text-white",t("t4.button_label",{seconds:8}));
-  const levelWrap=el("div","mt-4 flex flex-col items-center gap-2");
-  const level=el("div","relative rounded-full border border-emerald-400/60 bg-gradient-to-br from-white via-sky-50 to-emerald-50 shadow-inner overflow-hidden","");
-  level.style.width="160px";
-  level.style.height="160px";
-  const crossH=el("div","absolute left-0 top-1/2 w-full h-px bg-emerald-200/70 pointer-events-none","");
-  const crossV=el("div","absolute left-1/2 top-0 w-px h-full bg-emerald-200/70 pointer-events-none","");
-  const bubble=el("div","absolute rounded-full border border-emerald-500/60 bg-emerald-300/70 shadow-lg backdrop-blur-sm transition-transform duration-150 ease-out","");
-  bubble.style.width="56px";
-  bubble.style.height="56px";
-  bubble.style.transform="translate(-50%,-50%)";
-  const levelHint=el("p","text-xs text-slate-500 dark:text-slate-400 text-center",t("t4.level_hint"));
-  const motionWrap=el("div","w-full max-w-xs flex flex-col gap-1 items-stretch text-left");
+  const levelWrap=el("div","mt-4 w-full max-w-xs flex flex-col gap-2 items-stretch");
+  const motionWrap=el("div","w-full flex flex-col gap-1 items-stretch text-left");
   const motionLabel=el("p","text-xs font-medium text-slate-500 dark:text-slate-400",t("t4.motion_indicator_label"));
   const motionBar=el("div","h-2 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 overflow-hidden");
   const motionFill=el("div","h-full w-0 bg-rose-400/80 dark:bg-rose-400/90 transition-all duration-150 ease-out","");
   const motionValue=el("p","text-xs font-mono text-slate-500 dark:text-slate-400 text-right",t("t4.motion_indicator_value",{value:"0.00"}));
   motionBar.append(motionFill);
   motionWrap.append(motionLabel,motionBar,motionValue);
-  level.append(crossH,crossV,bubble);
-  levelWrap.append(level,levelHint,motionWrap);
+  levelWrap.append(motionWrap);
   const fallbackWrap=el("div","hidden mt-3");
   const status=el("div","sr-only","");
   box.append(info,btn,levelWrap,fallbackWrap,status);
 
   async function fetchSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});return await r.json();}catch(e){return {};}}
   function norm(v,d){if(v==null)return d;const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?d:n;}
-  function defs(s){const duration=Math.max(1000,norm(s.bal_duration_ms,8000));return{mode:s.bal_mode||'lin',duration,low_good:norm(s.bal_low_good,0.30),high_bad:norm(s.bal_high_bad,0.50)};}
+  function defs(s){
+    const duration=Math.max(1000,norm(s.bal_duration_ms,8000));
+    const low=norm(s.bal_low_good,0.02);
+    let high=norm(s.bal_high_bad,0.10);
+    if(!isFinite(high) || high<=low){
+      high=low+0.02;
+    }
+    return{
+      mode:s.bal_mode||'lin',
+      duration,
+      low_good:Math.max(0,low),
+      high_bad:Math.max(0,high)
+    };
+  }
 
-  let started=false, finished=false, events=0, lastTs=0, values=[], note="", src={dm:false, do:false};
+  let started=false, finished=false, events=0, lastTs=0, values=[], note="", src={dm:false};
   let watchdog=null, endTimer=null, fallbackMode=false, measureStart=0;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 
@@ -51,42 +53,11 @@
     updateStatus();
   });
 
-  function levelMaxOffset(){
-    const maxX=(level.clientWidth-bubble.clientWidth)/2;
-    const maxY=(level.clientHeight-bubble.clientHeight)/2;
-    return {x:Math.max(0,maxX), y:Math.max(0,maxY)};
-  }
-
-  function setBubble(dx,dy){
-    const max=levelMaxOffset();
-    const clampedX=Math.max(-max.x, Math.min(max.x, dx));
-    const clampedY=Math.max(-max.y, Math.min(max.y, dy));
-    bubble.style.transform=`translate(-50%,-50%) translate(${clampedX}px, ${clampedY}px)`;
-  }
-
-  function updateBubbleFromGravity(gx,gy,gz){
-    const norm=Math.hypot(gx,gy,gz) || 1;
-    if(!norm) return;
-    const scale=levelMaxOffset();
-    if(scale.x===0 && scale.y===0) return;
-    const nx=gx/norm;
-    const ny=gy/norm;
-    setBubble(-nx*scale.x, ny*scale.y);
-  }
-
-  function updateBubbleFromOrientation(beta,gamma){
-    const scale=levelMaxOffset();
-    if(scale.x===0 && scale.y===0) return;
-    const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-    const nx=clamp(gamma/45,-1,1);
-    const ny=clamp(beta/45,-1,1);
-    setBubble(nx*scale.x, -ny*scale.y);
-  }
-
   function updateMotionIndicator(mag){
     if(!motionFill || !motionValue) return;
-    const ref=Math.max(0.05, ST.high_bad || 0.5);
-    const ratio=Math.max(0, Math.min(1, mag / ref));
+    const low=Math.max(0, ST.low_good || 0);
+    const high=Math.max(low+1e-3, ST.high_bad || (low+0.08));
+    const ratio=Math.max(0, Math.min(1, (mag-low) / Math.max(1e-6, high-low)));
     motionFill.style.width=`${Math.round(ratio*100)}%`;
     motionFill.style.opacity=0.2 + 0.6*ratio;
     motionValue.textContent=t('t4.motion_indicator_value',{value:mag.toFixed(2)});
@@ -99,7 +70,7 @@
       `UA: ${navigator.userAgent}`,
       `Events: ${events}`,
       `LastEvent(ms): ${Math.round(lastTs)}`,
-      `Src: dm=${src.dm} do=${src.do}`,
+      `Src: dm=${src.dm}`,
       `Mode: ${ST.mode} dur=${ST.duration}ms low=${ST.low_good} high=${ST.high_bad}`,
       note?`Note: ${note}`:""
     ]; if(extra) lines.push(extra);
@@ -142,29 +113,18 @@
         note = accIG ? "mode:accIG-total" : "mode:acc-total";
       }
     }
-    if (accIG && accIG.x!=null && accIG.y!=null && accIG.z!=null){
-      updateBubbleFromGravity(accIG.x, accIG.y, accIG.z);
-    }
     if (magG!=null){
       updateMotionIndicator(magG);
       pushVal(magG);
     }
   }
-  function onOri(e){
-    src.do=true;
-    if (e && typeof e.beta==='number' && typeof e.gamma==='number'){
-      updateBubbleFromOrientation(e.beta, e.gamma);
-    }
-  }
 
   function attachBasic(){
     window.addEventListener('devicemotion', onDev, {passive:true});
-    window.addEventListener('deviceorientation', onOri, {passive:true});
     document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') stopAll('hidden'); });
   }
   function detachAll(){
     window.removeEventListener('devicemotion', onDev);
-    window.removeEventListener('deviceorientation', onOri);
   }
   function stopAll(reason){
     if (watchdog){ clearInterval(watchdog); watchdog=null; }
@@ -259,7 +219,7 @@
 
   async function start(){
     if (started || finished) return;
-    started=true; events=0; lastTs=0; values=[]; note=''; src={dm:false,do:false};
+    started=true; events=0; lastTs=0; values=[]; note=''; src={dm:false};
     fallbackMode=false;
     gEst={x:0,y:0,z:0}; gInit=false;
     btn.textContent=t('t4.button_measuring');
