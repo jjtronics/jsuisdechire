@@ -18,6 +18,8 @@ DEFAULT_SETTINGS = {
     "bal_lin_rel_tol": 0.15,
 }
 
+ALLOWED_SETTING_KEYS = frozenset(DEFAULT_SETTINGS.keys())
+
 def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
@@ -112,8 +114,7 @@ def api_settings():
 @app.post("/api/admin/settings")
 def api_admin_settings():
     data = request.get_json(silent=True) or {}
-    allowed = set(DEFAULT_SETTINGS.keys())
-    filtered = {k: data[k] for k in data if k in allowed}
+    filtered = {k: data[k] for k in data if k in ALLOWED_SETTING_KEYS}
     set_settings(filtered)
     return jsonify({"ok": True, "saved": filtered})
 
