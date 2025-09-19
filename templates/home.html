@@ -7,12 +7,93 @@
     <ul class="mt-4 text-sm list-disc pl-5 space-y-1 text-gray-600 dark:text-slate-300">
       <li data-i18n="home.list1">4 mini-tests rapides (réaction, couleurs, poursuite, équilibre)</li>
       <li data-i18n="home.list2">Aucune donnée envoyée sans ton accord</li>
-      <li data-i18n="home.list3">À la fin : tu peux enregistrer ton score</li>
+      <li data-i18n="home.list3">À la fin : ton score est enregistré automatiquement</li>
     </ul>
     <div class="mt-5 flex gap-2">
-      <a href="/t1" class="px-4 py-2 rounded-xl bg-black text-white" data-i18n="home.cta_start">Commencer</a>
+      <a id="startTests" href="/t1" class="px-4 py-2 rounded-xl bg-black text-white" data-i18n="home.cta_start">Commencer</a>
       <a href="/leaderboard" class="px-4 py-2 rounded-xl border" data-i18n="home.cta_leaderboard">Voir le classement</a>
     </div>
   </section>
 </div>
+<div id="nicknameModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-4">
+  <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-white/60 dark:bg-slate-900/90 dark:border-slate-700/80">
+    <h2 class="text-xl font-bold" data-i18n="home.nickname_title">Choisis ton surnom</h2>
+    <p class="mt-2 text-sm text-gray-600 dark:text-slate-300" data-i18n="home.nickname_description">Avant de commencer, choisis un surnom pour le classement.</p>
+    <input id="nicknameInput" type="text" maxlength="32" class="mt-4 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white/90 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:bg-slate-800 dark:border-slate-700" data-i18n-attr="placeholder:home.nickname_placeholder" placeholder="Ton meilleur blaze" />
+    <p id="nicknameError" class="mt-2 text-sm font-medium text-rose-600 hidden" data-i18n="home.nickname_error">Choisis un surnom pour continuer.</p>
+    <div class="mt-5 flex justify-end gap-2">
+      <button id="nicknameCancel" type="button" class="px-4 py-2 rounded-xl border border-gray-200 bg-white/70 text-gray-700 hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" data-i18n="home.nickname_cancel">Annuler</button>
+      <button id="nicknameConfirm" type="button" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="home.nickname_confirm">C'est parti</button>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const startLink = document.getElementById('startTests');
+    const modal = document.getElementById('nicknameModal');
+    const input = document.getElementById('nicknameInput');
+    const confirmBtn = document.getElementById('nicknameConfirm');
+    const cancelBtn = document.getElementById('nicknameCancel');
+    const errorEl = document.getElementById('nicknameError');
+
+    if (!startLink || !modal || !input || !confirmBtn || !cancelBtn){
+      return;
+    }
+
+    function showModal(){
+      const stored = (localStorage.getItem('jsd:nick') || '').trim();
+      input.value = stored;
+      errorEl.classList.add('hidden');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function hideModal(){
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    }
+
+    function validateNickname(){
+      const value = input.value.trim();
+      if (!value){
+        errorEl.classList.remove('hidden');
+        input.focus();
+        return;
+      }
+      localStorage.setItem('jsd:nick', value);
+      if (window.jsdSession && typeof window.jsdSession.resetProgress === 'function'){
+        window.jsdSession.resetProgress({ keepNickname: true });
+      } else {
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted']
+          .forEach(key => localStorage.removeItem(key));
+      }
+      hideModal();
+      window.location.href = startLink.getAttribute('href');
+    }
+
+    startLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      showModal();
+    });
+
+    confirmBtn.addEventListener('click', validateNickname);
+    cancelBtn.addEventListener('click', hideModal);
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter'){
+        event.preventDefault();
+        validateNickname();
+      } else if (event.key === 'Escape'){
+        event.preventDefault();
+        hideModal();
+      }
+    });
+
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal){
+        hideModal();
+      }
+    });
+  });
+</script>
 {% endblock %}

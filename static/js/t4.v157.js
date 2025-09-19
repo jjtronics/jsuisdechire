@@ -206,6 +206,9 @@
     const stdStored = Number.isFinite(std) ? Number(std.toFixed(4)) : null;
     localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:durationMs, std_g:stdStored, score:s }));
     localStorage.setItem('jsd:done:t4','1');
+    if (window.jsdSession && typeof window.jsdSession.submitScore === 'function'){
+      window.jsdSession.submitScore().catch(console.error);
+    }
     btn.textContent=t('t4.fallback_status_done');
     document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
     setTimeout(()=>location.href='/results', 600);
@@ -245,6 +248,9 @@
       const durationMs=Math.round(Math.max(0, performance.now()-fallbackStart));
       localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:durationMs, std_px:stdPx, score }));
       localStorage.setItem('jsd:done:t4','1');
+      if (window.jsdSession && typeof window.jsdSession.submitScore === 'function'){
+        window.jsdSession.submitScore().catch(console.error);
+      }
       fbStatus.textContent=t('t4.fallback_status_done');
       document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
       setTimeout(()=>location.href='/results', 600);

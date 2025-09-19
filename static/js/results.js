@@ -1,17 +1,42 @@
 (function(){
   const t=(window.i18n)||((key)=>key);
-  const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
-  const box=document.getElementById("results");
-  function read(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
-  const rxn=read("jsd:rxn"), str=read("jsd:str"), prs=read("jsd:prs"), bal=read("jsd:bal");
-  function compute(){ const w={rxn:0.3,str:0.3,prs:0.3,bal:0.1}; let score=0, wsum=0;
-    if(rxn){score+=rxn.score*w.rxn; wsum+=w.rxn;}
-    if(str){score+=str.score*w.str; wsum+=w.str;}
-    if(prs){score+=prs.score*w.prs; wsum+=w.prs;}
-    if(bal){score+=bal.score*w.bal; wsum+=w.bal;}
-    return score/(wsum||1);
+  const el=(tag,cls,html)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e;};
+  const box=document.getElementById('results');
+  if(!box) return;
+
+  const session=window.jsdSession;
+
+  function fallbackRead(k){
+    try { return JSON.parse(localStorage.getItem(k)||'null'); }
+    catch(e){ return null; }
   }
-  const total=compute();
+
+  function fallbackCompute(parts){
+    const w={rxn:0.3,str:0.3,prs:0.3,bal:0.1}; let score=0,wsum=0;
+    if(parts.rxn && Number.isFinite(parts.rxn.score)){score+=parts.rxn.score*w.rxn; wsum+=w.rxn;}
+    if(parts.str && Number.isFinite(parts.str.score)){score+=parts.str.score*w.str; wsum+=w.str;}
+    if(parts.prs && Number.isFinite(parts.prs.score)){score+=parts.prs.score*w.prs; wsum+=w.prs;}
+    if(parts.bal && Number.isFinite(parts.bal.score)){score+=parts.bal.score*w.bal; wsum+=w.bal;}
+    if(wsum<=0) return NaN;
+    return score/wsum;
+  }
+
+  let rxn=null, str=null, prs=null, bal=null, total=NaN;
+  if(session && typeof session.gatherScores==='function'){
+    const gathered=session.gatherScores();
+    rxn=gathered.rxn;
+    str=gathered.str;
+    prs=gathered.prs;
+    bal=gathered.bal;
+    total=gathered.total;
+  } else {
+    rxn=fallbackRead('jsd:rxn');
+    str=fallbackRead('jsd:str');
+    prs=fallbackRead('jsd:prs');
+    bal=fallbackRead('jsd:bal');
+    total=fallbackCompute({rxn,str,prs,bal});
+  }
+
   const formatScore=(value)=>{
     const num=Number(value);
     if(!Number.isFinite(num)){ return "—"; }
@@ -53,20 +78,44 @@
   if(!bal && localStorage.getItem("jsd:skip:t4")==="1") details.append(el("div","text-amber-700",t("results.balance_skipped")));
   box.append(details);
 
-  const actions=el("div","flex flex-wrap gap-2 mt-4");
-  const nick=el("input","px-3 py-2 rounded-xl border bg-white/80 dark:bg-slate-800 dark:border-slate-700",""); nick.placeholder=t("results.nickname_placeholder"); nick.value=localStorage.getItem("jsd:nick")||""; nick.addEventListener("input",()=>localStorage.setItem("jsd:nick",nick.value));
-  const save=el("button","px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700",t("results.save_button"));
-  const share=el("button","px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800",t("results.share_button"));
-  actions.append(nick,save,share); box.append(actions);
+  const actions=el('div','flex flex-wrap gap-2 mt-4 items-center');
+  const nickname=(localStorage.getItem('jsd:nick')||'').trim();
+  const stateBadge=el('div','');
+  const baseBadgeClasses='px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200';
 
-  save.addEventListener("click", async ()=>{
-    const payload = { nickname:nick.value||null, total_score: total, rxn, str, prs, bal };
-    try{
-      const r=await fetch("/api/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-      const j=await r.json();
-      if(j.ok){ save.textContent=t("results.save_success"); save.disabled=true; }
-    }catch(e){ console.error(e); }
-  });
+  function messageForState(state){
+    if(state==='1'){
+      return nickname ? t('results.auto_saved_with',{nickname}) : t('results.auto_saved');
+    }
+    if(state==='pending'){
+      return t('results.auto_saving');
+    }
+    if(state==='0'){
+      return t('results.auto_save_retry');
+    }
+    return t('results.auto_save_preparing');
+  }
+
+  function applyState(state){
+    stateBadge.className = `${baseBadgeClasses} ${state==='1' ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
+      : state==='0' ? 'bg-rose-100/80 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200'
+      : 'bg-amber-100/80 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'}`;
+    stateBadge.textContent = messageForState(state);
+  }
+
+  const initialState = session && typeof session.submissionState==='function' ? session.submissionState() : null;
+  applyState(initialState);
+
+  const share=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.share_button'));
+  actions.append(stateBadge, share); box.append(actions);
+
+  if(session && typeof session.submitScore==='function'){
+    session.submitScore().then(()=>{
+      applyState(session.submissionState ? session.submissionState() : '1');
+    }).catch(()=>{
+      applyState('0');
+    });
+  }
 
   share.addEventListener("click", async ()=>{
     const message=t("results.share_message",{score:`${total}/100`});
