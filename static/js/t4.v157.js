@@ -85,12 +85,13 @@
     let magG = null;
 
     if (ST.mode === 'lin'){
-      if (acc && acc.x!=null && acc.y!=null && acc.z!=null){
-        // Use linear acceleration directly, convert to g
-        const m = Math.hypot(acc.x||0, acc.y||0, acc.z||0) / G;
-        magG = m;
-        note = "mode:acc";
-      } else if (accIG && accIG.x!=null && accIG.y!=null && accIG.z!=null){
+      const hasAcc = acc && acc.x!=null && acc.y!=null && acc.z!=null;
+      const hasAccIG = accIG && accIG.x!=null && accIG.y!=null && accIG.z!=null;
+      let magAcc = null;
+      let magHP = null;
+      let magTotal = null;
+
+      if (hasAccIG){
         // Estimate gravity and subtract (linear = includingGravity - gravity_estimate)
         if (!gInit){
           gEst = {x: accIG.x, y: accIG.y, z: accIG.z};
@@ -103,7 +104,29 @@
           };
         }
         const lin = { x: accIG.x - gEst.x, y: accIG.y - gEst.y, z: accIG.z - gEst.z };
-        magG = Math.hypot(lin.x, lin.y, lin.z) / G;
+        magHP = Math.hypot(lin.x, lin.y, lin.z) / G;
+        magTotal = Math.hypot(accIG.x||0, accIG.y||0, accIG.z||0) / G;
+      }
+
+      if (hasAcc){
+        magAcc = Math.hypot(acc.x||0, acc.y||0, acc.z||0) / G;
+      }
+
+      if (hasAcc && hasAccIG){
+        const diff = Math.abs((magAcc||0) - (magTotal||0));
+        const rel = magTotal ? diff / magTotal : diff;
+        if (rel <= 0.15 && magHP!=null){
+          magG = magHP;
+          note = "mode:accIG-HPF";
+        } else {
+          magG = magAcc;
+          note = "mode:acc";
+        }
+      } else if (hasAcc){
+        magG = magAcc;
+        note = "mode:acc";
+      } else if (hasAccIG && magHP!=null){
+        magG = magHP;
         note = "mode:accIG-HPF";
       }
     } else {
