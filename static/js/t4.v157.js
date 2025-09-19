@@ -72,12 +72,13 @@
     const std=currentStd();
     const low=Number.isFinite(ST.low_good)?Math.max(0,ST.low_good):0;
     const high=Number.isFinite(ST.high_bad)?Math.max(low+1e-3,ST.high_bad):low+0.05;
-    let ratio;
-    if (std <= low) ratio = 0;
-    else if (std >= high) ratio = 1;
-    else ratio = (std - low) / Math.max(1e-6, high - low);
-    const hue = 120 * (1 - ratio);
-    motionFill.style.width=`${Math.round(ratio*100)}%`;
+    let score;
+    if (std <= low) score = 1;
+    else if (std >= high) score = 0;
+    else score = (high - std) / Math.max(1e-6, high - low);
+    score = Math.max(0, Math.min(1, score));
+    const hue = 120 * score;
+    motionFill.style.width=`${Math.round(score*100)}%`;
     motionFill.style.backgroundColor=`hsl(${Math.round(hue)}, 85%, 50%)`;
     motionValue.textContent=t('t4.motion_indicator_value',{value:std.toFixed(3)});
   }
