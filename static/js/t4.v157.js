@@ -16,8 +16,15 @@
   bubble.style.height="56px";
   bubble.style.transform="translate(-50%,-50%)";
   const levelHint=el("p","text-xs text-slate-500 dark:text-slate-400 text-center",t("t4.level_hint"));
+  const motionWrap=el("div","w-full max-w-xs flex flex-col gap-1 items-stretch text-left");
+  const motionLabel=el("p","text-xs font-medium text-slate-500 dark:text-slate-400",t("t4.motion_indicator_label"));
+  const motionBar=el("div","h-2 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 overflow-hidden");
+  const motionFill=el("div","h-full w-0 bg-rose-400/80 dark:bg-rose-400/90 transition-all duration-150 ease-out","");
+  const motionValue=el("p","text-xs font-mono text-slate-500 dark:text-slate-400 text-right",t("t4.motion_indicator_value",{value:"0.00"}));
+  motionBar.append(motionFill);
+  motionWrap.append(motionLabel,motionBar,motionValue);
   level.append(crossH,crossV,bubble);
-  levelWrap.append(level,levelHint);
+  levelWrap.append(level,levelHint,motionWrap);
   const fallbackWrap=el("div","hidden mt-3");
   const status=el("div","sr-only","");
   box.append(info,btn,levelWrap,fallbackWrap,status);
@@ -76,6 +83,15 @@
     setBubble(nx*scale.x, -ny*scale.y);
   }
 
+  function updateMotionIndicator(mag){
+    if(!motionFill || !motionValue) return;
+    const ref=Math.max(0.05, ST.high_bad || 0.5);
+    const ratio=Math.max(0, Math.min(1, mag / ref));
+    motionFill.style.width=`${Math.round(ratio*100)}%`;
+    motionFill.style.opacity=0.2 + 0.6*ratio;
+    motionValue.textContent=t('t4.motion_indicator_value',{value:mag.toFixed(2)});
+  }
+
   function updateStatus(extra=""){
     const lines=[
       `HTTPS: ${location.protocol==='https:'}`,
@@ -129,7 +145,10 @@
     if (accIG && accIG.x!=null && accIG.y!=null && accIG.z!=null){
       updateBubbleFromGravity(accIG.x, accIG.y, accIG.z);
     }
-    if (magG!=null) pushVal(magG);
+    if (magG!=null){
+      updateMotionIndicator(magG);
+      pushVal(magG);
+    }
   }
   function onOri(e){
     src.do=true;
@@ -244,6 +263,7 @@
     fallbackMode=false;
     gEst={x:0,y:0,z:0}; gInit=false;
     btn.textContent=t('t4.button_measuring');
+    updateMotionIndicator(0);
 
     if (location.protocol!=='https:' && !['localhost','127.0.0.1'].includes(location.hostname)){
       started=false; btn.textContent=t('t4.button_blocked_http'); return;
