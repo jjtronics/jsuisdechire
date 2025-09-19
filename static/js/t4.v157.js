@@ -5,10 +5,22 @@
   const box=document.getElementById("t4");
   const info=el("div","text-sm text-gray-500",t("t4.sensor_instruction",{seconds:8}));
   const btn=el("button","px-4 py-2 rounded-xl bg-black text-white",t("t4.button_label",{seconds:8}));
-  const dbg=el("pre","text-[11px] leading-tight bg-gray-50 dark:bg-slate-900/40 p-2 rounded border border-white/20 overflow-x-auto","");
-  dbg.style.whiteSpace="pre-wrap";
+  const levelWrap=el("div","mt-4 flex flex-col items-center gap-2");
+  const level=el("div","relative rounded-full border border-emerald-400/60 bg-gradient-to-br from-white via-sky-50 to-emerald-50 shadow-inner overflow-hidden","");
+  level.style.width="160px";
+  level.style.height="160px";
+  const crossH=el("div","absolute left-0 top-1/2 w-full h-px bg-emerald-200/70 pointer-events-none","");
+  const crossV=el("div","absolute left-1/2 top-0 w-px h-full bg-emerald-200/70 pointer-events-none","");
+  const bubble=el("div","absolute rounded-full border border-emerald-500/60 bg-emerald-300/70 shadow-lg backdrop-blur-sm transition-transform duration-150 ease-out","");
+  bubble.style.width="56px";
+  bubble.style.height="56px";
+  bubble.style.transform="translate(-50%,-50%)";
+  const levelHint=el("p","text-xs text-slate-500 dark:text-slate-400 text-center",t("t4.level_hint"));
+  level.append(crossH,crossV,bubble);
+  levelWrap.append(level,levelHint);
   const fallbackWrap=el("div","hidden mt-3");
-  box.append(info,btn,dbg,fallbackWrap);
+  const status=el("div","sr-only","");
+  box.append(info,btn,levelWrap,fallbackWrap,status);
 
   async function fetchSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});return await r.json();}catch(e){return {};}}
   function norm(v,d){if(v==null)return d;const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?d:n;}
@@ -29,10 +41,42 @@
     const seconds=Math.max(1,Math.round(ST.duration/1000));
     info.textContent=t("t4.sensor_instruction",{seconds});
     btn.textContent=t("t4.button_label",{seconds});
-    updateDbg();
+    updateStatus();
   });
 
-  function updateDbg(extra=""){
+  function levelMaxOffset(){
+    const maxX=(level.clientWidth-bubble.clientWidth)/2;
+    const maxY=(level.clientHeight-bubble.clientHeight)/2;
+    return {x:Math.max(0,maxX), y:Math.max(0,maxY)};
+  }
+
+  function setBubble(dx,dy){
+    const max=levelMaxOffset();
+    const clampedX=Math.max(-max.x, Math.min(max.x, dx));
+    const clampedY=Math.max(-max.y, Math.min(max.y, dy));
+    bubble.style.transform=`translate(-50%,-50%) translate(${clampedX}px, ${clampedY}px)`;
+  }
+
+  function updateBubbleFromGravity(gx,gy,gz){
+    const norm=Math.hypot(gx,gy,gz) || 1;
+    if(!norm) return;
+    const scale=levelMaxOffset();
+    if(scale.x===0 && scale.y===0) return;
+    const nx=gx/norm;
+    const ny=gy/norm;
+    setBubble(-nx*scale.x, ny*scale.y);
+  }
+
+  function updateBubbleFromOrientation(beta,gamma){
+    const scale=levelMaxOffset();
+    if(scale.x===0 && scale.y===0) return;
+    const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+    const nx=clamp(gamma/45,-1,1);
+    const ny=clamp(beta/45,-1,1);
+    setBubble(nx*scale.x, -ny*scale.y);
+  }
+
+  function updateStatus(extra=""){
     const lines=[
       `HTTPS: ${location.protocol==='https:'}`,
       `SecureContext: ${!!window.isSecureContext}`,
@@ -43,7 +87,7 @@
       `Mode: ${ST.mode} dur=${ST.duration}ms low=${ST.low_good} high=${ST.high_bad}`,
       note?`Note: ${note}`:""
     ]; if(extra) lines.push(extra);
-    dbg.textContent=lines.filter(Boolean).join("\\n");
+    status.textContent=lines.filter(Boolean).join("\n");
   }
   function pushVal(v){ if(finished) return; values.push(v); events++; lastTs=performance.now(); }
 
@@ -82,9 +126,17 @@
         note = accIG ? "mode:accIG-total" : "mode:acc-total";
       }
     }
+    if (accIG && accIG.x!=null && accIG.y!=null && accIG.z!=null){
+      updateBubbleFromGravity(accIG.x, accIG.y, accIG.z);
+    }
     if (magG!=null) pushVal(magG);
   }
-  function onOri(e){ src.do=true; /* not used in std */ }
+  function onOri(e){
+    src.do=true;
+    if (e && typeof e.beta==='number' && typeof e.gamma==='number'){
+      updateBubbleFromOrientation(e.beta, e.gamma);
+    }
+  }
 
   function attachBasic(){
     window.addEventListener('devicemotion', onDev, {passive:true});
@@ -98,7 +150,7 @@
   function stopAll(reason){
     if (watchdog){ clearInterval(watchdog); watchdog=null; }
     if (endTimer){ clearTimeout(endTimer); endTimer=null; }
-    detachAll(); updateDbg('stop:'+reason);
+    detachAll(); updateStatus('stop:'+reason);
   }
 
   function sensorsSuccess(){
@@ -128,6 +180,7 @@
   function startFallback(){
     if (finished) return;
     fallbackMode=true;
+    levelWrap.classList.add('hidden');
     const seconds=Math.max(1,Math.round(ST.duration/1000));
     info.textContent=t('t4.fallback_instruction',{seconds});
     btn.classList.add('hidden');
@@ -140,15 +193,15 @@
       msUserSelect:'none'
     });
     const circle=el('div','absolute rounded-full border-2'); circle.style.width='140px'; circle.style.height='140px'; circle.style.left='50%'; circle.style.top='50%'; circle.style.transform='translate(-50%,-50%)'; circle.style.borderColor='#0ea5e9'; circle.style.background='rgba(14,165,233,0.06)';
-    const status=el('div','mt-2 text-center text-sm',t('t4.fallback_status_ready'));
-    area.append(circle); fallbackWrap.append(area, status); fallbackWrap.classList.remove('hidden');
+    const fbStatus=el('div','mt-2 text-center text-sm',t('t4.fallback_status_ready'));
+    area.append(circle); fallbackWrap.append(area, fbStatus); fallbackWrap.classList.remove('hidden');
 
     let running=false, points=[]; let center=null; let timer=null; let fallbackStart=0;
     const dist=(a,b)=>Math.hypot(a.x-b.x, a.y-b.y);
     function finishTouch(){
       if (finished) return;
       running=false; clearTimeout(timer);
-      if (points.length<32){ status.textContent=t('t4.fallback_status_short'); return; }
+      if (points.length<32){ fbStatus.textContent=t('t4.fallback_status_short'); return; }
       const dists=points.map(p=>dist(p, center));
       const mean=dists.reduce((a,b)=>a+b,0)/dists.length;
       const variance=dists.reduce((a,b)=>a+Math.pow(b-mean,2),0)/dists.length;
@@ -158,7 +211,7 @@
       const durationMs=Math.round(Math.max(0, performance.now()-fallbackStart));
       localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:durationMs, std_px:stdPx, score }));
       localStorage.setItem('jsd:done:t4','1');
-      status.textContent=t('t4.fallback_status_done');
+      fbStatus.textContent=t('t4.fallback_status_done');
       document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
       setTimeout(()=>location.href='/results', 600);
     }
@@ -173,7 +226,7 @@
       center={x:r.width/2, y:r.height/2};
       points=[{x:e.clientX-r.left, y:e.clientY-r.top, ts:performance.now()}];
       fallbackStart=performance.now();
-      running=true; status.textContent=t('t4.fallback_status_running');
+      running=true; fbStatus.textContent=t('t4.fallback_status_running');
       timer=setTimeout(finishTouch, ST.duration);
     }, {passive:false});
     area.addEventListener('pointermove',(e)=>{
@@ -205,12 +258,12 @@
     if (isIOS){
       try{
         if (typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){
-          const pm=await DeviceMotionEvent.requestPermission(); if(pm!=='granted'){ note='iOS motion denied'; updateDbg(); startFallback(); return; }
+          const pm=await DeviceMotionEvent.requestPermission(); if(pm!=='granted'){ note='iOS motion denied'; updateStatus(); startFallback(); return; }
         }
         if (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
-          const po=await DeviceOrientationEvent.requestPermission(); if(po!=='granted'){ note='iOS orientation denied'; updateDbg(); startFallback(); return; }
+          const po=await DeviceOrientationEvent.requestPermission(); if(po!=='granted'){ note='iOS orientation denied'; updateStatus(); startFallback(); return; }
         }
-      }catch(e){ note='iOS permission error'; updateDbg(); startFallback(); return; }
+      }catch(e){ note='iOS permission error'; updateStatus(); startFallback(); return; }
     }
 
     attachBasic();
@@ -218,7 +271,7 @@
 
     const t0=performance.now();
     watchdog=setInterval(()=>{
-      updateDbg();
+      updateStatus();
       const elapsed=performance.now()-t0;
       if (!fallbackMode && !finished && events===0 && elapsed>1500){
         stopAll('noevents'); startFallback();
@@ -233,5 +286,5 @@
   }
 
   btn.addEventListener('click', start);
-  updateDbg();
+  updateStatus();
 })();
