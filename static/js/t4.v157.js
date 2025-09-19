@@ -20,12 +20,18 @@
 
   async function fetchSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});return await r.json();}catch(e){return {};}}
   function norm(v,d){if(v==null)return d;const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?d:n;}
+  function clamp01(v, fallback){
+    const hasV = Number.isFinite(v);
+    const hasFallback = Number.isFinite(fallback);
+    const base = hasV ? v : (hasFallback ? fallback : 0);
+    return Math.max(0, Math.min(1, base));
+  }
   function defs(s){
     const duration=Math.max(1000,norm(s.bal_duration_ms,8000));
     const low=norm(s.bal_low_good,0.02);
     let high=norm(s.bal_high_bad,0.10);
     const linTolRaw=norm(s.bal_lin_rel_tol,0.15);
-    const linTol=Math.max(0, Math.min(1, isFinite(linTolRaw)?linTolRaw:0.15));
+    const linTol=clamp01(linTolRaw,0.15);
     if(!isFinite(high) || high<=low){
       high=low+0.02;
     }
@@ -118,7 +124,7 @@
       if (hasAcc && hasAccIG){
         const diff = Math.abs((magAcc||0) - (magTotal||0));
         const rel = magTotal ? diff / magTotal : diff;
-        const tol = Math.max(0, Math.min(1, ST.lin_rel_tol ?? 0.15));
+        const tol = clamp01(ST.lin_rel_tol ?? 0.15,0.15);
         if (rel <= tol && magHP!=null){
           magG = magHP;
           note = "mode:accIG-HPF";
