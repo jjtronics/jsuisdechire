@@ -17,19 +17,7 @@
   </style>
   <meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
 
-<script>
-// Theme toggle: toggles 'dark' class on html
-document.addEventListener('DOMContentLoaded',()=>{
-  const btn=document.getElementById('themeToggle');
-  if(btn){
-    btn.addEventListener('click',()=>{
-      document.documentElement.classList.toggle('dark');
-    });
-  }
-});
-</script>
-
-</head>
+  </head>
   <body class="h-full bg-gradient-to-b from-pink-50 to-rose-100 text-gray-900 dark:from-slate-900 dark:to-slate-800 dark:text-slate-100">
     <div class="min-h-screen">
       <nav class="sticky top-0 backdrop-blur bg-white/70 dark:bg-slate-900/60 border-b border-white/20 z-10">
@@ -53,9 +41,36 @@ document.addEventListener('DOMContentLoaded',()=>{
       </footer>
     </div>
     <script>
-      const applyTheme = (t) => { document.documentElement.classList.toggle('dark', t==='dark'); localStorage.setItem('jsd:theme', t); };
-      applyTheme(localStorage.getItem('jsd:theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-      if ('serviceWorker' in navigator) { addEventListener('load', ()=>navigator.serviceWorker.register('{{ url_for('static', filename='sw.js') }}')); }
+      const applyTheme = (theme) => {
+        const next = theme === 'dark' ? 'dark' : 'light';
+        document.documentElement.classList.toggle('dark', next === 'dark');
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('jsd:theme', next);
+      };
+
+      const getPreferredTheme = () => {
+        const stored = localStorage.getItem('jsd:theme');
+        if (stored === 'dark' || stored === 'light') {
+          return stored;
+        }
+        return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      };
+
+      applyTheme(getPreferredTheme());
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('themeToggle');
+        if (btn) {
+          btn.addEventListener('click', () => {
+            const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(next);
+          });
+        }
+      });
+
+      if ('serviceWorker' in navigator) {
+        addEventListener('load', () => navigator.serviceWorker.register('{{ url_for('static', filename='sw.js') }}'));
+      }
     </script>
   </body>
 </html>
