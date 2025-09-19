@@ -8,11 +8,36 @@
     </thead>
     <tbody>
       {% for r in rows %}
-      <tr class="border-t border-white/20"><td class="py-2">{{ loop.index }}</td><td>{{ r['nickname'] or '—' }}</td><td class="font-semibold">{{ r['total_score'] }}</td><td>{{ r['created_at'] | int | datetime }}</td></tr>
+      <tr class="border-t border-white/20">
+        <td class="py-2">{{ loop.index }}</td>
+        <td>{{ r['nickname'] or '—' }}</td>
+        <td class="font-semibold">{{ r['total_score'] }}</td>
+        <td>
+          <time
+            class="js-local-time"
+            data-timestamp="{{ r['created_at'] }}"
+            datetime="{{ r['created_at'] | int | datetime }}"
+          >{{ r['created_at'] | int | datetime }}</time>
+        </td>
+      </tr>
       {% else %}
       <tr><td colspan="4" class="py-4 text-center text-gray-500" data-i18n="leaderboard.empty">Aucun score pour l'instant.</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    document.querySelectorAll('.js-local-time').forEach((el) => {
+      const ts = Number(el.dataset.timestamp);
+      if (!Number.isFinite(ts)) {
+        return;
+      }
+      const date = new Date(ts * 1000);
+      el.textContent = fmt.format(date);
+      el.setAttribute('datetime', date.toISOString());
+    });
+  });
+</script>
 {% endblock %}
