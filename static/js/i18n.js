@@ -21,7 +21,7 @@
       "t3.heading": "Test 3 · Poursuite",
       "t3.notice": "Clique sur Démarrer : le cercle part en cavale. Poursuis-le avec ta souris (ou ton doigt) et clique dessus avant qu'il ne s'échappe trop longtemps.",
       "t4.heading": "Test 4 · Équilibre (mobile)",
-      "t4.notice": "Deviens une statue : appuie sur Démarrer puis reste le plus immobile possible. Si tu bouges, le score se dandine aussi.",
+      "t4.notice": "Téléphone dans la main, bras tendu : appuie sur Démarrer puis reste le plus immobile possible. Si tu bouges, le score se dandine aussi.",
 
       "common.back": "Retour",
       "common.next": "Suivant",
@@ -124,7 +124,7 @@
       "t3.heading": "Test 3 · Pursuit",
       "t3.notice": "Hit Start and the circle will bolt everywhere. Chase it with your mouse (or finger) and tap it before it gets away.",
       "t4.heading": "Test 4 · Balance (mobile)",
-      "t4.notice": "Channel your inner statue: press Start and stay as still as possible. Wobbles = wobbly score.",
+      "t4.notice": "Phone in hand, arm stretched out: press Start and stay as still as possible. Wobbles = wobbly score.",
 
       "common.back": "Back",
       "common.next": "Next",
@@ -227,7 +227,7 @@
       "t3.heading": "Test 3 · Inseguimento",
       "t3.notice": "Premi Avvia: il cerchio impazzisce ovunque. Inseguilo con mouse o dito e cliccalo prima che scappi.",
       "t4.heading": "Test 4 · Equilibrio (mobile)",
-      "t4.notice": "Diventa una statua: premi Avvia e resta il più fermo possibile. Se ti muovi, il punteggio barcolla.",
+      "t4.notice": "Telefono in mano, braccio teso: premi Avvia e resta il più fermo possibile. Se ti muovi, il punteggio barcolla.",
 
       "common.back": "Indietro",
       "common.next": "Avanti",
