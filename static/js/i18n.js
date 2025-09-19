@@ -89,6 +89,10 @@
       "leaderboard.stroop": "Stroop",
       "leaderboard.pursuit": "Poursuite",
       "leaderboard.balance": "Équilibre",
+      "reaction": "Réaction",
+      "stroop": "Stroop",
+      "pursuit": "Poursuite",
+      "balance": "Équilibre",
       "leaderboard.date": "Date",
       "leaderboard.empty": "Aucun score pour l'instant.",
 
@@ -200,6 +204,10 @@
       "leaderboard.stroop": "Stroop",
       "leaderboard.pursuit": "Pursuit",
       "leaderboard.balance": "Balance",
+      "reaction": "Reaction",
+      "stroop": "Stroop",
+      "pursuit": "Pursuit",
+      "balance": "Balance",
       "leaderboard.date": "Date",
       "leaderboard.empty": "No score yet.",
 
@@ -311,6 +319,10 @@
       "leaderboard.stroop": "Stroop",
       "leaderboard.pursuit": "Inseguimento",
       "leaderboard.balance": "Equilibrio",
+      "reaction": "Reazione",
+      "stroop": "Stroop",
+      "pursuit": "Inseguimento",
+      "balance": "Equilibrio",
       "leaderboard.date": "Data",
       "leaderboard.empty": "Nessun punteggio per ora.",
 
