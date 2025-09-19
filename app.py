@@ -15,6 +15,7 @@ DEFAULT_SETTINGS = {
     "bal_duration_ms": 8000,
     "bal_low_good": 0.02,
     "bal_high_bad": 0.10,
+    "bal_lin_rel_tol": 0.15,
 }
 
 def get_db():

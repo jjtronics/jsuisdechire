@@ -24,6 +24,8 @@
     const duration=Math.max(1000,norm(s.bal_duration_ms,8000));
     const low=norm(s.bal_low_good,0.02);
     let high=norm(s.bal_high_bad,0.10);
+    const linTolRaw=norm(s.bal_lin_rel_tol,0.15);
+    const linTol=Math.max(0, Math.min(1, isFinite(linTolRaw)?linTolRaw:0.15));
     if(!isFinite(high) || high<=low){
       high=low+0.02;
     }
@@ -31,7 +33,8 @@
       mode:s.bal_mode||'lin',
       duration,
       low_good:Math.max(0,low),
-      high_bad:Math.max(0,high)
+      high_bad:Math.max(0,high),
+      lin_rel_tol:linTol
     };
   }
 
@@ -115,7 +118,8 @@
       if (hasAcc && hasAccIG){
         const diff = Math.abs((magAcc||0) - (magTotal||0));
         const rel = magTotal ? diff / magTotal : diff;
-        if (rel <= 0.15 && magHP!=null){
+        const tol = Math.max(0, Math.min(1, ST.lin_rel_tol ?? 0.15));
+        if (rel <= tol && magHP!=null){
           magG = magHP;
           note = "mode:accIG-HPF";
         } else {
