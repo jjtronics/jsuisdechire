@@ -39,6 +39,21 @@
   if(!bal && localStorage.getItem("jsd:skip:t4")==="1") details.append(el("div","text-amber-700",t("results.balance_skipped")));
   box.append(details);
 
+  const summaryMessage=(()=>{
+    if(!Number.isFinite(total)) return null;
+    const prettyScore=formatScore(total);
+    if(total < 50){
+      return `Mais t'es carpet, pose tout de suite ton verre et va voir ta gueule dans un miroir (${prettyScore}/100).`;
+    }
+    if(total < 75){
+      return `${prettyScore}/100 ! C'est pas mal, mais tu devrais t'arrêter là.`;
+    }
+    return `${prettyScore}/100 et plus ! Wahou, tu mérites un autre verre pour ce score ! Mais un dernier hein !`;
+  })();
+  if(summaryMessage){
+    box.append(el("div","mt-4 text-base font-semibold text-rose-700 dark:text-rose-300",summaryMessage));
+  }
+
   const actions=el("div","flex flex-wrap gap-2 mt-4");
   const nick=el("input","px-3 py-2 rounded-xl border bg-white/80 dark:bg-slate-800 dark:border-slate-700",""); nick.placeholder=t("results.nickname_placeholder"); nick.value=localStorage.getItem("jsd:nick")||""; nick.addEventListener("input",()=>localStorage.setItem("jsd:nick",nick.value));
   const save=el("button","px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700",t("results.save_button"));
