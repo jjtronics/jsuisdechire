@@ -69,12 +69,13 @@
   <div class="mb-10" data-podium>
     <div class="mx-auto flex max-w-5xl flex-row flex-nowrap items-stretch justify-center gap-2 text-center sm:gap-6 sm:items-end sm:justify-center">
       {% if second %}
+      {% set second_name = second['nickname'] or '—' %}
       <div class="order-2 flex basis-0 flex-1 min-w-0 flex-col items-center gap-4 sm:order-1 sm:min-w-[14rem] sm:w-56 sm:flex-none sm:pt-10">
         <div class="relative w-full max-w-[13rem] overflow-hidden rounded-[2rem] border border-white/40 bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 text-slate-700 shadow-[0_1.5rem_3rem_-1.4rem_rgba(15,23,42,0.45)] dark:border-white/10 dark:from-white/10 dark:via-white/5 dark:to-white/10 dark:text-white">
           <div class="absolute inset-x-6 -bottom-10 h-16 rounded-full bg-slate-500/20 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-3 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
             <span class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500/80 dark:text-slate-200/70">2<sup class="text-[0.6rem] font-semibold">e</sup></span>
-            <span class="text-lg font-bold leading-tight break-words">{{ second['nickname'] or '—' }}</span>
+            <span class="text-lg font-bold leading-tight break-words" title="{{ second_name }}">{{ second_name[:10] ~ ('…' if second_name|length > 10 else '') }}</span>
             <span class="text-sm font-medium text-slate-600 dark:text-slate-200/80" data-i18n="leaderboard.score">Score</span>
             <span class="text-2xl font-black text-slate-800 dark:text-white">
               {{ second['total_score']|round(1) if second['total_score'] is not none else '—' }}
@@ -88,12 +89,13 @@
       </div>
       {% endif %}
       {% if first %}
+      {% set first_name = first['nickname'] or '—' %}
       <div class="order-1 flex basis-0 flex-1 min-w-0 flex-col items-center gap-4 sm:order-2 sm:min-w-[14rem] sm:w-60 sm:flex-none">
         <div class="relative w-full max-w-[15rem] overflow-hidden rounded-[2.5rem] border border-amber-200/60 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-500 text-amber-950 shadow-[0_2rem_3.5rem_-1.8rem_rgba(249,115,22,0.55)] dark:border-amber-400/40 dark:from-amber-300/20 dark:via-amber-400/25 dark:to-amber-500/25 dark:text-amber-50">
           <div class="absolute inset-x-6 -bottom-14 h-20 rounded-full bg-amber-500/40 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-4 px-5 pt-8 pb-6 sm:px-7 sm:pt-10 sm:pb-7">
             <span class="text-xs font-extrabold uppercase tracking-[0.5em] text-amber-700/80 dark:text-amber-200/80">1<sup class="text-[0.6rem] font-semibold">er</sup></span>
-            <span class="text-2xl font-black leading-tight drop-shadow-sm break-words">{{ first['nickname'] or '—' }}</span>
+            <span class="text-2xl font-black leading-tight drop-shadow-sm break-words" title="{{ first_name }}">{{ first_name[:10] ~ ('…' if first_name|length > 10 else '') }}</span>
             <div class="flex items-baseline gap-1 text-3xl font-black tracking-tight text-amber-900/90 dark:text-amber-100">
               <span>{{ first['total_score']|round(1) if first['total_score'] is not none else '—' }}</span>
               <span class="text-sm font-semibold uppercase tracking-[0.35em]">pts</span>
@@ -106,12 +108,13 @@
       </div>
       {% endif %}
       {% if third %}
+      {% set third_name = third['nickname'] or '—' %}
       <div class="order-3 flex basis-0 flex-1 min-w-0 flex-col items-center gap-4 sm:order-3 sm:min-w-[14rem] sm:w-52 sm:flex-none sm:pt-12">
         <div class="relative w-full max-w-[13rem] overflow-hidden rounded-[2rem] border border-orange-200/60 bg-gradient-to-br from-orange-200 via-amber-200 to-orange-400 text-orange-900 shadow-[0_1.6rem_3.1rem_-1.6rem_rgba(194,65,12,0.55)] dark:border-orange-400/30 dark:from-orange-300/20 dark:via-amber-400/20 dark:to-orange-500/25 dark:text-amber-50">
           <div class="absolute inset-x-6 -bottom-10 h-16 rounded-full bg-orange-400/30 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-3 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
             <span class="text-xs font-semibold uppercase tracking-[0.4em] text-orange-700/80 dark:text-amber-200/80">3<sup class="text-[0.6rem] font-semibold">e</sup></span>
-            <span class="text-lg font-bold leading-tight break-words">{{ third['nickname'] or '—' }}</span>
+            <span class="text-lg font-bold leading-tight break-words" title="{{ third_name }}">{{ third_name[:10] ~ ('…' if third_name|length > 10 else '') }}</span>
             <span class="text-sm font-medium text-orange-800/80 dark:text-amber-100/80" data-i18n="leaderboard.score">Score</span>
             <span class="text-2xl font-black text-orange-900 dark:text-amber-100">
               {{ third['total_score']|round(1) if third['total_score'] is not none else '—' }}
