@@ -1,31 +1,52 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-6">
-  <h1 class="text-2xl font-black" data-i18n="admin.heading">Admin · Calibration</h1>
-  <p class="text-sm text-gray-600 dark:text-slate-300" data-i18n="admin.subtitle">Protège cette page via ton reverse proxy (HTTP auth). Les paramètres sont stockés en base et appliqués aux tests au chargement.</p>
+<div class="space-y-6">
+  <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-3">
+    <h1 class="text-2xl font-black" data-i18n="admin.heading">Admin · Calibration</h1>
+    <p class="text-sm text-gray-600 dark:text-slate-300" data-i18n="admin.subtitle">Protège cette page via ton reverse proxy (HTTP auth). Les paramètres sont stockés en base et appliqués aux tests au chargement.</p>
+  </section>
 
-  <div id="formWrap" class="grid md:grid-cols-2 gap-6"></div>
+  <div id="formWrap" class="space-y-6"></div>
 
-  <div class="flex flex-wrap gap-3">
-    <button id="saveBtn" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="admin.save_button">Enregistrer</button>
-    <button id="clearBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" data-i18n="admin.clear_button">Vider les scores</button>
-    <span id="msg" class="text-sm text-gray-500"></span>
-  </div>
+  <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-4">
+    <div class="space-y-1">
+      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.groups.actions.title">Actions globales</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.groups.actions.description">Sauvegarde les paramètres ou purge les scores enregistrés.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="saveBtn" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="admin.save_button">Enregistrer</button>
+      <button id="clearBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" data-i18n="admin.clear_button">Vider les scores</button>
+      <p id="msg" class="text-sm text-gray-500"></p>
+    </div>
+  </section>
 </div>
 
 <script>
 const t = window.i18n || ((key)=>key);
-const FIELDS = [
-  {k:'prs_timeSpeed', label:'admin.fields.prs_timeSpeed', type:'number', step:'0.05', min:'0.1', max:'5'},
-  {k:'prs_duration_ms', label:'admin.fields.prs_duration', type:'number', step:'100', min:'2000', max:'30000'},
-  {k:'prs_captureRadius', label:'admin.fields.prs_captureRadius', type:'number', step:'1', min:'8', max:'200'},
-  {k:'prs_jitterAmp', label:'admin.fields.prs_jitterAmp', type:'number', step:'0.01', min:'0', max:'0.3'},
-
-  {k:'bal_mode', label:'admin.fields.bal_mode', type:'select', options:[['mag','admin.fields.bal_mode.magnitude'], ['lin','admin.fields.bal_mode.linear']]},
-  {k:'bal_duration_ms', label:'admin.fields.bal_duration', type:'number', step:'100', min:'3000', max:'30000'},
-  {k:'bal_low_good', label:'admin.fields.bal_low_good', type:'number', step:'0.01', min:'0.01', max:'2'},
-  {k:'bal_high_bad', label:'admin.fields.bal_high_bad', type:'number', step:'0.01', min:'0.02', max:'3'},
-  {k:'bal_lin_rel_tol', label:'admin.fields.bal_lin_rel_tol', type:'number', step:'0.01', min:'0'},
+const GROUPS = [
+  {
+    id: 'pursuit',
+    title: 'admin.groups.pursuit.title',
+    description: 'admin.groups.pursuit.description',
+    fields: [
+      {k:'prs_timeSpeed', label:'admin.fields.pursuit.speed', helper:'admin.helpers.pursuit.speed', type:'number', step:'0.05', min:'0.1', max:'5'},
+      {k:'prs_duration_ms', label:'admin.fields.pursuit.duration', helper:'admin.helpers.pursuit.duration', type:'number', step:'100', min:'2000', max:'30000'},
+      {k:'prs_captureRadius', label:'admin.fields.pursuit.capture', helper:'admin.helpers.pursuit.capture', type:'number', step:'1', min:'8', max:'200'},
+      {k:'prs_jitterAmp', label:'admin.fields.pursuit.jitter', helper:'admin.helpers.pursuit.jitter', type:'number', step:'0.01', min:'0', max:'0.3'}
+    ]
+  },
+  {
+    id: 'balance',
+    title: 'admin.groups.balance.title',
+    description: 'admin.groups.balance.description',
+    fields: [
+      {k:'bal_mode', label:'admin.fields.balance.mode', helper:'admin.helpers.balance.mode', type:'select', options:[['mag','admin.fields.balance.mode.magnitude'], ['lin','admin.fields.balance.mode.linear']]},
+      {k:'bal_duration_ms', label:'admin.fields.balance.duration', helper:'admin.helpers.balance.duration', type:'number', step:'100', min:'3000', max:'30000'},
+      {k:'bal_low_good', label:'admin.fields.balance.low_good', helper:'admin.helpers.balance.low_good', type:'number', step:'0.01', min:'0.01', max:'2'},
+      {k:'bal_high_bad', label:'admin.fields.balance.high_bad', helper:'admin.helpers.balance.high_bad', type:'number', step:'0.01', min:'0.02', max:'3'},
+      {k:'bal_lin_rel_tol', label:'admin.fields.balance.rel_tol', helper:'admin.helpers.balance.rel_tol', type:'number', step:'0.01', min:'0'}
+    ]
+  }
 ];
 
 const wrap = document.getElementById('formWrap');
@@ -33,26 +54,58 @@ const msg = document.getElementById('msg');
 const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!==undefined) e.innerHTML=h; return e;};
 
 function fieldRow(f, val){
-  const card=el('div','rounded-xl border p-4 bg-white/70 dark:bg-slate-800/60');
+  const card = el('div','rounded-2xl border border-white/40 bg-white/80 dark:bg-slate-900/50 p-4 space-y-3 shadow-sm');
+  const labelId = `field-${f.k}`;
+  const label = el('label','block text-sm font-semibold text-slate-800 dark:text-slate-200', t(f.label));
+  label.setAttribute('for', labelId);
+
+  let control;
   if(f.type==='select'){
-    const sel = el('select','w-full rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700');
-    (f.options||[]).forEach(([v,l])=>{ const o=el('option','',t(l)); o.value=v; sel.append(o); });
-    sel.value = String(val ?? '');
-    sel.dataset.key = f.k;
-    card.append(el('div','text-sm text-gray-500 mb-1', t(f.label)), sel);
+    control = el('select','w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm');
+    (f.options||[]).forEach(([v,l])=>{ const o=el('option','',t(l)); o.value=v; control.append(o); });
   } else {
-    const inp = el('input','w-full rounded-lg border px-3 py-2 bg-white/80 dark:bg-slate-800 dark:border-slate-700');
-    inp.type=f.type; if(f.step) inp.step=f.step; if(f.min) inp.min=f.min; if(f.max) inp.max=f.max;
-    inp.value = String(val ?? '');
-    inp.dataset.key = f.k;
-    card.append(el('div','text-sm text-gray-500 mb-1', t(f.label)), inp);
+    control = el('input','w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm');
+    control.type=f.type;
+    if(f.step) control.step=f.step;
+    if(f.min) control.min=f.min;
+    if(f.max) control.max=f.max;
   }
+
+  control.id = labelId;
+  control.value = String(val ?? '');
+  control.dataset.key = f.k;
+
+  card.append(label, control);
+
+  if (f.helper){
+    card.append(el('p','text-xs text-slate-500 dark:text-slate-400', t(f.helper)));
+  }
+
   return card;
+}
+
+function groupSection(group, settings){
+  const section = el('section','rounded-2xl border border-white/40 bg-white/90 dark:bg-slate-900/60 p-6 space-y-5 shadow-sm');
+  const header = el('div','space-y-1');
+  header.append(
+    el('h2','text-xl font-semibold text-slate-800 dark:text-slate-100', t(group.title)),
+    el('p','text-sm text-slate-600 dark:text-slate-300', t(group.description))
+  );
+  section.append(header);
+
+  if (group.fields && group.fields.length){
+    const grid = el('div','grid gap-4 md:grid-cols-2');
+    group.fields.forEach(f=>grid.append(fieldRow(f, settings[f.k])));
+    section.append(grid);
+  }
+
+  return section;
 }
 
 async function load(){
   const r = await fetch('/api/settings'); const s = await r.json();
-  wrap.innerHTML=''; FIELDS.forEach(f=>wrap.append(fieldRow(f, s[f.k])));
+  wrap.innerHTML='';
+  GROUPS.forEach(group=>wrap.append(groupSection(group, s)));
 }
 async function save(){
   const data={};
