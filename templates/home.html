@@ -19,7 +19,8 @@
   <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-white/60 dark:bg-slate-900/90 dark:border-slate-700/80">
     <h2 class="text-xl font-bold" data-i18n="home.nickname_title">Choisis ton surnom</h2>
     <p class="mt-2 text-sm text-gray-600 dark:text-slate-300" data-i18n="home.nickname_description">Avant de commencer, choisis un surnom pour le classement.</p>
-    <input id="nicknameInput" type="text" maxlength="32" class="mt-4 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white/90 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:bg-slate-800 dark:border-slate-700" data-i18n-attr="placeholder:home.nickname_placeholder" placeholder="Ton meilleur blaze" />
+    {% set nickname_max = app_settings.get('nickname_max_length') %}
+    <input id="nicknameInput" type="text" {% if nickname_max and nickname_max > 0 %}maxlength="{{ nickname_max|int }}"{% endif %} class="mt-4 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white/90 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:bg-slate-800 dark:border-slate-700" data-i18n-attr="placeholder:home.nickname_placeholder" placeholder="Ton meilleur blaze" />
     <p id="nicknameError" class="mt-2 text-sm font-medium text-rose-600 hidden" data-i18n="home.nickname_error">Choisis un surnom pour continuer.</p>
     <div class="mt-5 flex justify-end gap-2">
       <button id="nicknameCancel" type="button" class="px-4 py-2 rounded-xl border border-gray-200 bg-white/70 text-gray-700 hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" data-i18n="home.nickname_cancel">Annuler</button>
@@ -35,13 +36,29 @@
     const confirmBtn = document.getElementById('nicknameConfirm');
     const cancelBtn = document.getElementById('nicknameCancel');
     const errorEl = document.getElementById('nicknameError');
+    const t = window.i18n || ((key) => key);
+    const sessionApi = window.jsdSession || {};
+    const getNicknameMaxLength = typeof sessionApi.getNicknameMaxLength === 'function' ? sessionApi.getNicknameMaxLength : () => 0;
+    const sanitizeNickname = typeof sessionApi.sanitizeNickname === 'function' ? sessionApi.sanitizeNickname : (value) => (value || '').trim();
+    const nicknameMaxLength = getNicknameMaxLength();
 
     if (!startLink || !modal || !input || !confirmBtn || !cancelBtn){
       return;
     }
 
+    if (nicknameMaxLength > 0){
+      input.maxLength = nicknameMaxLength;
+    } else {
+      input.removeAttribute('maxlength');
+    }
+
+    function showError(messageKey){
+      errorEl.textContent = t(messageKey);
+      errorEl.classList.remove('hidden');
+    }
+
     function showModal(){
-      const stored = (localStorage.getItem('jsd:nick') || '').trim();
+      const stored = sanitizeNickname(localStorage.getItem('jsd:nick'));
       input.value = stored;
       errorEl.classList.add('hidden');
       modal.classList.remove('hidden');
@@ -55,13 +72,21 @@
     }
 
     function validateNickname(){
-      const value = input.value.trim();
-      if (!value){
-        errorEl.classList.remove('hidden');
+      const rawValue = input.value;
+      const sanitized = sanitizeNickname(rawValue);
+      if (!sanitized){
+        showError('home.nickname_error');
         input.focus();
         return;
       }
-      localStorage.setItem('jsd:nick', value);
+      if (sanitized.length !== rawValue.trim().length){
+        input.value = sanitized;
+        showError('home.nickname_too_long');
+        input.focus();
+        return;
+      }
+      errorEl.classList.add('hidden');
+      localStorage.setItem('jsd:nick', sanitized);
       if (window.jsdSession && typeof window.jsdSession.resetProgress === 'function'){
         window.jsdSession.resetProgress({ keepNickname: true });
       } else {

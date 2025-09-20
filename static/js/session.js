@@ -1,4 +1,22 @@
 (function(){
+  function getNicknameMaxLength(){
+    const raw = window.jsdConfig && window.jsdConfig.settings ? window.jsdConfig.settings.nickname_max_length : null;
+    const num = Number(raw);
+    if (Number.isFinite(num) && num > 0){
+      return Math.max(1, Math.min(512, Math.floor(num)));
+    }
+    return 0;
+  }
+
+  function sanitizeNickname(value){
+    const trimmed = (value || '').trim();
+    const maxLen = getNicknameMaxLength();
+    if (maxLen > 0){
+      return trimmed.slice(0, maxLen);
+    }
+    return trimmed;
+  }
+
   function readJson(key){
     try {
       const raw = localStorage.getItem(key);
@@ -46,7 +64,7 @@
   }
 
   function hasNickname(){
-    return !!(localStorage.getItem('jsd:nick') || '').trim();
+    return !!sanitizeNickname(localStorage.getItem('jsd:nick'));
   }
 
   function submissionState(){
@@ -74,7 +92,15 @@
       return { status: 'noscore' };
     }
 
-    const nickname = (localStorage.getItem('jsd:nick') || '').trim();
+    const rawNickname = localStorage.getItem('jsd:nick');
+    const nickname = sanitizeNickname(rawNickname);
+    if ((rawNickname || '').trim() !== nickname){
+      localStorage.setItem('jsd:nick', nickname);
+    }
+    if (!nickname){
+      return { status: 'nonick' };
+    }
+
     const payload = { nickname, total_score: total, rxn, str, prs, bal };
 
     try {
@@ -117,6 +143,8 @@
     submitScore,
     resetProgress,
     hasNickname,
-    submissionState
+    submissionState,
+    getNicknameMaxLength,
+    sanitizeNickname
   };
 })();

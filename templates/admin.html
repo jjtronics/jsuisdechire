@@ -46,6 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const t = window.i18n || ((key) => key);
   const GROUPS = [
     {
+      id: 'general',
+      title: 'admin.groups.general.title',
+      description: 'admin.groups.general.description',
+      fields: [
+        {k:'nickname_max_length', label:'admin.fields.general.nickname_max_length', helper:'admin.helpers.general.nickname_max_length', type:'number', step:'1', min:'1', max:'128'}
+      ]
+    },
+    {
       id: 'reaction',
       title: 'admin.groups.reaction.title',
       description: 'admin.groups.reaction.description',
