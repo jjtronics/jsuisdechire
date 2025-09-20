@@ -118,7 +118,8 @@
   }
 
   share.addEventListener("click", async ()=>{
-    const message=t("results.share_message",{score:`${total}/100`});
+    const roundedTotal = Number.isFinite(total) ? total.toFixed(1) : "—";
+    const message=t("results.share_message",{score:`${roundedTotal}/100`});
     const reset=()=>{ share.disabled=false; share.textContent=t("results.share_button"); };
     share.disabled=true;
     try{
