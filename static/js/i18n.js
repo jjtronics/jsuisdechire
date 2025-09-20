@@ -8,7 +8,7 @@
       "footer.disclaimer": "Ce n'est pas un dispositif médical. Si tu as bu : ne conduis jamais. · Dev par JJC",
 
       "home.title": "Un check fun & sérieux pour savoir si tu dois poser le verre",
-      "home.subtitle": "Local, anonyme, gratuit. Résultats indicatifs uniquement.",
+      "home.subtitle": "Anonyme, gratuit. Optimisé pour ton téléphone — si t'es bourré devant ton PC, on peut rien pour toi. Résultats indicatifs uniquement.",
       "home.list1": "4 mini-tests rapides (réaction, couleurs, poursuite, équilibre)",
       "home.list2": "Aucune donnée envoyée sans ton accord",
       "home.list3": "À la fin : ton score est enregistré automatiquement",
@@ -135,7 +135,7 @@
       "footer.disclaimer": "This is not a medical device. If you drank: never drive. · Dev by JJC",
 
       "home.title": "A fun & serious check to know if you should put the glass down",
-      "home.subtitle": "Local, anonymous, free. Results are indicative only.",
+      "home.subtitle": "Anonymous, free. Optimized for your phone — if you're drunk at your PC, we can't help you. Results are for guidance only.",
       "home.list1": "4 quick mini-tests (reaction, colors, pursuit, balance)",
       "home.list2": "No data sent without your consent",
       "home.list3": "At the end: your score is saved automatically",
@@ -262,7 +262,7 @@
       "footer.disclaimer": "Non è un dispositivo medico. Se hai bevuto: non guidare mai. · Dev da JJC",
 
       "home.title": "Un check divertente e serio per capire se devi posare il bicchiere",
-      "home.subtitle": "Locale, anonimo, gratuito. Risultati solo indicativi.",
+      "home.subtitle": "Anonimo, gratuito. Ottimizzato per il tuo telefono — se sei sbronzo davanti al PC, non possiamo aiutarti. Risultati solo indicativi.",
       "home.list1": "4 mini-test rapidi (reazione, colori, inseguimento, equilibrio)",
       "home.list2": "Nessun dato inviato senza il tuo consenso",
       "home.list3": "Alla fine: il punteggio viene salvato automaticamente",
