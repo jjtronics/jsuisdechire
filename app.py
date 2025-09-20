@@ -20,6 +20,18 @@ def inject_asset_helpers():
     return {"asset_url": asset_url, "asset_version": ASSET_VERSION}
 
 DEFAULT_SETTINGS = {
+    "rxn_trials": 5,
+    "rxn_wait_min_ms": 1000,
+    "rxn_wait_range_ms": 2500,
+    "rxn_false_penalty_min_ms": 1000,
+    "rxn_false_penalty_range_ms": 500,
+    "rxn_median_best_ms": 250,
+    "rxn_median_worst_ms": 500,
+    "str_rounds": 8,
+    "str_acc_weight": 0.6,
+    "str_speed_weight": 0.4,
+    "str_speed_best_ms": 700,
+    "str_speed_worst_ms": 1400,
     "prs_timeSpeed": 0.75,
     "prs_duration_ms": 10000,
     "prs_captureRadius": 36,
