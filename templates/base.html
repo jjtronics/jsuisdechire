@@ -6,12 +6,12 @@
     <title>{{ app_name }} · jsuisdechire</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','system-ui']}}}}</script>
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+    <link rel="manifest" href="{{ asset_url('manifest.webmanifest') }}">
     <meta name="theme-color" content="#f43f5e" />
-    <link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
-    <script defer src="{{ url_for('static', filename='js/i18n.js') }}"></script>
-    <script defer src="{{ url_for('static', filename='js/core.js') }}"></script>
-    <script defer src="{{ url_for('static', filename='js/session.js') }}"></script>
+    <link rel="icon" href="{{ asset_url('icons/icon-192.png') }}">
+    <script defer src="{{ asset_url('js/i18n.js') }}"></script>
+    <script defer src="{{ asset_url('js/core.js') }}"></script>
+    <script defer src="{{ asset_url('js/session.js') }}"></script>
     <style>
   * { -webkit-tap-highlight-color: transparent; }
   body { -webkit-user-select: none; user-select:none; }
@@ -80,7 +80,7 @@
       });
 
       if ('serviceWorker' in navigator) {
-        addEventListener('load', () => navigator.serviceWorker.register('{{ url_for('static', filename='sw.js') }}'));
+        addEventListener('load', () => navigator.serviceWorker.register('{{ asset_url('sw.js') }}'));
       }
     </script>
   </body>
