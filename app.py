@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # Bump this version (or provide ASSET_VERSION env var) when deploying to
 # force browsers to pick up new static assets such as translations.
-ASSET_VERSION = os.getenv("ASSET_VERSION", "202404")
+ASSET_VERSION = os.getenv("ASSET_VERSION", "20240521")
 
 
 def asset_url(path: str) -> str:
