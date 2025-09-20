@@ -5,6 +5,9 @@
   if(!box) return;
 
   const session=window.jsdSession;
+  const sanitizeNickname = session && typeof session.sanitizeNickname==='function'
+    ? session.sanitizeNickname
+    : (value)=> (value || '').trim();
 
   function fallbackRead(k){
     try { return JSON.parse(localStorage.getItem(k)||'null'); }
@@ -79,7 +82,7 @@
   box.append(details);
 
   const actions=el('div','flex flex-wrap gap-2 mt-4 items-center');
-  const nickname=(localStorage.getItem('jsd:nick')||'').trim();
+  const nickname=sanitizeNickname(localStorage.getItem('jsd:nick'));
   const stateBadge=el('div','');
   const baseBadgeClasses='px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200';
 

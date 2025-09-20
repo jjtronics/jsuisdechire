@@ -12,6 +12,10 @@
     <script defer src="{{ asset_url('js/i18n.js') }}"></script>
     <script defer src="{{ asset_url('js/core.js') }}"></script>
     <script defer src="{{ asset_url('js/session.js') }}"></script>
+    <script>
+      window.jsdConfig = window.jsdConfig || {};
+      window.jsdConfig.settings = {{ app_settings | tojson | safe }};
+    </script>
     <style>
   * { -webkit-tap-highlight-color: transparent; }
   body { -webkit-user-select: none; user-select:none; }

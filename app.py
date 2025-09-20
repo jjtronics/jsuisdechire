@@ -19,6 +19,11 @@ def asset_url(path: str) -> str:
 def inject_asset_helpers():
     return {"asset_url": asset_url, "asset_version": ASSET_VERSION}
 
+
+@app.context_processor
+def inject_app_settings():
+    return {"app_settings": get_settings()}
+
 DEFAULT_SETTINGS = {
     "rxn_trials": 5,
     "rxn_wait_min_ms": 1000,
@@ -41,6 +46,7 @@ DEFAULT_SETTINGS = {
     "bal_low_good": 0.02,
     "bal_high_bad": 0.10,
     "bal_lin_rel_tol": 0.15,
+    "nickname_max_length": 32,
 }
 
 ALLOWED_SETTING_KEYS = frozenset(DEFAULT_SETTINGS.keys())
@@ -80,11 +86,15 @@ def init_db():
     ensure_schema(db)
 
 def get_settings():
+    if hasattr(g, "settings_cache"):
+        return g.settings_cache
+
     db = get_db()
     rows = db.execute("SELECT key, value FROM settings").fetchall()
     store = { r["key"]: json.loads(r["value"]) for r in rows }
     merged = DEFAULT_SETTINGS.copy()
     merged.update(store)
+    g.settings_cache = merged
     return merged
 
 def set_settings(newvals: dict):
@@ -92,6 +102,8 @@ def set_settings(newvals: dict):
     for k, v in newvals.items():
         db.execute("INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (k, json.dumps(v)))
     db.commit()
+    if hasattr(g, "settings_cache"):
+        del g.settings_cache
 
 @app.template_filter('datetime')
 def _fmt_ts(ts):
@@ -197,7 +209,18 @@ def api_admin_delete_scores():
 def submit():
     data = request.get_json(silent=True) or {}
     total = int(data.get("total_score", 0))
-    nickname = (data.get("nickname") or "").strip()[:32] or None
+    settings = get_settings()
+    nickname = (data.get("nickname") or "").strip()
+    max_len_raw = settings.get("nickname_max_length")
+    try:
+        max_len = int(max_len_raw)
+    except (TypeError, ValueError):
+        max_len = 0
+    if max_len > 512:
+        max_len = 512
+    if max_len > 0:
+        nickname = nickname[:max_len]
+    nickname = nickname or None
     fields = {
         "rxn_score": data.get("rxn", {}).get("score"),
         "rxn_median": data.get("rxn", {}).get("median"),
