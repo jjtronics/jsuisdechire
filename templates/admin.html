@@ -26,6 +26,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const t = window.i18n || ((key) => key);
   const GROUPS = [
     {
+      id: 'reaction',
+      title: 'admin.groups.reaction.title',
+      description: 'admin.groups.reaction.description',
+      fields: [
+        {k:'rxn_trials', label:'admin.fields.reaction.trials', helper:'admin.helpers.reaction.trials', type:'number', step:'1', min:'1', max:'20'},
+        {k:'rxn_wait_min_ms', label:'admin.fields.reaction.wait_min', helper:'admin.helpers.reaction.wait_min', type:'number', step:'50', min:'0'},
+        {k:'rxn_wait_range_ms', label:'admin.fields.reaction.wait_range', helper:'admin.helpers.reaction.wait_range', type:'number', step:'50', min:'0'},
+        {k:'rxn_false_penalty_min_ms', label:'admin.fields.reaction.false_min', helper:'admin.helpers.reaction.false_min', type:'number', step:'50', min:'0'},
+        {k:'rxn_false_penalty_range_ms', label:'admin.fields.reaction.false_range', helper:'admin.helpers.reaction.false_range', type:'number', step:'50', min:'0'},
+        {k:'rxn_median_best_ms', label:'admin.fields.reaction.best', helper:'admin.helpers.reaction.best', type:'number', step:'10', min:'50'},
+        {k:'rxn_median_worst_ms', label:'admin.fields.reaction.worst', helper:'admin.helpers.reaction.worst', type:'number', step:'10', min:'100'}
+      ]
+    },
+    {
+      id: 'stroop',
+      title: 'admin.groups.stroop.title',
+      description: 'admin.groups.stroop.description',
+      fields: [
+        {k:'str_rounds', label:'admin.fields.stroop.rounds', helper:'admin.helpers.stroop.rounds', type:'number', step:'1', min:'1', max:'30'},
+        {k:'str_acc_weight', label:'admin.fields.stroop.acc_weight', helper:'admin.helpers.stroop.acc_weight', type:'number', step:'0.05', min:'0', max:'1'},
+        {k:'str_speed_weight', label:'admin.fields.stroop.speed_weight', helper:'admin.helpers.stroop.speed_weight', type:'number', step:'0.05', min:'0', max:'1'},
+        {k:'str_speed_best_ms', label:'admin.fields.stroop.best', helper:'admin.helpers.stroop.best', type:'number', step:'10', min:'100'},
+        {k:'str_speed_worst_ms', label:'admin.fields.stroop.worst', helper:'admin.helpers.stroop.worst', type:'number', step:'10', min:'200'}
+      ]
+    },
+    {
       id: 'pursuit',
       title: 'admin.groups.pursuit.title',
       description: 'admin.groups.pursuit.description',
