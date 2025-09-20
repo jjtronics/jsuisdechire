@@ -2,6 +2,9 @@
   const t=(window.i18n)||((key)=>key);
   const el=(tag,cls,html)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e;};
   const box=document.getElementById("t2");
+  if(!box){return;}
+  const startSection=document.getElementById("t2-start-section");
+  const startButton=document.getElementById("t2-start-button");
   const CSS_COLORS=[
     {key:"red",css:"red"},
     {key:"blue",css:"blue"},
@@ -51,7 +54,7 @@
     return Math.round(accW*accScore+speedW*meanScore);
   }
 
-  let index=0, startedAt=null, rec=[], finished=false, lock=false;
+  let index=0, startedAt=null, rec=[], finished=false, lock=false, hasStarted=false;
 
   function nextItem(){
     const wIdx=Math.floor(Math.random()*CSS_COLORS.length);
@@ -85,6 +88,7 @@
 
   function choose(cssColor){
     if (finished || lock) return;
+    if(!hasStarted){return;}
     if (index >= cfg.rounds){ endTest(); return; }
     lock = true;
     const dt=startedAt?performance.now()-startedAt:null;
@@ -96,6 +100,22 @@
     requestAnimationFrame(()=>{ nextItem(); lock=false; });
   }
 
+  function startTest(){
+    if(hasStarted){return;}
+    hasStarted=true;
+    if(startSection){startSection.classList.add("hidden");}
+    box.classList.remove("hidden");
+    grid.style.pointerEvents="";
+    grid.querySelectorAll("button").forEach(b=>{b.disabled=false;});
+    index=0;
+    startedAt=null;
+    rec=[];
+    finished=false;
+    lock=false;
+    info.textContent="0/"+cfg.rounds;
+    requestAnimationFrame(()=>{nextItem();});
+  }
+
   CSS_COLORS.forEach((color)=>{
     const b=el("button","p-3 rounded-xl border bg-white hover:bg-gray-50 active:scale-95 dark:bg-slate-800 dark:border-slate-700");
     b.innerHTML='<span class="font-semibold" style="color:'+color.css+'">'+t(`colors.${color.key}`)+'</span>';
@@ -104,6 +124,10 @@
   });
 
   info.textContent="0/"+cfg.rounds;
-  nextItem();
+  if(startButton){
+    startButton.addEventListener("click", startTest);
+  }else{
+    startTest();
+  }
   load();
 })();
