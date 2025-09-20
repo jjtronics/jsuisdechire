@@ -1,10 +1,23 @@
 
-from flask import Flask, render_template, request, jsonify, g
+from flask import Flask, render_template, request, jsonify, g, url_for
 import sqlite3, os, time, datetime, json
 
 APP_NAME = "jsuisdechire"
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.sqlite")
 app = Flask(__name__)
+
+# Bump this version (or provide ASSET_VERSION env var) when deploying to
+# force browsers to pick up new static assets such as translations.
+ASSET_VERSION = os.getenv("ASSET_VERSION", "202404")
+
+
+def asset_url(path: str) -> str:
+    return url_for("static", filename=path, v=ASSET_VERSION)
+
+
+@app.context_processor
+def inject_asset_helpers():
+    return {"asset_url": asset_url, "asset_version": ASSET_VERSION}
 
 DEFAULT_SETTINGS = {
     "prs_timeSpeed": 0.75,
