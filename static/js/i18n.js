@@ -4,6 +4,7 @@
     fr: {
       "nav.theme_toggle": "Basculer le thème",
       "nav.leaderboard": "Top",
+      "footer.tagline": "Reste en vibe, hydrate-toi et si ça tourne trop, appelle un taxi.",
       "footer.disclaimer": "Ce n'est pas un dispositif médical. Si tu as bu : ne conduis jamais. · Dev par JJC",
 
       "home.title": "Un check fun & sérieux pour savoir si tu dois poser le verre",
@@ -130,6 +131,7 @@
     en: {
       "nav.theme_toggle": "Toggle theme",
       "nav.leaderboard": "Leaderboard",
+      "footer.tagline": "Stay in the vibe, hydrate, and if things start spinning, call a cab.",
       "footer.disclaimer": "This is not a medical device. If you drank: never drive. · Dev by JJC",
 
       "home.title": "A fun & serious check to know if you should put the glass down",
@@ -256,6 +258,7 @@
     it: {
       "nav.theme_toggle": "Cambia tema",
       "nav.leaderboard": "Classifica",
+      "footer.tagline": "Resta nel mood, idratati e se tutto gira troppo, chiama un taxi.",
       "footer.disclaimer": "Non è un dispositivo medico. Se hai bevuto: non guidare mai. · Dev da JJC",
 
       "home.title": "Un check divertente e serio per capire se devi posare il bicchiere",
