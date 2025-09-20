@@ -34,6 +34,31 @@
   th[data-sort-key] .sort-button:hover .sort-indicator {
     opacity: 0.9;
   }
+
+  [data-podium] .text-xs {
+    font-size: 0.45rem;
+    line-height: 0.6rem;
+  }
+
+  [data-podium] .text-sm {
+    font-size: 0.525rem;
+    line-height: 0.75rem;
+  }
+
+  [data-podium] .text-lg {
+    font-size: 0.675rem;
+    line-height: 1.05rem;
+  }
+
+  [data-podium] .text-2xl {
+    font-size: 0.9rem;
+    line-height: 1.2rem;
+  }
+
+  [data-podium] .text-3xl {
+    font-size: 1.125rem;
+    line-height: 1.35rem;
+  }
 </style>
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
   <h1 class="text-2xl font-black mb-4" data-i18n="leaderboard.heading">Classement</h1>
@@ -41,7 +66,7 @@
   {% set second = rows[1] if rows|length > 1 else None %}
   {% set third = rows[2] if rows|length > 2 else None %}
   {% if first or second or third %}
-  <div class="mb-10">
+  <div class="mb-10" data-podium>
     <div class="mx-auto flex max-w-5xl flex-row flex-nowrap items-stretch justify-center gap-2 text-center sm:gap-6 sm:items-end sm:justify-center">
       {% if second %}
       <div class="order-2 flex basis-0 flex-1 min-w-0 flex-col items-center gap-4 sm:order-1 sm:min-w-[14rem] sm:w-56 sm:flex-none sm:pt-10">
