@@ -150,6 +150,49 @@ def api_admin_clear():
     db.commit()
     return jsonify({"ok": True})
 
+@app.get("/api/admin/scores")
+def api_admin_scores():
+    rows = get_db().execute("SELECT * FROM scores ORDER BY created_at DESC").fetchall()
+    payload = []
+    for row in rows:
+        payload.append({
+            "id": row["id"],
+            "created_at": row["created_at"],
+            "nickname": row["nickname"],
+            "total_score": row["total_score"],
+            "rxn_score": row["rxn_score"],
+            "rxn_median": row["rxn_median"],
+            "rxn_mean": row["rxn_mean"],
+            "str_score": row["str_score"],
+            "str_accuracy": row["str_accuracy"],
+            "str_mean": row["str_mean"],
+            "prs_score": row["prs_score"],
+            "prs_error": row["prs_error"],
+            "time_to_catch_ms": row["time_to_catch_ms"],
+            "bal_score": row["bal_score"],
+            "bal_std": row["bal_std"],
+        })
+    return jsonify(payload)
+
+
+@app.post("/api/admin/scores/delete")
+def api_admin_delete_scores():
+    data = request.get_json(silent=True) or {}
+    ids = data.get("ids") or []
+    try:
+        ids = [int(i) for i in ids if int(i) > 0]
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "invalid_ids"}), 400
+
+    if not ids:
+        return jsonify({"ok": False, "error": "empty"}), 400
+
+    db = get_db()
+    query = "DELETE FROM scores WHERE id IN (%s)" % ",".join(["?"] * len(ids))
+    db.execute(query, ids)
+    db.commit()
+    return jsonify({"ok": True, "deleted": ids})
+
 @app.post("/api/submit")
 def submit():
     data = request.get_json(silent=True) or {}

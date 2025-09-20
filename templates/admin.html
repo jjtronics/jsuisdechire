@@ -16,7 +16,27 @@
     <div class="flex flex-wrap items-center gap-3">
       <button id="saveBtn" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="admin.save_button">Enregistrer</button>
       <button id="clearBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" data-i18n="admin.clear_button">Vider les scores</button>
+      <button id="editScoresBtn" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" data-open-label="Éditer les scores" data-close-label="Fermer l'éditeur">Éditer les scores</button>
       <p id="msg" class="text-sm text-gray-500"></p>
+    </div>
+  </section>
+
+  <section id="scoreEditor" class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-4 hidden">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Gestion des scores</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300">Filtre, trie et sélectionne les entrées à supprimer.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="deleteSelectedBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30" disabled>Supprimer la sélection</button>
+        <p id="scoreMsg" class="text-sm text-gray-500"></p>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table id="scoreTable" class="min-w-full text-sm text-left text-slate-700 dark:text-slate-200">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
     </div>
   </section>
 </div>
@@ -154,6 +174,349 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('saveBtn').addEventListener('click', save);
   document.getElementById('clearBtn').addEventListener('click', clearScores);
   load();
+
+  const scoreSection = document.getElementById('scoreEditor');
+  const scoreTable = document.getElementById('scoreTable');
+  const scoreHead = scoreTable ? scoreTable.querySelector('thead') : null;
+  const scoreBody = scoreTable ? scoreTable.querySelector('tbody') : null;
+  const editBtn = document.getElementById('editScoresBtn');
+  const deleteBtn = document.getElementById('deleteSelectedBtn');
+  const scoreMsg = document.getElementById('scoreMsg');
+
+  if (scoreSection && scoreTable && scoreHead && scoreBody && editBtn && deleteBtn && scoreMsg) {
+    const SCORE_COLUMNS = [
+      {key:'created_at', label:'admin.scores.created_at', type:'datetime'},
+      {key:'nickname', label:'admin.scores.nickname', type:'text'},
+      {key:'total_score', label:'admin.scores.total_score', type:'number', decimals:0},
+      {key:'rxn_score', label:'admin.scores.rxn_score', type:'number', decimals:0},
+      {key:'rxn_median', label:'admin.scores.rxn_median', type:'number', decimals:1},
+      {key:'rxn_mean', label:'admin.scores.rxn_mean', type:'number', decimals:1},
+      {key:'str_score', label:'admin.scores.str_score', type:'number', decimals:0},
+      {key:'str_accuracy', label:'admin.scores.str_accuracy', type:'number', decimals:2},
+      {key:'str_mean', label:'admin.scores.str_mean', type:'number', decimals:1},
+      {key:'prs_score', label:'admin.scores.prs_score', type:'number', decimals:0},
+      {key:'prs_error', label:'admin.scores.prs_error', type:'number', decimals:2},
+      {key:'time_to_catch_ms', label:'admin.scores.time_to_catch_ms', type:'number', decimals:0},
+      {key:'bal_score', label:'admin.scores.bal_score', type:'number', decimals:0},
+      {key:'bal_std', label:'admin.scores.bal_std', type:'number', decimals:3}
+    ];
+
+    const scoreState = {
+      rows: [],
+      filtered: [],
+      sortKey: 'created_at',
+      sortDir: 'desc',
+      filters: {},
+      selected: new Set(),
+      loaded: false,
+      loading: false
+    };
+
+    let masterCheckbox = null;
+    const indicatorMap = new Map();
+
+    function translateOrFallback(key, fallback) {
+      const value = t(key);
+      return value === key ? fallback : value;
+    }
+
+    function getColumn(key) {
+      return SCORE_COLUMNS.find(col => col.key === key) || SCORE_COLUMNS[0];
+    }
+
+    function formatValue(col, row) {
+      const value = row[col.key];
+      if (value === null || value === undefined) return '';
+      if (col.type === 'datetime') {
+        const ms = Number(value) * 1000;
+        if (!Number.isFinite(ms)) return String(value);
+        const date = new Date(ms);
+        if (isNaN(date.getTime())) return String(value);
+        return date.toLocaleString();
+      }
+      if (col.type === 'number') {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return '';
+        if (col.decimals !== undefined) return num.toFixed(col.decimals);
+        return String(num);
+      }
+      return String(value);
+    }
+
+    function compareValues(a, b, col) {
+      const av = a[col.key];
+      const bv = b[col.key];
+      const aNull = av === null || av === undefined;
+      const bNull = bv === null || bv === undefined;
+      if (aNull && bNull) return 0;
+      if (aNull) return -1;
+      if (bNull) return 1;
+      if (col.type === 'number' || col.type === 'datetime') {
+        const na = Number(av);
+        const nb = Number(bv);
+        if (Number.isFinite(na) && Number.isFinite(nb)) {
+          return na - nb;
+        }
+      }
+      const sa = String(av).toLowerCase();
+      const sb = String(bv).toLowerCase();
+      return sa.localeCompare(sb);
+    }
+
+    function applyFilters() {
+      let rows = scoreState.rows.slice();
+      Object.entries(scoreState.filters).forEach(([key, value]) => {
+        const term = (value || '').toString().trim().toLowerCase();
+        if (!term) return;
+        rows = rows.filter(row => {
+          const cell = row[key];
+          if (cell === null || cell === undefined) return false;
+          return String(cell).toLowerCase().includes(term);
+        });
+      });
+      const column = getColumn(scoreState.sortKey);
+      rows.sort((a, b) => {
+        const res = compareValues(a, b, column);
+        return scoreState.sortDir === 'desc' ? -res : res;
+      });
+      scoreState.filtered = rows;
+      return rows;
+    }
+
+    function updateSortIndicators() {
+      indicatorMap.forEach((indicator, key) => {
+        if (!indicator) return;
+        if (scoreState.sortKey === key) {
+          indicator.textContent = scoreState.sortDir === 'asc' ? '▲' : '▼';
+          indicator.style.opacity = '1';
+        } else {
+          indicator.textContent = '';
+          indicator.style.opacity = '0.4';
+        }
+      });
+    }
+
+    function updateDeleteButton() {
+      if (!deleteBtn) return;
+      const base = deleteBtn.dataset.baseLabel || deleteBtn.textContent.trim();
+      const count = scoreState.selected.size;
+      deleteBtn.textContent = count ? `${base} (${count})` : base;
+      deleteBtn.disabled = count === 0;
+    }
+
+    function syncMasterCheckbox() {
+      if (!masterCheckbox) return;
+      const rows = scoreState.filtered || [];
+      if (!rows.length) {
+        masterCheckbox.checked = false;
+        masterCheckbox.indeterminate = false;
+        return;
+      }
+      let selectedCount = 0;
+      rows.forEach(row => {
+        if (scoreState.selected.has(Number(row.id))) selectedCount += 1;
+      });
+      masterCheckbox.checked = selectedCount === rows.length;
+      masterCheckbox.indeterminate = selectedCount > 0 && selectedCount < rows.length;
+    }
+
+    function renderRows() {
+      if (!scoreBody) return;
+      const rows = applyFilters();
+      scoreBody.innerHTML = '';
+      if (!rows.length) {
+        const emptyRow = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = SCORE_COLUMNS.length + 1;
+        td.className = 'px-3 py-6 text-center text-slate-400 dark:text-slate-500';
+        td.textContent = translateOrFallback('admin.scores.empty', 'Aucun score à afficher.');
+        emptyRow.append(td);
+        scoreBody.append(emptyRow);
+      } else {
+        rows.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b border-slate-100 dark:border-slate-800';
+          const selectCell = document.createElement('td');
+          selectCell.className = 'px-2 py-2 align-middle';
+          const id = Number(row.id);
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = scoreState.selected.has(id);
+          cb.addEventListener('change', () => {
+            if (cb.checked) {
+              scoreState.selected.add(id);
+            } else {
+              scoreState.selected.delete(id);
+            }
+            updateDeleteButton();
+            syncMasterCheckbox();
+          });
+          selectCell.append(cb);
+          tr.append(selectCell);
+          SCORE_COLUMNS.forEach(col => {
+            const td = document.createElement('td');
+            td.className = 'px-3 py-2 align-middle whitespace-nowrap';
+            td.textContent = formatValue(col, row);
+            tr.append(td);
+          });
+          scoreBody.append(tr);
+        });
+      }
+      syncMasterCheckbox();
+      updateDeleteButton();
+    }
+
+    function buildScoreTable() {
+      if (!scoreHead) return;
+      scoreHead.innerHTML = '';
+      indicatorMap.clear();
+      masterCheckbox = document.createElement('input');
+      masterCheckbox.type = 'checkbox';
+      masterCheckbox.addEventListener('change', () => {
+        const ids = (scoreState.filtered || []).map(row => Number(row.id));
+        if (masterCheckbox.checked) {
+          ids.forEach(id => scoreState.selected.add(id));
+        } else {
+          ids.forEach(id => scoreState.selected.delete(id));
+        }
+        renderRows();
+      });
+
+      const headerRow = document.createElement('tr');
+      headerRow.className = 'border-b border-slate-200/70 dark:border-slate-700';
+      const selectHeader = document.createElement('th');
+      selectHeader.className = 'px-2 py-2 w-10 align-middle';
+      selectHeader.append(masterCheckbox);
+      headerRow.append(selectHeader);
+
+      SCORE_COLUMNS.forEach(col => {
+        const th = document.createElement('th');
+        th.className = 'px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'flex items-center gap-1 text-slate-700 dark:text-slate-100';
+        const label = document.createElement('span');
+        label.textContent = translateOrFallback(col.label, col.label);
+        const indicator = document.createElement('span');
+        indicator.className = 'text-xs';
+        indicator.style.opacity = '0.4';
+        indicatorMap.set(col.key, indicator);
+        button.addEventListener('click', () => {
+          if (scoreState.sortKey === col.key) {
+            scoreState.sortDir = scoreState.sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            scoreState.sortKey = col.key;
+            scoreState.sortDir = col.type === 'datetime' ? 'desc' : 'asc';
+          }
+          updateSortIndicators();
+          renderRows();
+        });
+        button.append(label, indicator);
+        th.append(button);
+        headerRow.append(th);
+      });
+      scoreHead.append(headerRow);
+
+      const filterRow = document.createElement('tr');
+      filterRow.className = 'border-b border-slate-200/60 dark:border-slate-700/70 bg-slate-50/60 dark:bg-slate-900/40';
+      const emptyFilter = document.createElement('th');
+      emptyFilter.className = 'px-2 py-2';
+      filterRow.append(emptyFilter);
+      const filterPlaceholder = translateOrFallback('admin.scores.filter_placeholder', 'Filtrer');
+      SCORE_COLUMNS.forEach(col => {
+        const th = document.createElement('th');
+        th.className = 'px-3 py-2 align-middle';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = filterPlaceholder;
+        input.className = 'w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-950/40 px-2 py-1 text-sm';
+        input.addEventListener('input', () => {
+          scoreState.filters[col.key] = input.value || '';
+          renderRows();
+        });
+        scoreState.filters[col.key] = '';
+        th.append(input);
+        filterRow.append(th);
+      });
+      scoreHead.append(filterRow);
+      updateSortIndicators();
+    }
+
+    async function loadScores() {
+      if (scoreState.loading) return;
+      scoreState.loading = true;
+      try {
+        scoreMsg.textContent = translateOrFallback('common.loading', 'Chargement...');
+        const res = await fetch('/api/admin/scores');
+        if (!res.ok) throw new Error('http_error');
+        const data = await res.json();
+        scoreState.rows = Array.isArray(data) ? data.map(row => ({...row, id: Number(row.id)})) : [];
+        scoreState.selected.clear();
+        scoreState.filters = {};
+        buildScoreTable();
+        renderRows();
+        scoreState.loaded = true;
+        scoreMsg.textContent = '';
+      } catch (err) {
+        console.error(err);
+        scoreMsg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
+      } finally {
+        scoreState.loading = false;
+      }
+    }
+
+    async function toggleScoreEditor() {
+      const isHidden = scoreSection.classList.contains('hidden');
+      if (isHidden) {
+        scoreSection.classList.remove('hidden');
+        editBtn.textContent = editBtn.dataset.closeLabel || translateOrFallback('admin.scores.close_label', "Fermer l'éditeur");
+        if (!scoreState.loaded) {
+          await loadScores();
+        } else {
+          renderRows();
+        }
+      } else {
+        scoreSection.classList.add('hidden');
+        editBtn.textContent = editBtn.dataset.openLabel || translateOrFallback('admin.scores.open_label', 'Éditer les scores');
+      }
+    }
+
+    async function deleteSelected() {
+      if (!scoreState.selected.size) return;
+      const confirmMessage = editBtn.dataset.confirmLabel || translateOrFallback('admin.scores.confirm_delete', 'Supprimer les scores sélectionnés ?');
+      if (!confirm(confirmMessage)) return;
+      const ids = Array.from(scoreState.selected);
+      try {
+        deleteBtn.disabled = true;
+        const res = await fetch('/api/admin/scores/delete', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ids})
+        });
+        const json = await res.json();
+        if (!res.ok || !json.ok) throw new Error('delete_error');
+        const removed = new Set((json.deleted || ids).map(id => Number(id)));
+        scoreState.rows = scoreState.rows.filter(row => !removed.has(Number(row.id)));
+        removed.forEach(id => scoreState.selected.delete(id));
+        renderRows();
+        scoreMsg.textContent = translateOrFallback('admin.scores.deleted', 'Scores supprimés.');
+      } catch (err) {
+        console.error(err);
+        scoreMsg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
+      } finally {
+        updateDeleteButton();
+      }
+    }
+
+    deleteBtn.dataset.baseLabel = deleteBtn.textContent.trim();
+    updateDeleteButton();
+    deleteBtn.addEventListener('click', deleteSelected);
+    if (editBtn.dataset.openLabel) {
+      editBtn.textContent = editBtn.dataset.openLabel;
+    }
+    editBtn.addEventListener('click', () => { toggleScoreEditor(); });
+  }
 });
 </script>
+
 {% endblock %}
