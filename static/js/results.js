@@ -50,13 +50,24 @@
   const n=el("span","font-black",formatScore(total)); head.append(n,el("span","","/100")); box.append(head);
   const summaryMessage=(()=>{
     if(!Number.isFinite(total)) return null;
-    if(total < 50){
-      return t("results.summary_low");
+    const tiers=[
+      {limit:10, key:"results.summary_tier0"},
+      {limit:20, key:"results.summary_tier1"},
+      {limit:30, key:"results.summary_tier2"},
+      {limit:40, key:"results.summary_tier3"},
+      {limit:50, key:"results.summary_low"},
+      {limit:60, key:"results.summary_tier5"},
+      {limit:70, key:"results.summary_tier6"},
+      {limit:80, key:"results.summary_mid"},
+      {limit:90, key:"results.summary_tier8"},
+      {limit:Infinity, key:"results.summary_high"},
+    ];
+    for(const tier of tiers){
+      if(total < tier.limit){
+        return t(tier.key);
+      }
     }
-    if(total < 75){
-      return t("results.summary_mid");
-    }
-    return t("results.summary_high");
+    return null;
   })();
   if(summaryMessage){
     box.append(el("div","mt-3 text-lg font-semibold text-rose-700 dark:text-rose-300",summaryMessage));
