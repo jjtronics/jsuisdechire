@@ -65,14 +65,15 @@
 
   function anim(now){
     if(finished || !params) return;
-    const elapsed=(now-start)*params.timeSpeed;
+    const elapsedReal = now - start;
+    const motionTime = elapsedReal * params.timeSpeed;
     const rect=area.getBoundingClientRect(); const W=Math.max(240, rect.width), H=Math.max(120, rect.height);
-    const a = baseA + driftA * (elapsed/1000);
-    const b = baseB + driftB * (elapsed/1000);
+    const a = baseA + driftA * (motionTime/1000);
+    const b = baseB + driftB * (motionTime/1000);
     const cx=W/2,cy=H/2,ax=W*0.44,ay=H*0.38;
-    const jitter = params.jitterAmp * noise1D(elapsed/500);
-    const x=cx + ax * Math.sin(a*elapsed*2*Math.PI + phase0) + jitter*24;
-    const y=cy + ay * Math.sin(b*elapsed*2*Math.PI + Math.PI/3) + jitter*16;
+    const jitter = params.jitterAmp * noise1D(motionTime/500);
+    const x=cx + ax * Math.sin(a*motionTime*2*Math.PI + phase0) + jitter*24;
+    const y=cy + ay * Math.sin(b*motionTime*2*Math.PI + Math.PI/3) + jitter*16;
 
     target.style.left=(x-20)+"px"; target.style.top=(y-20)+"px";
     targetPos={x,y};
@@ -81,9 +82,9 @@
     if (samples.length%2===0) samples.push(d);
     if (d<=params.captureRadius){ target.style.borderColor="#065f46"; target.style.background="#d1fae5"; } else { target.style.borderColor="#10b981"; target.style.background="#ecfdf5"; }
 
-    setCountdown(params.duration - elapsed);
+    setCountdown(params.duration - elapsedReal);
 
-    if (elapsed>=params.duration){
+    if (elapsedReal>=params.duration){
       running=false; cancelAnimationFrame(raf); btn.disabled=true; btn.textContent=t("t3.button_done"); finish(); return;
     }
     raf=requestAnimationFrame(anim);
