@@ -121,7 +121,8 @@
   applyState(initialState);
 
   const share=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.share_button'));
-  actions.append(stateBadge, share); box.append(actions);
+  const restart=el('button','px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400',t('results.restart_button'));
+  actions.append(stateBadge, share, restart); box.append(actions);
 
   if(session && typeof session.submitScore==='function'){
     session.submitScore().then(()=>{
@@ -162,5 +163,20 @@
       share.textContent=t("results.share_error");
       setTimeout(reset,2500);
     }
+  });
+
+  restart.addEventListener("click",()=>{
+    restart.disabled=true;
+    try{
+      if(session && typeof session.resetProgress==='function'){
+        session.resetProgress({keepNickname:true});
+      } else {
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted']
+          .forEach(key=>localStorage.removeItem(key));
+      }
+    }catch(err){
+      console.error(err);
+    }
+    window.location.href='/t1';
   });
 })();
