@@ -3,7 +3,7 @@
   const DICT = {
     fr: {
       "nav.theme_toggle": "Basculer le thème",
-      "nav.leaderboard": "Top",
+      "nav.leaderboard": "SCORES",
       "footer.tagline": "Reste en vibe, hydrate-toi et si ça tourne trop, appelle un taxi.",
       "footer.disclaimer": "Ce n'est pas un dispositif médical. Si tu as bu : ne conduis jamais. · Dev par JJC",
 
