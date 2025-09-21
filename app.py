@@ -4,10 +4,12 @@ import sqlite3, os, time, datetime, json, hashlib
 from functools import lru_cache, wraps
 from pathlib import Path
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 APP_NAME = "jsuisdechire"
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.sqlite")
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
 
 @lru_cache
