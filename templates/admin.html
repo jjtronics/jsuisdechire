@@ -3,7 +3,41 @@
 <div class="space-y-6">
   <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-3">
     <h1 class="text-2xl font-black" data-i18n="admin.heading">Admin · Calibration</h1>
-    <p class="text-sm text-gray-600 dark:text-slate-300" data-i18n="admin.subtitle">Protège cette page via ton reverse proxy (HTTP auth). Les paramètres sont stockés en base et appliqués aux tests au chargement.</p>
+    <p class="text-sm text-gray-600 dark:text-slate-300">Cette page est protégée par un couple login/mot de passe. Par défaut : <strong>admin / jsuisdechire</strong>. Utilise le formulaire ci-dessous pour les modifier.</p>
+  </section>
+
+  <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-5">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Identifiants d'accès</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300">Renseigne ton mot de passe actuel pour modifier le login et/ou définir un nouveau mot de passe.</p>
+      </div>
+      <form action="{{ url_for('admin_logout') }}" method="post">
+        <button class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" type="submit">Se déconnecter</button>
+      </form>
+    </div>
+    <form id="credentialsForm" class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <label class="block space-y-2">
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Login</span>
+        <input id="adminLogin" type="text" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="username" required>
+      </label>
+      <label class="block space-y-2">
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Nouveau mot de passe</span>
+        <input id="adminNewPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" placeholder="Laisse vide pour ne pas changer">
+      </label>
+      <label class="block space-y-2">
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Confirmation</span>
+        <input id="adminConfirmPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" placeholder="Répète le mot de passe">
+      </label>
+      <label class="block space-y-2">
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Mot de passe actuel</span>
+        <input id="adminCurrentPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="current-password" required>
+      </label>
+      <div class="md:col-span-2 lg:col-span-4 flex flex-wrap items-center gap-3">
+        <button id="credentialsSubmit" type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700">Mettre à jour</button>
+        <p id="credentialsMsg" class="text-sm text-gray-500"></p>
+      </div>
+    </form>
   </section>
 
   <div id="formWrap" class="space-y-6"></div>
@@ -183,6 +217,77 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('saveBtn').addEventListener('click', save);
   document.getElementById('clearBtn').addEventListener('click', clearScores);
   load();
+
+  const loginInput = document.getElementById('adminLogin');
+  const newPasswordInput = document.getElementById('adminNewPassword');
+  const confirmInput = document.getElementById('adminConfirmPassword');
+  const currentPasswordInput = document.getElementById('adminCurrentPassword');
+  const credentialsMsg = document.getElementById('credentialsMsg');
+  const credentialsForm = document.getElementById('credentialsForm');
+
+  async function loadCredentials(){
+    try {
+      const r = await fetch('/api/admin/credentials', { cache: 'no-store' });
+      if (!r.ok) return;
+      const data = await r.json();
+      loginInput.value = data.login || '';
+    } catch (err) {
+      console.error('credentials', err);
+    }
+  }
+
+  async function updateCredentials(ev){
+    ev.preventDefault();
+    credentialsMsg.textContent = '';
+    const login = (loginInput.value || '').trim();
+    const newPassword = newPasswordInput.value;
+    const confirm = confirmInput.value;
+    const currentPassword = currentPasswordInput.value;
+
+    if (!login){
+      credentialsMsg.textContent = 'Le login est obligatoire.';
+      return;
+    }
+    if (newPassword !== confirm){
+      credentialsMsg.textContent = 'La confirmation du mot de passe ne correspond pas.';
+      return;
+    }
+
+    const payload = {
+      login,
+      current_password: currentPassword,
+    };
+    if (newPassword){
+      payload.new_password = newPassword;
+    }
+
+    const res = await fetch('/api/admin/credentials', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok){
+      const data = await res.json();
+      loginInput.value = data.login || login;
+      newPasswordInput.value = '';
+      confirmInput.value = '';
+      currentPasswordInput.value = '';
+      credentialsMsg.textContent = 'Identifiants mis à jour ✅';
+    } else {
+      const errData = await res.json().catch(()=>({}));
+      if (errData && errData.error === 'invalid_password'){
+        credentialsMsg.textContent = 'Mot de passe actuel incorrect.';
+      } else {
+        credentialsMsg.textContent = 'Impossible de mettre à jour les identifiants.';
+      }
+    }
+  }
+
+  if (credentialsForm){
+    credentialsForm.addEventListener('submit', updateCredentials);
+    loadCredentials();
+  }
 
   const scoreSection = document.getElementById('scoreEditor');
   const scoreTable = document.getElementById('scoreTable');

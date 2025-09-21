@@ -1,12 +1,14 @@
 
-from flask import Flask, render_template, request, jsonify, g, url_for
+from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect
 import sqlite3, os, time, datetime, json, hashlib
-from functools import lru_cache
+from functools import lru_cache, wraps
 from pathlib import Path
+from werkzeug.security import generate_password_hash, check_password_hash
 
 APP_NAME = "jsuisdechire"
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.sqlite")
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
 
 @lru_cache
 def get_asset_version() -> str:
@@ -74,6 +76,10 @@ DEFAULT_SETTINGS = {
 
 ALLOWED_SETTING_KEYS = frozenset(DEFAULT_SETTINGS.keys())
 
+DEFAULT_ADMIN_LOGIN = "admin"
+DEFAULT_ADMIN_PASSWORD_HASH = generate_password_hash("jsuisdechire")
+ADMIN_SESSION_KEY = "admin_authenticated"
+
 def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
@@ -113,7 +119,10 @@ def get_settings():
         return g.settings_cache
 
     db = get_db()
-    rows = db.execute("SELECT key, value FROM settings").fetchall()
+    rows = db.execute(
+        "SELECT key, value FROM settings WHERE key NOT IN (?, ?)",
+        ("admin_login", "admin_password_hash"),
+    ).fetchall()
     store = { r["key"]: json.loads(r["value"]) for r in rows }
     merged = DEFAULT_SETTINGS.copy()
     merged.update(store)
@@ -127,6 +136,67 @@ def set_settings(newvals: dict):
     db.commit()
     if hasattr(g, "settings_cache"):
         del g.settings_cache
+
+
+def get_admin_credentials():
+    if hasattr(g, "admin_credentials"):
+        return g.admin_credentials
+
+    db = get_db()
+    rows = db.execute(
+        "SELECT key, value FROM settings WHERE key IN (?, ?)",
+        ("admin_login", "admin_password_hash"),
+    ).fetchall()
+    login = DEFAULT_ADMIN_LOGIN
+    password_hash = DEFAULT_ADMIN_PASSWORD_HASH
+    for row in rows:
+        if row["key"] == "admin_login":
+            try:
+                login = json.loads(row["value"])
+            except json.JSONDecodeError:
+                login = DEFAULT_ADMIN_LOGIN
+        elif row["key"] == "admin_password_hash":
+            try:
+                password_hash = json.loads(row["value"])
+            except json.JSONDecodeError:
+                password_hash = DEFAULT_ADMIN_PASSWORD_HASH
+
+    g.admin_credentials = {"login": login, "password_hash": password_hash}
+    return g.admin_credentials
+
+
+def set_admin_credentials(*, login=None, password_hash=None):
+    updates = {}
+    if login is not None:
+        updates["admin_login"] = login
+    if password_hash is not None:
+        updates["admin_password_hash"] = password_hash
+    if updates:
+        db = get_db()
+        for key, value in updates.items():
+            db.execute(
+                "INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (key, json.dumps(value)),
+            )
+        db.commit()
+    if hasattr(g, "admin_credentials"):
+        del g.admin_credentials
+
+
+def is_admin_authenticated() -> bool:
+    return session.get(ADMIN_SESSION_KEY) is True
+
+
+def require_admin(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not is_admin_authenticated():
+            if request.path.startswith("/api/"):
+                return jsonify({"ok": False, "error": "auth_required"}), 401
+            return redirect(url_for("admin_login", next=request.url))
+        return view(*args, **kwargs)
+
+    return wrapped
 
 @app.template_filter('datetime')
 def _fmt_ts(ts):
@@ -172,13 +242,48 @@ def api_settings():
     return jsonify(get_settings())
 
 @app.post("/api/admin/settings")
+@require_admin
 def api_admin_settings():
     data = request.get_json(silent=True) or {}
     filtered = {k: data[k] for k in data if k in ALLOWED_SETTING_KEYS}
     set_settings(filtered)
     return jsonify({"ok": True, "saved": filtered})
 
+
+@app.get("/api/admin/credentials")
+@require_admin
+def api_admin_credentials():
+    creds = get_admin_credentials()
+    return jsonify({"login": creds["login"]})
+
+
+@app.post("/api/admin/credentials")
+@require_admin
+def api_admin_credentials_update():
+    data = request.get_json(silent=True) or {}
+    creds = get_admin_credentials()
+    current_password = data.get("current_password") or ""
+    if not check_password_hash(creds["password_hash"], current_password):
+        return jsonify({"ok": False, "error": "invalid_password"}), 400
+
+    new_login = (data.get("login") or "").strip()
+    new_password = data.get("new_password") or ""
+    updates = {}
+    if new_login:
+        updates["login"] = new_login
+    if new_password:
+        updates["password_hash"] = generate_password_hash(new_password)
+
+    if not updates:
+        return jsonify({"ok": False, "error": "no_changes"}), 400
+
+    set_admin_credentials(**updates)
+    if "password_hash" in updates:
+        session[ADMIN_SESSION_KEY] = True
+    return jsonify({"ok": True, "login": updates.get("login", creds["login"])})
+
 @app.post("/api/admin/clear")
+@require_admin
 def api_admin_clear():
     db = get_db()
     db.execute("DELETE FROM scores")
@@ -186,6 +291,7 @@ def api_admin_clear():
     return jsonify({"ok": True})
 
 @app.get("/api/admin/scores")
+@require_admin
 def api_admin_scores():
     rows = get_db().execute("SELECT * FROM scores ORDER BY created_at DESC").fetchall()
     payload = []
@@ -211,6 +317,7 @@ def api_admin_scores():
 
 
 @app.post("/api/admin/scores/delete")
+@require_admin
 def api_admin_delete_scores():
     data = request.get_json(silent=True) or {}
     ids = data.get("ids") or []
@@ -275,8 +382,35 @@ def health():
     return jsonify({"ok": True, "ts": int(time.time())})
 
 @app.route("/admin")
+@require_admin
 def admin():
     return render_template("admin.html", app_name=APP_NAME)
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if is_admin_authenticated():
+        return redirect(url_for("admin"))
+
+    error = None
+    if request.method == "POST":
+        login = (request.form.get("login") or "").strip()
+        password = request.form.get("password") or ""
+        creds = get_admin_credentials()
+        if login == creds["login"] and check_password_hash(creds["password_hash"], password):
+            session[ADMIN_SESSION_KEY] = True
+            next_url = request.args.get("next")
+            return redirect(next_url or url_for("admin"))
+        error = "Identifiants invalides"
+
+    return render_template("admin_login.html", app_name=APP_NAME, error=error)
+
+
+@app.post("/admin/logout")
+@require_admin
+def admin_logout():
+    session.pop(ADMIN_SESSION_KEY, None)
+    return redirect(url_for("admin_login"))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9001, debug=True)
