@@ -8,7 +8,18 @@
   area.append(hint);
   const target=el("div","absolute w-10 h-10 rounded-full border-2"); target.style.borderColor="#10b981"; target.style.background="#ecfdf5"; area.append(target);
   const btnWrap=el("div","flex items-center justify-center mt-3",""); const btn=el("button","px-4 py-2 rounded-xl bg-black text-white",t("t3.button_start")); btnWrap.append(btn);
-  box.append(area,btnWrap);
+  const countdownWrap=el("div","mt-2 flex justify-center","");
+  const countdownDisplay=el("div","flex items-center gap-2 px-5 py-2 rounded-xl border-2 border-black/80 bg-gradient-to-r from-rose-600 via-amber-500 to-yellow-400 text-white font-mono text-lg tracking-widest shadow-lg",'<span aria-hidden="true">💣</span><span class="countdown-value">--.-</span><span class="sr-only">seconds</span>');
+  countdownDisplay.setAttribute('role','status');
+  countdownDisplay.setAttribute('aria-live','polite');
+  countdownWrap.append(countdownDisplay);
+  const countdownValue=countdownDisplay.querySelector('.countdown-value');
+  function setCountdown(ms){
+    if(!countdownValue) return;
+    const seconds=Math.max(0, ms)/1000;
+    countdownValue.textContent=`${seconds.toFixed(1)}s`;
+  }
+  box.append(area,btnWrap,countdownWrap);
 
   const rand=(a,b)=>a + Math.random()*(b-a);
   async function fetchSettings(){
@@ -70,6 +81,8 @@
     if (samples.length%2===0) samples.push(d);
     if (d<=params.captureRadius){ target.style.borderColor="#065f46"; target.style.background="#d1fae5"; } else { target.style.borderColor="#10b981"; target.style.background="#ecfdf5"; }
 
+    setCountdown(params.duration - elapsed);
+
     if (elapsed>=params.duration){
       running=false; cancelAnimationFrame(raf); btn.disabled=true; btn.textContent=t("t3.button_done"); finish(); return;
     }
@@ -82,6 +95,7 @@
     const settings = await fetchSettings();
     params = withDefaults(settings||{});
     samples=[]; misses=0; btn.textContent=t("t3.button_running");
+    setCountdown(params.duration||0);
     start=performance.now(); raf=requestAnimationFrame(anim);
   }
 
@@ -103,6 +117,7 @@
     localStorage.setItem("jsd:done:t3","1");
     document.getElementById("next").classList.remove("opacity-50","pointer-events-none");
     setTimeout(()=>location.href="/t4", 600);
+    setCountdown(0);
     detach();
   }
 
