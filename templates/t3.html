@@ -2,7 +2,7 @@
 {% block content %}
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-4">
   <h2 class="text-xl font-bold" data-i18n="t3.heading">Test 3 · Poursuite</h2>
-  <p class="px-4 py-3 rounded-xl bg-rose-100/80 border border-rose-200/60 text-rose-900 text-base font-semibold leading-relaxed shadow-sm dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-100" data-i18n="t3.notice" data-max-attempts="{{ app_settings.prs_max_attempts|int }}" data-i18n-param-max_attempts="{{ app_settings.prs_max_attempts|int }}">Clique sur Démarrer : le cercle part en cavale. Poursuis-le avec ta souris (ou ton doigt) et clique dessus avant qu'il ne s'échappe trop longtemps. Tu n'as droit qu'à {{ app_settings.prs_max_attempts|int }} essais.</p>
+  <p class="px-4 py-3 rounded-xl bg-rose-100/80 border border-rose-200/60 text-rose-900 text-base font-semibold leading-relaxed shadow-sm dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-100" data-i18n="t3.notice" data-max-attempts="{{ app_settings.prs_max_attempts|int }}" data-i18n-param-max_attempts="{{ app_settings.prs_max_attempts|int }}">Clique sur Démarrer : le cercle se met à bouger dans tous les sens, tu dois cliquer le plus vite possible dessus pour stopper sa progression. Attention tu n'as que {{ app_settings.prs_max_attempts|int }} essais.</p>
   <div id="t3"></div>
   <div class="flex justify-between">
     <a href="/t2" class="px-4 py-2 rounded-xl border" data-i18n="common.back">Retour</a>
