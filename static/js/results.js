@@ -40,6 +40,8 @@
     total=fallbackCompute({rxn,str,prs,bal});
   }
 
+  const normalizedTotal=Number.isFinite(total)?Math.trunc(total):null;
+
   const formatScore=(value)=>{
     const num=Number(value);
     if(!Number.isFinite(num)){ return "—"; }
@@ -71,6 +73,26 @@
   })();
   if(summaryMessage){
     box.append(el("div","mt-3 text-lg font-semibold text-rose-700 dark:text-rose-300",summaryMessage));
+  }
+
+  const placementBox=el("div","mt-3 text-lg font-semibold text-rose-700 dark:text-rose-300");
+  placementBox.style.display='none';
+  box.append(placementBox);
+
+  function matchesCurrentTotal(info){
+    if(!info || normalizedTotal==null) return false;
+    const storedTotal=Number(info.total_score);
+    return Number.isFinite(storedTotal) && storedTotal===normalizedTotal;
+  }
+
+  function showPlacement(info){
+    if(!info) return;
+    const rankNum=Number(info.rank);
+    const totalNum=Number(info.total_entries ?? info.total);
+    if(!Number.isFinite(rankNum) || rankNum<=0) return;
+    if(!Number.isFinite(totalNum) || totalNum<=0) return;
+    placementBox.textContent=t('results.rank_message',{rank:rankNum,total:totalNum});
+    placementBox.style.display='block';
   }
 
   const details=el("div","mt-3 grid gap-2 text-sm");
@@ -120,13 +142,36 @@
   const initialState = session && typeof session.submissionState==='function' ? session.submissionState() : null;
   applyState(initialState);
 
+  if(initialState==='1' && session && typeof session.getLastSubmissionInfo==='function'){
+    const cachedInfo=session.getLastSubmissionInfo();
+    if(matchesCurrentTotal(cachedInfo)){
+      showPlacement(cachedInfo);
+    }
+  }
+
   const share=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.share_button'));
   const restart=el('button','px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400',t('results.restart_button'));
   const leaderboard=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.scores_button'));
   actions.append(stateBadge, share, restart, leaderboard); box.append(actions);
 
   if(session && typeof session.submitScore==='function'){
-    session.submitScore().then(()=>{
+    session.submitScore().then((result)=>{
+      if(result){
+        if(result.status==='ok' && matchesCurrentTotal(result.saved)){
+          showPlacement(result.saved);
+        } else if(result.status==='already' && matchesCurrentTotal(result.cached)){
+          showPlacement(result.cached);
+        } else if(result.status==='ok' && result.response){
+          const fallbackInfo={
+            rank:result.response.rank,
+            total_entries:result.response.total_entries,
+            total_score:normalizedTotal
+          };
+          if(matchesCurrentTotal(fallbackInfo)){
+            showPlacement(fallbackInfo);
+          }
+        }
+      }
       applyState(session.submissionState ? session.submissionState() : '1');
     }).catch(()=>{
       applyState('0');
@@ -172,7 +217,7 @@
       if(session && typeof session.resetProgress==='function'){
         session.resetProgress({keepNickname:true});
       } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted']
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted','jsd:last_submission']
           .forEach(key=>localStorage.removeItem(key));
       }
     }catch(err){

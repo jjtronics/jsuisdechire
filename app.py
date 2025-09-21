@@ -236,7 +236,9 @@ def results_page():
 
 @app.route("/leaderboard")
 def leaderboard():
-    rows = get_db().execute("SELECT * FROM scores ORDER BY total_score DESC, created_at DESC LIMIT 50").fetchall()
+    rows = get_db().execute(
+        "SELECT * FROM scores ORDER BY total_score DESC, created_at DESC, id DESC LIMIT 50"
+    ).fetchall()
     return render_template("leaderboard.html", rows=rows, app_name=APP_NAME)
 
 @app.get("/api/settings")
@@ -368,16 +370,34 @@ def submit():
     }
     db = get_db()
     ensure_schema(db)
-    db.execute(
+    created_at = int(time.time())
+    cursor = db.execute(
         "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (int(time.time()), nickname, total,
+        (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
          fields['prs_score'], fields['prs_error'], fields['time_to_catch_ms'],
          fields['bal_score'], fields['bal_std'])
     )
     db.commit()
-    return jsonify({"ok": True})
+
+    row_id = cursor.lastrowid or 0
+    ahead = db.execute(
+        """
+        SELECT COUNT(*) FROM scores
+        WHERE total_score > ?
+           OR (total_score = ? AND (created_at > ? OR (created_at = ? AND id > ?)))
+        """,
+        (total, total, created_at, created_at, row_id)
+    ).fetchone()[0]
+    total_entries = db.execute("SELECT COUNT(*) FROM scores").fetchone()[0]
+
+    return jsonify({
+        "ok": True,
+        "id": row_id,
+        "rank": int(ahead) + 1,
+        "total_entries": int(total_entries),
+    })
 
 @app.get("/api/health")
 def health():
