@@ -1,7 +1,7 @@
 <h1 align="center">🍹 jsuisdechire · Mini-jeux pour savoir si tu es (un peu trop) déchiré·e</h1>
 
 <p align="center">
-  <strong><a href="#-francais">🇫🇷 Français</a> · <a href="#-english">🇬🇧 English</a> · <a href="#-espanol">🇪🇸 Español</a></strong>
+  <strong><a href="#-francais">🇫🇷 Français</a> · <a href="#-english">🇬🇧 English</a> · <a href="#-italiano">🇮🇹 Italiano</a></strong>
 </p>
 
 ---
@@ -141,70 +141,70 @@ MIT License (see [LICENSE](LICENSE)).
 
 ---
 
-## 🇪🇸 Español
+## 🇮🇹 Italiano
 
-### 🍸 Visión general
-**jsuisdechire** es una app web con mucha purpurina hecha en Flask para comprobar tu estado después de la fiesta. Supera cuatro mini-juegos (reacción, colores, persecución, equilibrio), consigue un puntaje en modo "pana" y sube en el ranking si te luciste. Es divertido, pero recuerda: **no** es una herramienta médica.
+### 🍸 Panoramica
+**jsuisdechire** è una web app Flask piena di brillantini per verificare come stai dopo l'aperitivo. Affronti quattro mini-giochi (riflessi, colori, inseguimento, equilibrio), ottieni un punteggio in modalità "serata tra amici" e puoi scalare la classifica se fai faville. È tutto molto divertente, ma ricorda: **non** è un dispositivo medico.
 
-### ✨ Funcionalidades
-- **4 pruebas exprés**:
-  - 🟢 *Reacción (t1)* – Toca cuando el cuadro se vuelve verde; la mediana marca la nota.
-  - 🌈 *Colores (t2)* – Desafío tipo Stroop: importa la velocidad y acertar el color real.
-  - 🎯 *Persecución (t3)* – Atrapa el objetivo tembloroso; guardamos precisión o tiempo.
-  - ⚖️ *Equilibrio (t4)* – Usa los sensores del móvil para medir tu estabilidad.
-- **Pantalla de resultados con estilo**: resumen, detalle por prueba y botón para compartir.
-- **Tabla de posiciones** (`/leaderboard`) que se actualiza sola tras cada intento.
-- **Panel de administración** (`/admin`) para ajustar parámetros o limpiar la base.
-- **Modo semi-offline** gracias al service worker y assets versionados.
-- **Internacionalización dinámica** (`static/js/i18n.js`) + cambio de tema claro/oscuro.
+### ✨ Funzionalità
+- **4 test lampo**:
+  - 🟢 *Reazione (t1)* – Tocca quando il riquadro diventa verde; la tua mediana fa il punteggio.
+  - 🌈 *Colori (t2)* – Sfida in stile Stroop: scegli il colore reale, velocità e precisione contano.
+  - 🎯 *Inseguimento (t3)* – Acchiappa il bersaglio ballerino; registriamo precisione o tempo di cattura.
+  - ⚖️ *Equilibrio (t4)* – Sfrutta i sensori del telefono per misurare la tua stabilità.
+- **Schermata risultati stilosa** con riepilogo, dettagli per test e pulsante di condivisione.
+- **Classifica pubblica** (`/leaderboard`) che si aggiorna automaticamente dopo ogni run.
+- **Pannello admin** (`/admin`) per ritoccare i parametri o pulire il database.
+- **Modalità quasi offline** grazie al service worker e agli asset versionati.
+- **I18n dinamica** (`static/js/i18n.js`) + switch tema chiaro/scuro.
 
-### 🛠️ Stack y arquitectura
+### 🛠️ Stack & architettura
 - **Backend**: Flask + SQLite (`data.sqlite`).
-- **Frontend**: Plantillas Jinja, Tailwind vía CDN y JavaScript puro.
-- **Service worker**: `static/sw.js` para cache liviano.
-- **Gestión de ajustes**: `/api/settings` (leer) y `/api/admin/*` (escritura, scores, limpieza).
-- **Almacenamiento local**: `localStorage` guarda progreso y puntajes antes del envío.
+- **Frontend**: Template Jinja, Tailwind da CDN e JavaScript vanilla.
+- **Service worker**: `static/sw.js` per una cache leggera.
+- **Gestione impostazioni**: `/api/settings` (lettura) e `/api/admin/*` (scrittura, punteggi, pulizia).
+- **Storage locale**: `localStorage` conserva stato della sessione e punteggi prima dell'invio.
 
 ```
 📁 jsuisdechire/
-├── app.py              # Rutas Flask, API, panel admin y lógica de puntajes
-├── templates/          # Páginas (home, t1..t4, ranking, admin, ...)
-├── static/js/          # Lógica front (tests, sesión, i18n, resultados)
-├── static/icons/       # Íconos PWA + manifest
-└── data.sqlite         # Base generada automáticamente
+├── app.py              # Route Flask, API, admin e pipeline di punteggio
+├── templates/          # Pagine (home, t1..t4, leaderboard, admin, ...)
+├── static/js/          # Logica front (test, sessione, i18n, risultati)
+├── static/icons/       # Icone PWA + manifest
+└── data.sqlite         # Database generato automaticamente
 ```
 
-### 🚀 Puesta en marcha
+### 🚀 Installazione & avvio
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install flask werkzeug
-python app.py  # expone 0.0.0.0:9001
+python app.py  # espone 0.0.0.0:9001
 ```
 
-- Visita `http://localhost:9001`.
-- La base SQLite aparece sola al iniciar.
-- Variables opcionales:
-  - `SECRET_KEY` – clave de sesión Flask.
-  - `ASSET_VERSION` – incrementa para forzar recarga de estáticos.
+- L'app gira su `http://localhost:9001`.
+- Il database SQLite viene creato automaticamente.
+- Variabili opzionali:
+  - `SECRET_KEY` – chiave di sessione Flask.
+  - `ASSET_VERSION` – incrementa per forzare il refresh degli asset statici.
 
-### 👩‍💻 Administración y puntajes
-- Login admin: `/admin`, credenciales iniciales **admin/jsuisdechire**.
-- Desde el panel cambias credenciales, limpias puntajes o ajustas cada mini-juego.
-- `/api/submit` guarda total, detalles por prueba, timestamp y apodo.
+### 👩‍💻 Admin & punteggi
+- Login admin: `/admin` con credenziali iniziali **admin/jsuisdechire**.
+- Dal pannello puoi cambiare credenziali, cancellare i punteggi o calibrare ogni mini-gioco.
+- `/api/submit` salva punteggio totale, dettaglio per test, timestamp e nickname.
 
-### 🎨 Personalización
-- Modifica tiempos y pesos en `DEFAULT_SETTINGS` dentro de `app.py`.
-- Traducciones en `static/js/i18n.js`.
-- Crea variantes copiando los archivos `t3.v###.js` / `t4.v###.js`.
+### 🎨 Personalizzazione rapida
+- Modifica durate, soglie e pesi in `DEFAULT_SETTINGS` dentro `app.py`.
+- Aggiorna le traduzioni in `static/js/i18n.js`.
+- Crea varianti duplicando i file `t3.v###.js` / `t4.v###.js`.
 
-### 🤝 Contribuciones
-1. Haz fork/clone, dale un toque divertido.
-2. Respeta el estilo (JS puro + Tailwind).
-3. Prueba localmente y abre un PR.
+### 🤝 Contributi
+1. Fai fork/clone, mantieni il tono scanzonato.
+2. Rispetta lo stile esistente (JS vanilla + Tailwind).
+3. Testa in locale e apri una PR.
 
-### 📜 Licencia
-Licencia MIT (ver [LICENSE](LICENSE)).
+### 📜 Licenza
+Licenza MIT (vedi [LICENSE](LICENSE)).
 
 ---
 
