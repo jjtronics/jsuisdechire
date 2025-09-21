@@ -26,11 +26,13 @@
     const parsedDuration = parseInt(s.prs_duration_ms, 10);
     const parsedCapture = parseFloat(s.prs_captureRadius);
     const parsedJitter = parseFloat(s.prs_jitterAmp);
+    const parsedMaxAttempts = parseInt(s.prs_max_attempts, 10);
     return {
       timeSpeed: Number.isFinite(parsedTimeSpeed) ? parsedTimeSpeed : 0.75,
       duration: Number.isFinite(parsedDuration) ? parsedDuration : 10000,
       captureRadius: Number.isFinite(parsedCapture) ? parsedCapture : 36,
       jitterAmp: Number.isFinite(parsedJitter) ? parsedJitter : defaultJitter,
+      maxAttempts: Number.isFinite(parsedMaxAttempts) && parsedMaxAttempts > 0 ? parsedMaxAttempts : 10,
     };
   }
 
@@ -43,7 +45,7 @@
   const phase0 = rand(0, Math.PI*2);
 
   let start=0,raf=0,samples=[],cursor={x:0,y:0};
-  let targetPos={x:0,y:0}; let running=false, finished=false; let params=null;
+  let targetPos={x:0,y:0}; let running=false, finished=false; let params=null; let misses=0;
 
   function noise1D(t){ return Math.sin(t*0.9)*0.5 + Math.sin(t*0.27+1.3)*0.3 + Math.sin(t*0.61+2.1)*0.2; }
 
@@ -79,18 +81,25 @@
     running=true; btn.disabled=true; btn.textContent=t("t3.button_loading");
     const settings = await fetchSettings();
     params = withDefaults(settings||{});
-    samples=[]; btn.textContent=t("t3.button_running");
+    samples=[]; misses=0; btn.textContent=t("t3.button_running");
     start=performance.now(); raf=requestAnimationFrame(anim);
   }
 
-  function finish(){
+  function finish(forcedData){
     if (finished) return; finished=true;
-    if (samples.length>5){
+    let payload=null;
+    if (forcedData && typeof forcedData === 'object'){
+      payload = forcedData;
+    } else if (samples.length>5){
       const mean=samples.reduce((a,b)=>a+b,0)/samples.length;
       const score=(100 - Math.min(100, Math.round((mean/140)*100)));
       const durationMs = params?.duration ?? 10000;
-      localStorage.setItem("jsd:prs", JSON.stringify({ duration_ms:durationMs, mean_error_px:mean, score }));
+      payload = { duration_ms:durationMs, mean_error_px:mean, score };
     }
+    if (!payload){
+      payload = { score: 0 };
+    }
+    localStorage.setItem("jsd:prs", JSON.stringify(payload));
     localStorage.setItem("jsd:done:t3","1");
     document.getElementById("next").classList.remove("opacity-50","pointer-events-none");
     setTimeout(()=>location.href="/t4", 600);
@@ -99,6 +108,7 @@
 
   function tryCapture(e){
     if (!running || finished || !params) return false;
+    if (e.type === "touchstart" && window.PointerEvent) return false;
     const r=area.getBoundingClientRect();
     const ex=(e.clientX??(e.touches&&e.touches[0]?.clientX))||0;
     const ey=(e.clientY??(e.touches&&e.touches[0]?.clientY))||0;
@@ -110,15 +120,19 @@
       const base=1500;
       const denom=Math.max(1, (params.duration||10000) - base);
       const score=Math.max(0, Math.min(100, Math.round(100 * (1 - (timeToCatch - base) / denom) )));
-      localStorage.setItem("jsd:prs", JSON.stringify({ time_to_catch_ms: timeToCatch, score }));
       btn.disabled=true; btn.textContent=t("t3.button_caught");
-      finish(); return true;
+      finish({ time_to_catch_ms: timeToCatch, score }); return true;
+    }
+    misses += 1;
+    if (misses >= (params.maxAttempts||10)){
+      running=false; cancelAnimationFrame(raf);
+      btn.disabled=true; btn.textContent=t("t3.button_done");
+      finish({ score: 0 });
     }
     return false;
   }
 
   btn.addEventListener("click", startRun);
   area.addEventListener("pointerdown", tryCapture);
-  area.addEventListener("click", tryCapture);
   area.addEventListener("touchstart", tryCapture, {passive:true});
 })();
