@@ -2,7 +2,10 @@
 {% block content %}
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-4">
   <h2 class="text-xl font-bold" data-i18n="t4.heading">Test 4 · Équilibre (mobile)</h2>
-  <p class="px-4 py-3 rounded-xl bg-rose-100/80 border border-rose-200/60 text-rose-900 text-base font-semibold leading-relaxed shadow-sm dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-100" data-i18n="t4.notice">Téléphone dans la main, bras tendu : appuie sur Démarrer puis reste le plus immobile possible. Si tu bouges, le score se dandine aussi.</p>
+  <p class="px-4 py-3 rounded-xl bg-rose-100/80 border border-rose-200/60 text-rose-900 text-base font-semibold leading-relaxed shadow-sm dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-100" data-i18n="t4.notice" data-max-attempts="{{ app_settings.prs_max_attempts|int }}">
+    Clique sur Démarrer : le cercle se met à bouger dans tous les sens, tu dois cliquer le plus vite possible dessus pour stopper sa progression.
+    Attention tu n'as que {{ app_settings.prs_max_attempts|int }} essais.
+  </p>
 
   <div id="t4"></div>
   <div class="flex justify-between">
@@ -10,5 +13,17 @@
     <a id="next" href="/results" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.view_results">Voir les résultats</a>
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const notice = document.querySelector('[data-i18n="t4.notice"]');
+    if (!notice) return;
+    const t = window.i18n || ((key) => key);
+    const attr = notice.getAttribute('data-max-attempts');
+    const parsed = parseInt(attr, 10);
+    const fromConfig = window.jsdConfig && window.jsdConfig.settings ? window.jsdConfig.settings.prs_max_attempts : undefined;
+    const fallback = Number.isFinite(parsed) && parsed > 0 ? parsed : (Number.isFinite(fromConfig) ? fromConfig : {{ app_settings.prs_max_attempts|int }});
+    notice.textContent = t('t4.notice', { max_attempts: fallback });
+  });
+</script>
 <script defer src="{{ asset_url('js/t4.v157.js') }}"></script>
 {% endblock %}
