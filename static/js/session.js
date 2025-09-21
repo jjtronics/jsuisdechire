@@ -26,6 +26,16 @@
     }
   }
 
+  function writeJson(key, value){
+    try {
+      if (value == null){
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+    } catch (err){}
+  }
+
   function computeTotal(parts){
     const weights = { rxn:0.3, str:0.3, prs:0.3, bal:0.1 };
     let score = 0;
@@ -79,10 +89,22 @@
     }
   }
 
+  function getLastSubmissionInfo(){
+    return readJson('jsd:last_submission');
+  }
+
+  function setLastSubmissionInfo(info){
+    if (!info){
+      localStorage.removeItem('jsd:last_submission');
+      return;
+    }
+    writeJson('jsd:last_submission', info);
+  }
+
   async function submitScore(options){
     options = options || {};
     if (!options.force && submissionState() === '1'){
-      return { status: 'already' };
+      return { status: 'already', cached: getLastSubmissionInfo() };
     }
     if (!hasNickname()){
       return { status: 'nonick' };
@@ -102,6 +124,7 @@
     }
 
     const payload = { nickname, total_score: total, rxn, str, prs, bal };
+    const totalForStorage = Number.isFinite(total) ? Math.trunc(total) : null;
 
     try {
       setSubmissionState('pending');
@@ -116,7 +139,17 @@
       } catch (err) {}
       if (response.ok && json && json.ok){
         setSubmissionState('1');
-        return { status: 'ok', response: json };
+        const rankNum = Number(json.rank);
+        const totalEntriesNum = Number(json.total_entries);
+        const storedInfo = {
+          id: json.id != null ? json.id : null,
+          rank: Number.isFinite(rankNum) ? Math.trunc(rankNum) : null,
+          total_entries: Number.isFinite(totalEntriesNum) ? Math.trunc(totalEntriesNum) : null,
+          total_score: totalForStorage,
+          nickname
+        };
+        setLastSubmissionInfo(storedInfo);
+        return { status: 'ok', response: json, saved: storedInfo };
       }
       setSubmissionState('0');
       return { status: 'error', response: json, httpStatus: response.status };
@@ -129,7 +162,7 @@
   function resetProgress(options){
     options = options || {};
     const keepNickname = options.keepNickname !== false;
-    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted']
+    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted','jsd:last_submission']
       .forEach(key => localStorage.removeItem(key));
     if (!keepNickname){
       localStorage.removeItem('jsd:nick');
@@ -145,6 +178,7 @@
     hasNickname,
     submissionState,
     getNicknameMaxLength,
-    sanitizeNickname
+    sanitizeNickname,
+    getLastSubmissionInfo
   };
 })();
