@@ -632,7 +632,6 @@ def register_view():
 
     errors = []
     form_values = {
-        "login": "",
         "email": "",
         "nickname": "",
     }
@@ -645,20 +644,16 @@ def register_view():
     nickname_max = settings.get("nickname_max_length") or 0
 
     if request.method == "POST":
-        login_value = (request.form.get("login") or "").strip()
         email_value = (request.form.get("email") or "").strip()
         nickname_value = (request.form.get("nickname") or "").strip()
         password_value = request.form.get("password") or ""
         password_confirm = request.form.get("password_confirm") or ""
 
         form_values.update({
-            "login": login_value,
             "email": email_value,
             "nickname": nickname_value,
         })
 
-        if not login_value or len(login_value) < 3:
-            errors.append("Choisis un login d'au moins 3 caractères.")
         if not email_value or "@" not in email_value:
             errors.append("Entre une adresse e-mail valide.")
         if not nickname_value:
@@ -676,8 +671,6 @@ def register_view():
             errors.append("Les deux mots de passe ne correspondent pas.")
 
         if not errors:
-            if find_user_by_login(login_value) is not None:
-                errors.append("Ce login est déjà utilisé.")
             if find_user_by_email(email_value) is not None:
                 errors.append("Cette adresse e-mail est déjà utilisée.")
             if find_user_by_nickname(nickname_value) is not None:
@@ -685,7 +678,12 @@ def register_view():
 
         if not errors:
             try:
-                user = create_user(login=login_value, email=email_value, nickname=nickname_value, password=password_value)
+                user = create_user(
+                    login=nickname_value,
+                    email=email_value,
+                    nickname=nickname_value,
+                    password=password_value,
+                )
             except sqlite3.IntegrityError:
                 errors.append("Impossible de créer le compte. Réessaie avec d'autres identifiants.")
             else:
@@ -806,7 +804,7 @@ def google_complete():
         if not errors:
             try:
                 user = create_user(
-                    login=pending["email"],
+                    login=nickname_value,
                     email=pending["email"],
                     nickname=nickname_value,
                     password=None,
