@@ -21,6 +21,8 @@
       "home.nickname_cancel": "Annuler",
       "home.nickname_error": "Choisis un surnom pour continuer.",
       "home.nickname_too_long": "Le surnom est trop long. Raccourcis-le pour continuer.",
+      "home.nickname_reserved": "Surnom déjà utilisé, choisis-en un autre.",
+      "home.nickname_check_failed": "Impossible de vérifier le surnom. Réessaie.",
 
       "t1.heading": "Test 1 · Réaction",
       "t1.notice": "Prêt·e ? Dès que le fond passe au VERT, tape plus vite que ton ombre. Si tu tires trop tôt, on recommence !",
@@ -222,6 +224,8 @@
       "home.nickname_cancel": "Cancel",
       "home.nickname_error": "Choose a nickname to continue.",
       "home.nickname_too_long": "Nickname is too long. Shorten it to continue.",
+      "home.nickname_reserved": "Nickname already used, pick another one.",
+      "home.nickname_check_failed": "Couldn't verify the nickname. Try again.",
 
       "t1.heading": "Test 1 · Reaction",
       "t1.notice": "Ready? As soon as the background turns GREEN, tap faster than your shadow. Jumping the gun means a redo.",
@@ -423,6 +427,8 @@
       "home.nickname_cancel": "Annulla",
       "home.nickname_error": "Scegli un soprannome per continuare.",
       "home.nickname_too_long": "Il soprannome è troppo lungo. Accorcialo per continuare.",
+      "home.nickname_reserved": "Soprannome già utilizzato, scegline un altro.",
+      "home.nickname_check_failed": "Impossibile verificare il soprannome. Riprova.",
 
       "t1.heading": "Test 1 · Reazione",
       "t1.notice": "Prontə? Quando lo sfondo diventa VERDE, tocca più veloce della tua ombra. Se parti in anticipo, si ricomincia!",
