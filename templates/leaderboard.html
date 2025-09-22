@@ -222,51 +222,89 @@
   {% endif %}
   {% endif %}
   <div class="w-full overflow-x-auto">
-  <table class="min-w-full text-xs sm:text-sm" data-sortable data-rank-offset="{{ rank_start }}">
+  {% set active_sort_key = sort_key|default('total_score', true) %}
+  {% set active_sort_order = sort_order|default('desc', true) %}
+  {% set sort_defaults = sort_defaults|default({}, true) %}
+  <table class="min-w-full text-xs sm:text-sm">
     <thead class="text-left text-gray-500 dark:text-slate-300">
       <tr>
         <th scope="col" class="py-2" data-i18n="leaderboard.rank">#</th>
-        <th scope="col" data-sort-key="nickname" data-sort-type="text" aria-sort="none">
-          <button type="button" class="sort-button">
+        {% set key = 'nickname' %}
+        {% set default_order = sort_defaults.get(key, 'asc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="leaderboard.name">Nom</span>
-            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
-          </button>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
         </th>
-        <th scope="col" data-sort-key="total_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
-          <button type="button" class="sort-button">
+        {% set key = 'total_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="leaderboard.score">Total</span>
-            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
-          </button>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
         </th>
-        <th scope="col" data-sort-key="rxn_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
-          <button type="button" class="sort-button">
+        {% set key = 'rxn_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="reaction">Réaction</span>
-          <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
-          </button>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
         </th>
-        <th scope="col" data-sort-key="str_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
-          <button type="button" class="sort-button">
+        {% set key = 'str_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="stroop">Stroop</span>
-            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
-          </button>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
         </th>
-        <th scope="col" data-sort-key="prs_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
-          <button type="button" class="sort-button">
+        {% set key = 'prs_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="pursuit">Poursuite</span>
-            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
-          </button>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
         </th>
-        <th scope="col" data-sort-key="bal_score" data-sort-type="number" data-default-order="desc" aria-sort="none">
-          <button type="button" class="sort-button">
+        {% set key = 'bal_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="balance">Équilibre</span>
-            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
-          </button>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
         </th>
-        <th scope="col" data-sort-key="created_at" data-sort-type="number" data-default-order="desc" aria-sort="none">
-          <button type="button" class="sort-button">
+        {% set key = 'created_at' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="leaderboard.date">Date</span>
-            <span class="sort-indicator" data-sort-indicator aria-hidden="true">↕</span>
-          </button>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
         </th>
       </tr>
     </thead>
@@ -315,7 +353,7 @@
       {% set prev_classes = "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-150" %}
       <a
         {% if has_prev_page %}
-        href="{{ url_for('leaderboard', page=current_page - 1) }}"
+        href="{{ url_for('leaderboard', page=current_page - 1, sort=active_sort_key, order=active_sort_order) }}"
         rel="prev"
         class="{{ prev_classes }} bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
         {% else %}
@@ -330,7 +368,7 @@
       {% set next_classes = "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-150" %}
       <a
         {% if has_next_page %}
-        href="{{ url_for('leaderboard', page=current_page + 1) }}"
+        href="{{ url_for('leaderboard', page=current_page + 1, sort=active_sort_key, order=active_sort_order) }}"
         rel="next"
         class="{{ next_classes }} bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
         {% else %}
@@ -368,52 +406,6 @@
       el.textContent = fmt.format(date);
       el.setAttribute('datetime', date.toISOString());
     });
-
-    const table = document.querySelector('[data-sortable]');
-    if (!table) {
-      return;
-    }
-
-    const tbody = table.querySelector('tbody');
-    const headers = Array.from(table.querySelectorAll('th[data-sort-key]'));
-    const rankOffset = Number(table.dataset.rankOffset || '0');
-
-    const resetIndicators = () => {
-      headers.forEach((header) => {
-        header.dataset.sortDirection = '';
-        header.setAttribute('aria-sort', 'none');
-        const indicator = header.querySelector('[data-sort-indicator]');
-        if (indicator) {
-          indicator.textContent = '↕';
-        }
-      });
-    };
-
-    const parseValue = (cell, type) => {
-      if (!cell) {
-        return { raw: '', value: null };
-      }
-      const raw = (cell.dataset.sortValue ?? cell.textContent).trim();
-      if (raw === '') {
-        return { raw: '', value: null };
-      }
-      if (type === 'number') {
-        const num = Number(raw);
-        return { raw, value: Number.isFinite(num) ? num : null };
-      }
-      const cleaned = raw === '—' ? '' : raw;
-      const normalized = cleaned ? cleaned.toLocaleLowerCase() : null;
-      return { raw: cleaned, value: normalized };
-    };
-
-    const updateRanks = () => {
-      Array.from(tbody.rows).forEach((row, index) => {
-        const cell = row.cells[0];
-        if (cell) {
-          cell.textContent = rankOffset + index + 1;
-        }
-      });
-    };
 
     const highlightNickname = () => {
       const session = window.jsdSession;
@@ -473,55 +465,6 @@
     };
 
     highlightNickname();
-
-    headers.forEach((header) => {
-      const button = header.querySelector('.sort-button');
-      if (!button) {
-        return;
-      }
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-        const index = header.cellIndex;
-        const type = header.dataset.sortType || 'text';
-        const currentDirection = header.dataset.sortDirection;
-        const defaultOrder = header.dataset.defaultOrder || (type === 'text' ? 'asc' : 'desc');
-        const nextDirection = currentDirection
-          ? (currentDirection === 'asc' ? 'desc' : 'asc')
-          : defaultOrder;
-
-        resetIndicators();
-        header.dataset.sortDirection = nextDirection;
-        header.setAttribute('aria-sort', nextDirection === 'asc' ? 'ascending' : 'descending');
-        const indicator = header.querySelector('[data-sort-indicator]');
-        if (indicator) {
-          indicator.textContent = nextDirection === 'asc' ? '↑' : '↓';
-        }
-
-        const rows = Array.from(tbody.rows);
-        rows.sort((rowA, rowB) => {
-          const a = parseValue(rowA.cells[index], type).value;
-          const b = parseValue(rowB.cells[index], type).value;
-          if (a === null && b === null) {
-            return 0;
-          }
-          if (a === null) {
-            return nextDirection === 'asc' ? 1 : -1;
-          }
-          if (b === null) {
-            return nextDirection === 'asc' ? -1 : 1;
-          }
-          if (type === 'text') {
-            return nextDirection === 'asc'
-              ? a.localeCompare(b, undefined, { sensitivity: 'base' })
-              : b.localeCompare(a, undefined, { sensitivity: 'base' });
-          }
-          return nextDirection === 'asc' ? a - b : b - a;
-        });
-
-        rows.forEach((row) => tbody.appendChild(row));
-        updateRanks();
-      });
-    });
   });
 </script>
 {% endblock %}
