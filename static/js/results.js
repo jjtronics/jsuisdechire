@@ -151,7 +151,7 @@
 
   const share=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.share_button'));
   const restart=el('button','px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400',t('results.restart_button'));
-  const leaderboard=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.scores_button'));
+  const leaderboard=el('button','text-sm px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700',t('results.scores_button'));
   actions.append(stateBadge, share, restart, leaderboard); box.append(actions);
 
   if(session && typeof session.submitScore==='function'){
