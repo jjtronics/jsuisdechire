@@ -156,6 +156,7 @@
 
   if(session && typeof session.submitScore==='function'){
     session.submitScore().then((result)=>{
+      let customErrorMessage=null;
       if(result){
         if(result.status==='ok' && matchesCurrentTotal(result.saved)){
           showPlacement(result.saved);
@@ -170,9 +171,20 @@
           if(matchesCurrentTotal(fallbackInfo)){
             showPlacement(fallbackInfo);
           }
+        } else if(result.status==='error' && result.response){
+          if(result.response.error==='nickname_reserved'){
+            customErrorMessage="Ton surnom est vérifié par un autre joueur. Connecte-toi pour enregistrer le score.";
+          } else if(result.response.error==='missing_nickname'){
+            customErrorMessage="Choisis un surnom pour sauvegarder ton score.";
+          }
         }
       }
-      applyState(session.submissionState ? session.submissionState() : '1');
+      const nextState=session.submissionState ? session.submissionState() : '1';
+      applyState(nextState);
+      if(customErrorMessage){
+        stateBadge.className=`${baseBadgeClasses} bg-rose-100/80 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200`;
+        stateBadge.textContent=customErrorMessage;
+      }
     }).catch(()=>{
       applyState('0');
     });

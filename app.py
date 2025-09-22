@@ -3,14 +3,37 @@ from flask import Flask, render_template, request, jsonify, g, url_for, session,
 import sqlite3, os, time, datetime, json, hashlib
 from functools import lru_cache, wraps
 from pathlib import Path
+from typing import Optional
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+try:
+    from authlib.integrations.flask_client import OAuth
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    OAuth = None
 
 APP_NAME = "jsuisdechire"
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.sqlite")
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
+
+google_oauth = None
+if OAuth is not None:
+    oauth = OAuth(app)
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+    google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+    if google_client_id and google_client_secret:
+        google_oauth = oauth.register(
+            name="google",
+            client_id=google_client_id,
+            client_secret=google_client_secret,
+            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+            client_kwargs={"scope": "openid email profile"},
+            authorize_params={"prompt": "select_account"},
+        )
+else:
+    oauth = None
 
 @lru_cache
 def get_asset_version() -> str:
@@ -51,6 +74,25 @@ def inject_app_settings():
     return {"app_settings": get_settings()}
 
 
+@app.context_processor
+def inject_auth_context():
+    user = get_current_user()
+    payload = None
+    if user is not None:
+        payload = {
+            "id": int(user["id"]),
+            "login": user["login"],
+            "email": user["email"],
+            "nickname": user["nickname"],
+            "role": user["role"],
+        }
+    return {
+        "current_user": user,
+        "current_user_payload": payload,
+        "google_login_enabled": is_google_login_available(),
+    }
+
+
 @app.route("/sw.js")
 def service_worker():
     return send_from_directory(app.static_folder or "static", "sw.js")
@@ -86,6 +128,9 @@ ALLOWED_SETTING_KEYS = frozenset(DEFAULT_SETTINGS.keys())
 DEFAULT_ADMIN_LOGIN = "admin"
 DEFAULT_ADMIN_PASSWORD_HASH = generate_password_hash("jsuisdechire")
 ADMIN_SESSION_KEY = "admin_authenticated"
+USER_SESSION_KEY = "user_authenticated_id"
+GOOGLE_PENDING_SESSION_KEY = "pending_google_signup"
+DEFAULT_USER_ROLE = "player"
 
 def get_db():
     if "db" not in g:
@@ -115,6 +160,22 @@ def ensure_schema(db=None):
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
     )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at INTEGER NOT NULL,
+        login TEXT NOT NULL UNIQUE COLLATE NOCASE,
+        email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+        nickname TEXT NOT NULL UNIQUE COLLATE NOCASE,
+        password_hash TEXT,
+        role TEXT NOT NULL DEFAULT 'player',
+        google_id TEXT UNIQUE
+    )''')
+
+    # Ensure new columns exist without requiring a destructive migration
+    score_columns = {row["name"] for row in db.execute("PRAGMA table_info(scores)").fetchall()}
+    if "user_id" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN user_id INTEGER")
+    db.commit()
     db.commit()
 
 def init_db():
@@ -194,6 +255,86 @@ def is_admin_authenticated() -> bool:
     return session.get(ADMIN_SESSION_KEY) is True
 
 
+def is_google_login_available() -> bool:
+    return google_oauth is not None
+
+
+def _normalize_identifier(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    value = value.strip()
+    return value.lower() if value else None
+
+
+def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
+    if not user_id:
+        return None
+    return get_db().execute("SELECT * FROM users WHERE id = ?", (int(user_id),)).fetchone()
+
+
+def find_user_by_login(login: str) -> Optional[sqlite3.Row]:
+    normalized = _normalize_identifier(login)
+    if not normalized:
+        return None
+    return get_db().execute(
+        "SELECT * FROM users WHERE login = ? COLLATE NOCASE",
+        (normalized,),
+    ).fetchone()
+
+
+def find_user_by_email(email: str) -> Optional[sqlite3.Row]:
+    normalized = _normalize_identifier(email)
+    if not normalized:
+        return None
+    return get_db().execute(
+        "SELECT * FROM users WHERE email = ? COLLATE NOCASE",
+        (normalized,),
+    ).fetchone()
+
+
+def find_user_by_nickname(nickname: str) -> Optional[sqlite3.Row]:
+    normalized = _normalize_identifier(nickname)
+    if not normalized:
+        return None
+    return get_db().execute(
+        "SELECT * FROM users WHERE nickname = ? COLLATE NOCASE",
+        (normalized,),
+    ).fetchone()
+
+
+def create_user(*, login: str, email: str, nickname: str, password: Optional[str], role: str = DEFAULT_USER_ROLE,
+                google_id: Optional[str] = None) -> sqlite3.Row:
+    login_value = (login or "").strip()
+    email_value = (email or "").strip()
+    nickname_value = (nickname or "").strip()
+    if not login_value or not email_value or not nickname_value:
+        raise ValueError("Missing required user fields")
+    password_hash = generate_password_hash(password) if password else None
+    created_at = int(time.time())
+    db = get_db()
+    db.execute(
+        """
+        INSERT INTO users (created_at, login, email, nickname, password_hash, role, google_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (created_at, login_value, email_value, nickname_value, password_hash, role or DEFAULT_USER_ROLE, google_id),
+    )
+    db.commit()
+    return find_user_by_login(login_value)
+
+
+def login_user(user: sqlite3.Row) -> None:
+    session[USER_SESSION_KEY] = int(user["id"])
+
+
+def logout_user() -> None:
+    session.pop(USER_SESSION_KEY, None)
+
+
+def get_current_user() -> Optional[sqlite3.Row]:
+    return getattr(g, "current_user", None)
+
+
 def require_admin(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
@@ -214,6 +355,12 @@ def _ensure_db():
     if not os.path.exists(DB_PATH):
         open(DB_PATH, "a").close()
     init_db()
+
+
+@app.before_request
+def _load_current_user():
+    user_id = session.get(USER_SESSION_KEY)
+    g.current_user = get_user_by_id(user_id) if user_id else None
 
 @app.route("/")
 def home():
@@ -241,8 +388,20 @@ def results_page():
 
 @app.route("/leaderboard")
 def leaderboard():
-    rows = get_db().execute(
-        "SELECT * FROM scores ORDER BY total_score DESC, created_at DESC, id DESC LIMIT 50"
+    db = get_db()
+    rows = db.execute(
+        """
+        SELECT scores.*, users.id AS verified_user_id
+        FROM scores
+        LEFT JOIN users ON (
+            users.id = scores.user_id
+            OR (
+                scores.user_id IS NULL AND LOWER(users.nickname) = LOWER(COALESCE(scores.nickname, ''))
+            )
+        )
+        ORDER BY total_score DESC, created_at DESC, id DESC
+        LIMIT 50
+        """
     ).fetchall()
     return render_template("leaderboard.html", rows=rows, app_name=APP_NAME)
 
@@ -360,6 +519,17 @@ def submit():
     if max_len > 0:
         nickname = nickname[:max_len]
     nickname = nickname or None
+    current_user = get_current_user()
+    user_id = None
+    if current_user is not None:
+        nickname = current_user["nickname"]
+        user_id = int(current_user["id"])
+    elif nickname:
+        reserved = find_user_by_nickname(nickname)
+        if reserved is not None:
+            return jsonify({"ok": False, "error": "nickname_reserved"}), 403
+    else:
+        return jsonify({"ok": False, "error": "missing_nickname"}), 400
     fields = {
         "rxn_score": data.get("rxn", {}).get("score"),
         "rxn_median": data.get("rxn", {}).get("median"),
@@ -377,12 +547,12 @@ def submit():
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
          fields['prs_score'], fields['prs_error'], fields['time_to_catch_ms'],
-         fields['bal_score'], fields['bal_std'])
+         fields['bal_score'], fields['bal_std'], user_id)
     )
     db.commit()
 
@@ -403,6 +573,262 @@ def submit():
         "rank": int(ahead) + 1,
         "total_entries": int(total_entries),
     })
+
+
+def _resolve_error_message(code: Optional[str]) -> Optional[str]:
+    if not code:
+        return None
+    mapping = {
+        "google_disabled": "La connexion Google n'est pas disponible pour le moment.",
+        "google_error": "Impossible de contacter Google. Réessaie plus tard.",
+        "email_in_use": "Cette adresse e-mail est déjà utilisée. Connecte-toi avec ton mot de passe.",
+        "nickname_taken": "Ce surnom est déjà réservé par un autre joueur.",
+        "login_taken": "Ce login est déjà utilisé.",
+    }
+    return mapping.get(code)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login_view():
+    if get_current_user():
+        return redirect(url_for("home"))
+
+    error = _resolve_error_message(request.args.get("error"))
+    identifier_value = ""
+    next_url = request.args.get("next") or request.form.get("next")
+
+    if request.method == "POST":
+        identifier_value = (request.form.get("login") or request.form.get("identifier") or "").strip()
+        password_value = request.form.get("password") or ""
+        if not identifier_value or not password_value:
+            error = "Entre ton login (ou email) et ton mot de passe."
+        else:
+            user = find_user_by_login(identifier_value)
+            if user is None:
+                user = find_user_by_email(identifier_value)
+            if user and user["password_hash"]:
+                if check_password_hash(user["password_hash"], password_value):
+                    login_user(user)
+                    return redirect(next_url or url_for("home"))
+                error = "Mot de passe incorrect."
+            elif user and not user["password_hash"]:
+                error = "Ce compte utilise la connexion Google. Clique sur le bouton Google."
+            else:
+                error = "Identifiants introuvables."
+
+    return render_template(
+        "login.html",
+        app_name=APP_NAME,
+        error=error,
+        identifier_value=identifier_value,
+        next_url=next_url,
+    )
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register_view():
+    if get_current_user():
+        return redirect(url_for("home"))
+
+    errors = []
+    form_values = {
+        "login": "",
+        "email": "",
+        "nickname": "",
+    }
+
+    error_from_query = _resolve_error_message(request.args.get("error"))
+    if error_from_query:
+        errors.append(error_from_query)
+
+    settings = get_settings()
+    nickname_max = settings.get("nickname_max_length") or 0
+
+    if request.method == "POST":
+        login_value = (request.form.get("login") or "").strip()
+        email_value = (request.form.get("email") or "").strip()
+        nickname_value = (request.form.get("nickname") or "").strip()
+        password_value = request.form.get("password") or ""
+        password_confirm = request.form.get("password_confirm") or ""
+
+        form_values.update({
+            "login": login_value,
+            "email": email_value,
+            "nickname": nickname_value,
+        })
+
+        if not login_value or len(login_value) < 3:
+            errors.append("Choisis un login d'au moins 3 caractères.")
+        if not email_value or "@" not in email_value:
+            errors.append("Entre une adresse e-mail valide.")
+        if not nickname_value:
+            errors.append("Choisis un surnom.")
+        else:
+            try:
+                limit = int(nickname_max)
+            except (TypeError, ValueError):
+                limit = 0
+            if limit and len(nickname_value) > limit:
+                errors.append(f"Ton surnom doit faire au maximum {limit} caractères.")
+        if not password_value or len(password_value) < 8:
+            errors.append("Ton mot de passe doit faire au moins 8 caractères.")
+        if password_value != password_confirm:
+            errors.append("Les deux mots de passe ne correspondent pas.")
+
+        if not errors:
+            if find_user_by_login(login_value) is not None:
+                errors.append("Ce login est déjà utilisé.")
+            if find_user_by_email(email_value) is not None:
+                errors.append("Cette adresse e-mail est déjà utilisée.")
+            if find_user_by_nickname(nickname_value) is not None:
+                errors.append("Ce surnom est déjà réservé.")
+
+        if not errors:
+            try:
+                user = create_user(login=login_value, email=email_value, nickname=nickname_value, password=password_value)
+            except sqlite3.IntegrityError:
+                errors.append("Impossible de créer le compte. Réessaie avec d'autres identifiants.")
+            else:
+                login_user(user)
+                return redirect(url_for("home"))
+
+    return render_template(
+        "register.html",
+        app_name=APP_NAME,
+        errors=errors,
+        values=form_values,
+        nickname_max=nickname_max,
+    )
+
+
+@app.route("/logout", methods=["POST"])
+def logout_view():
+    logout_user()
+    session.pop(GOOGLE_PENDING_SESSION_KEY, None)
+    session.pop("google_next", None)
+    return redirect(url_for("home"))
+
+
+@app.route("/auth/google/start")
+def auth_google_start():
+    if not is_google_login_available():
+        return redirect(url_for("register_view", error="google_disabled"))
+    next_url = request.args.get("next")
+    if next_url:
+        session["google_next"] = next_url
+    redirect_uri = url_for("auth_google_callback", _external=True)
+    return google_oauth.authorize_redirect(redirect_uri)
+
+
+@app.route("/auth/google/callback")
+def auth_google_callback():
+    if not is_google_login_available():
+        return redirect(url_for("register_view", error="google_disabled"))
+    try:
+        token = google_oauth.authorize_access_token()
+    except Exception:
+        return redirect(url_for("register_view", error="google_error"))
+
+    userinfo = None
+    try:
+        userinfo = google_oauth.parse_id_token(token)
+    except Exception:
+        userinfo = None
+    if not userinfo:
+        try:
+            resp = google_oauth.get("userinfo")
+            if resp.ok:
+                userinfo = resp.json()
+        except Exception:
+            userinfo = None
+
+    if not userinfo:
+        return redirect(url_for("register_view", error="google_error"))
+
+    google_id = userinfo.get("sub") or userinfo.get("id")
+    email = (userinfo.get("email") or "").strip()
+    name = (userinfo.get("name") or "").strip()
+    if not google_id or not email:
+        return redirect(url_for("register_view", error="google_error"))
+
+    db = get_db()
+    existing = db.execute("SELECT * FROM users WHERE google_id = ?", (google_id,)).fetchone()
+    if existing:
+        login_user(existing)
+        session.pop(GOOGLE_PENDING_SESSION_KEY, None)
+        next_url = session.pop("google_next", None)
+        return redirect(next_url or url_for("home"))
+
+    email_user = find_user_by_email(email)
+    if email_user:
+        if email_user["google_id"] == google_id:
+            login_user(email_user)
+            session.pop(GOOGLE_PENDING_SESSION_KEY, None)
+            next_url = session.pop("google_next", None)
+            return redirect(next_url or url_for("home"))
+        return redirect(url_for("login_view", error="email_in_use"))
+
+    session[GOOGLE_PENDING_SESSION_KEY] = {
+        "google_id": google_id,
+        "email": email,
+        "name": name,
+    }
+    return redirect(url_for("google_complete"))
+
+
+@app.route("/auth/google/complete", methods=["GET", "POST"])
+def google_complete():
+    if not is_google_login_available():
+        return redirect(url_for("register_view"))
+    pending = session.get(GOOGLE_PENDING_SESSION_KEY)
+    if not pending:
+        return redirect(url_for("register_view"))
+
+    errors = []
+    nickname_value = (request.form.get("nickname") or "").strip() if request.method == "POST" else ""
+    suggested = pending.get("name") or pending.get("email", "").split("@")[0]
+    settings = get_settings()
+    nickname_max = settings.get("nickname_max_length") or 0
+
+    if request.method == "POST":
+        if not nickname_value:
+            errors.append("Choisis un surnom.")
+        else:
+            try:
+                limit = int(nickname_max)
+            except (TypeError, ValueError):
+                limit = 0
+            if limit and len(nickname_value) > limit:
+                errors.append(f"Ton surnom doit faire au maximum {limit} caractères.")
+        if not errors and find_user_by_nickname(nickname_value) is not None:
+            errors.append("Ce surnom est déjà réservé.")
+
+        if not errors:
+            try:
+                user = create_user(
+                    login=pending["email"],
+                    email=pending["email"],
+                    nickname=nickname_value,
+                    password=None,
+                    google_id=pending["google_id"],
+                )
+            except sqlite3.IntegrityError:
+                errors.append("Impossible d'enregistrer ton compte Google. Réessaie plus tard.")
+            else:
+                login_user(user)
+                session.pop(GOOGLE_PENDING_SESSION_KEY, None)
+                next_url = session.pop("google_next", None)
+                return redirect(next_url or url_for("home"))
+
+    return render_template(
+        "google_complete.html",
+        app_name=APP_NAME,
+        errors=errors,
+        pending=pending,
+        suggested_nickname=suggested,
+        nickname_value=nickname_value or suggested,
+        nickname_max=nickname_max,
+    )
 
 @app.get("/api/health")
 def health():
