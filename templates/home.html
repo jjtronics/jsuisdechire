@@ -13,6 +13,19 @@
       <a id="startTests" href="/t1" class="px-4 py-2 rounded-xl bg-black text-white" data-i18n="home.cta_start">Commencer</a>
       <a href="/leaderboard" class="px-4 py-2 rounded-xl border" data-i18n="home.cta_leaderboard">Voir le classement</a>
     </div>
+    {% if current_user_payload %}
+    <div class="mt-3 inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+      </svg>
+      <span>Ton pseudo vérifié : <strong>{{ current_user_payload.nickname }}</strong></span>
+    </div>
+    {% else %}
+    <div class="mt-3 flex gap-2 text-sm">
+      <a href="{{ url_for('login_view') }}" class="px-4 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-200 dark:hover:bg-slate-800">Se connecter</a>
+      <a href="{{ url_for('register_view') }}" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700">S'inscrire</a>
+    </div>
+    {% endif %}
   </section>
 </div>
 <div id="nicknameModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-4">
@@ -38,6 +51,7 @@
     const errorEl = document.getElementById('nicknameError');
     const t = window.i18n || ((key) => key);
     const sessionApi = window.jsdSession || {};
+    const currentUser = window.jsdCurrentUser || null;
     const getNicknameMaxLength = typeof sessionApi.getNicknameMaxLength === 'function' ? sessionApi.getNicknameMaxLength : () => 0;
     const sanitizeNickname = typeof sessionApi.sanitizeNickname === 'function' ? sessionApi.sanitizeNickname : (value) => (value || '').trim();
     const nicknameMaxLength = getNicknameMaxLength();
@@ -99,6 +113,11 @@
 
     startLink.addEventListener('click', (event) => {
       event.preventDefault();
+      if (currentUser && currentUser.nickname){
+        try { localStorage.setItem('jsd:nick', currentUser.nickname); } catch (err) {}
+        window.location.href = startLink.getAttribute('href');
+        return;
+      }
       showModal();
     });
 
