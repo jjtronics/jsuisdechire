@@ -575,6 +575,45 @@ def t4():
 def results_page():
     return render_template("results.html", app_name=APP_NAME)
 
+LEADERBOARD_SORTS = {
+    "total_score": {
+        "expression": "scores.total_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "rxn_score": {
+        "expression": "scores.rxn_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "str_score": {
+        "expression": "scores.str_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "prs_score": {
+        "expression": "scores.prs_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "bal_score": {
+        "expression": "scores.bal_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "nickname": {
+        "expression": "LOWER(COALESCE(scores.nickname, ''))",
+        "default_order": "asc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "created_at": {
+        "expression": "scores.created_at",
+        "default_order": "desc",
+        "secondary": ["scores.id DESC"],
+    },
+}
+
+
 @app.route("/leaderboard")
 def leaderboard():
     db = get_db()
@@ -584,8 +623,29 @@ def leaderboard():
         page = 1
 
     offset = (page - 1) * per_page
+
+    requested_sort = (request.args.get("sort", "") or "").strip().lower()
+    sort_config = LEADERBOARD_SORTS.get(requested_sort)
+    if sort_config is None:
+        sort_key = "total_score"
+        sort_config = LEADERBOARD_SORTS[sort_key]
+    else:
+        sort_key = requested_sort
+
+    requested_order = (request.args.get("order", "") or "").strip().lower()
+    if requested_order not in {"asc", "desc"}:
+        sort_order = sort_config["default_order"]
+    else:
+        sort_order = requested_order
+
+    sort_direction = "ASC" if sort_order == "asc" else "DESC"
+    order_clauses = [f"{sort_config['expression']} {sort_direction}"]
+    for clause in sort_config.get("secondary", []):
+        order_clauses.append(clause)
+    order_sql = ", ".join(order_clauses)
+
     query = db.execute(
-        """
+        f"""
         SELECT scores.*, users.id AS verified_user_id
         FROM scores
         LEFT JOIN users ON (
@@ -594,7 +654,7 @@ def leaderboard():
                 scores.user_id IS NULL AND LOWER(users.nickname) = LOWER(COALESCE(scores.nickname, ''))
             )
         )
-        ORDER BY total_score DESC, created_at DESC, id DESC
+        ORDER BY {order_sql}
         LIMIT ? OFFSET ?
         """,
         (per_page + 1, offset),
@@ -613,6 +673,9 @@ def leaderboard():
         has_next=has_next,
         has_prev=has_prev,
         rank_offset=offset,
+        sort_key=sort_key,
+        sort_order=sort_order,
+        sort_defaults={key: cfg["default_order"] for key, cfg in LEADERBOARD_SORTS.items()},
     )
 
 @app.get("/api/settings")
