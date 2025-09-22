@@ -1,11 +1,12 @@
 
 from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, send_from_directory
-import sqlite3, os, time, datetime, json, hashlib
+import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl
 from functools import lru_cache, wraps
 from pathlib import Path
 from typing import Optional
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
+from email.message import EmailMessage
 
 try:
     from authlib.integrations.flask_client import OAuth
@@ -121,6 +122,12 @@ DEFAULT_SETTINGS = {
     "bal_high_bad": 0.10,
     "bal_lin_rel_tol": 0.15,
     "nickname_max_length": 32,
+    "smtp_host": "",
+    "smtp_port": 587,
+    "smtp_username": "",
+    "smtp_password": "",
+    "smtp_sender": "",
+    "smtp_security": "starttls",
 }
 
 ALLOWED_SETTING_KEYS = frozenset(DEFAULT_SETTINGS.keys())
@@ -131,6 +138,8 @@ ADMIN_SESSION_KEY = "admin_authenticated"
 USER_SESSION_KEY = "user_authenticated_id"
 GOOGLE_PENDING_SESSION_KEY = "pending_google_signup"
 DEFAULT_USER_ROLE = "player"
+PASSWORD_RESET_TOKEN_TTL = 3600
+SMTP_SECURITY_MODES = {"none", "starttls", "ssl"}
 
 def get_db():
     if "db" not in g:
@@ -169,6 +178,14 @@ def ensure_schema(db=None):
         password_hash TEXT,
         role TEXT NOT NULL DEFAULT 'player',
         google_id TEXT UNIQUE
+    )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS password_resets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        created_at INTEGER NOT NULL,
+        used_at INTEGER,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     )''')
 
     # Ensure new columns exist without requiring a destructive migration
@@ -321,6 +338,157 @@ def find_conflicting_user_by_nickname(
         else:
             query += " AND id != ?"
     return get_db().execute(query + " LIMIT 1", params).fetchone()
+
+
+def _cleanup_password_resets():
+    cutoff = int(time.time()) - (PASSWORD_RESET_TOKEN_TTL * 2)
+    db = get_db()
+    db.execute(
+        "DELETE FROM password_resets WHERE (used_at IS NOT NULL) OR created_at < ?",
+        (cutoff,),
+    )
+    db.commit()
+
+
+def _hash_password_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_password_reset_token(user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    token_hash = _hash_password_reset_token(token)
+    created_at = int(time.time())
+    db = get_db()
+    _cleanup_password_resets()
+    db.execute(
+        "INSERT INTO password_resets (user_id, token_hash, created_at) VALUES (?, ?, ?)",
+        (int(user_id), token_hash, created_at),
+    )
+    db.commit()
+    return token
+
+
+def find_password_reset_request(token: str) -> Optional[sqlite3.Row]:
+    if not token:
+        return None
+    token_hash = _hash_password_reset_token(token)
+    row = get_db().execute(
+        """
+        SELECT password_resets.*, users.email AS user_email, users.login AS user_login, users.nickname AS user_nickname
+        FROM password_resets
+        JOIN users ON users.id = password_resets.user_id
+        WHERE password_resets.token_hash = ?
+        LIMIT 1
+        """,
+        (token_hash,),
+    ).fetchone()
+    if row is None:
+        return None
+    if row["used_at"]:
+        return None
+    created_at = int(row["created_at"] or 0)
+    if created_at < int(time.time()) - PASSWORD_RESET_TOKEN_TTL:
+        return None
+    return row
+
+
+def mark_password_reset_used(reset_id: int, db: Optional[sqlite3.Connection] = None) -> None:
+    commit = False
+    if db is None:
+        db = get_db()
+        commit = True
+    db.execute(
+        "UPDATE password_resets SET used_at = ? WHERE id = ?",
+        (int(time.time()), int(reset_id)),
+    )
+    if commit:
+        db.commit()
+
+
+def _resolve_smtp_security(value: Optional[str]) -> str:
+    if not value:
+        return "starttls"
+    value = str(value).strip().lower()
+    if value not in SMTP_SECURITY_MODES:
+        return "starttls"
+    return value
+
+
+def send_email_via_smtp(*, subject: str, body: str, recipient: str) -> bool:
+    settings = get_settings()
+    host = (settings.get("smtp_host") or "").strip()
+    sender = (settings.get("smtp_sender") or "").strip()
+    username = (settings.get("smtp_username") or "").strip()
+    password = settings.get("smtp_password") or ""
+    port_raw = settings.get("smtp_port")
+    try:
+        port = int(port_raw)
+    except (TypeError, ValueError):
+        port = 0
+    security = _resolve_smtp_security(settings.get("smtp_security"))
+
+    if not host or not port or not recipient:
+        app.logger.warning("SMTP configuration incomplete; cannot send email")
+        return False
+
+    if not sender:
+        sender = username
+
+    if not sender:
+        app.logger.warning("No SMTP sender configured; cannot send email")
+        return False
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = sender
+    message["To"] = recipient
+    message.set_content(body)
+
+    context = ssl.create_default_context()
+    try:
+        if security == "ssl":
+            with smtplib.SMTP_SSL(host, port, timeout=20, context=context) as server:
+                if username:
+                    server.login(username, password)
+                server.send_message(message)
+        else:
+            with smtplib.SMTP(host, port, timeout=20) as server:
+                server.ehlo()
+                if security == "starttls":
+                    server.starttls(context=context)
+                    server.ehlo()
+                if username:
+                    server.login(username, password)
+                server.send_message(message)
+    except Exception as exc:  # pragma: no cover - relies on external SMTP service
+        app.logger.error("Failed to send email: %s", exc)
+        return False
+
+    return True
+
+
+def send_password_reset_email(user: sqlite3.Row, reset_url: str) -> bool:
+    mapping = dict(user)
+    nickname = mapping.get("user_nickname") or mapping.get("nickname")
+    login = mapping.get("user_login") or mapping.get("login")
+    recipient = mapping.get("user_email") or mapping.get("email")
+    if not recipient:
+        return False
+
+    display_name = nickname or login or "joueur"
+    subject = "Réinitialise ton mot de passe jsuisdechire"
+    body = f"""Salut {display_name},
+
+Tu as demandé à réinitialiser ton mot de passe sur jsuisdechire.com.
+Clique sur le lien suivant pour choisir un nouveau mot de passe (il expire dans {PASSWORD_RESET_TOKEN_TTL // 60} minutes) :
+
+{reset_url}
+
+Si tu n'es pas à l'origine de cette demande, ignore simplement cet email.
+
+À très vite sur jsuisdechire.com !
+"""
+    return send_email_via_smtp(subject=subject, body=body, recipient=recipient)
 
 
 def create_user(*, login: str, email: str, nickname: str, password: Optional[str], role: str = DEFAULT_USER_ROLE,
@@ -721,6 +889,10 @@ def login_view():
     error = _resolve_error_message(request.args.get("error"))
     identifier_value = ""
     next_url = request.args.get("next") or request.form.get("next")
+    success_message = None
+
+    if request.args.get("reset") == "1":
+        success_message = "Ton mot de passe a été réinitialisé. Tu peux te connecter."
 
     if request.method == "POST":
         identifier_value = (request.form.get("login") or request.form.get("identifier") or "").strip()
@@ -747,6 +919,83 @@ def login_view():
         error=error,
         identifier_value=identifier_value,
         next_url=next_url,
+        success_message=success_message,
+    )
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password_view():
+    if get_current_user():
+        return redirect(url_for("home"))
+
+    email_value = ""
+    email_error = None
+    submitted = False
+
+    if request.method == "POST":
+        submitted = True
+        email_value = (request.form.get("email") or "").strip()
+        if not email_value:
+            email_error = "Entre ton adresse e-mail."
+        else:
+            user = find_user_by_email(email_value)
+            if user and user["password_hash"]:
+                token = create_password_reset_token(int(user["id"]))
+                reset_url = url_for("reset_password_view", token=token, _external=True)
+                if not send_password_reset_email(user, reset_url):
+                    email_error = "Impossible d'envoyer l'email. Vérifie la configuration SMTP dans l'admin."
+                else:
+                    email_value = ""
+            else:
+                # Répondre positivement pour éviter de divulguer l'existence d'un compte
+                pass
+
+    return render_template(
+        "forgot_password.html",
+        app_name=APP_NAME,
+        email_value=email_value,
+        email_error=email_error,
+        submitted=submitted,
+    )
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password_view(token: str):
+    if get_current_user():
+        return redirect(url_for("home"))
+
+    reset_request = find_password_reset_request(token)
+    if reset_request is None:
+        return render_template(
+            "reset_password.html",
+            app_name=APP_NAME,
+            invalid=True,
+            error=None,
+        )
+
+    error = None
+    if request.method == "POST":
+        password_value = request.form.get("password") or ""
+        confirm_value = request.form.get("password_confirm") or ""
+        if len(password_value) < 8:
+            error = "Ton nouveau mot de passe doit contenir au moins 8 caractères."
+        elif password_value != confirm_value:
+            error = "Les deux mots de passe ne correspondent pas."
+        else:
+            db = get_db()
+            db.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (generate_password_hash(password_value), int(reset_request["user_id"])),
+            )
+            mark_password_reset_used(int(reset_request["id"]), db=db)
+            db.commit()
+            return redirect(url_for("login_view", reset="1"))
+
+    return render_template(
+        "reset_password.html",
+        app_name=APP_NAME,
+        invalid=False,
+        error=error,
     )
 
 
