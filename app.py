@@ -302,6 +302,27 @@ def find_user_by_nickname(nickname: str) -> Optional[sqlite3.Row]:
     ).fetchone()
 
 
+def find_conflicting_user_by_nickname(
+    nickname: str,
+    *,
+    exclude_user_id: Optional[int] = None,
+) -> Optional[sqlite3.Row]:
+    normalized = _normalize_identifier(nickname)
+    if not normalized:
+        return None
+
+    params = [normalized]
+    query = "SELECT * FROM users WHERE INSTR(?, LOWER(nickname)) > 0"
+    if exclude_user_id is not None:
+        try:
+            params.append(int(exclude_user_id))
+        except (TypeError, ValueError):
+            exclude_user_id = None
+        else:
+            query += " AND id != ?"
+    return get_db().execute(query + " LIMIT 1", params).fetchone()
+
+
 def create_user(*, login: str, email: str, nickname: str, password: Optional[str], role: str = DEFAULT_USER_ROLE,
                 google_id: Optional[str] = None) -> sqlite3.Row:
     login_value = (login or "").strip()
@@ -574,13 +595,14 @@ def api_nickname_check():
         return jsonify({"ok": False, "error": "missing_nickname"}), 400
 
     current_user = get_current_user()
-    reserved = find_user_by_nickname(nickname)
-    available = reserved is None
-    if reserved is not None and current_user is not None:
+    exclude_user_id = None
+    if current_user is not None:
         try:
-            available = int(reserved["id"]) == int(current_user["id"])
+            exclude_user_id = int(current_user["id"])
         except (TypeError, ValueError, KeyError):
-            available = False
+            exclude_user_id = None
+    conflict = find_conflicting_user_by_nickname(nickname, exclude_user_id=exclude_user_id)
+    available = conflict is None
 
     return jsonify({"ok": True, "available": bool(available)})
 
@@ -607,7 +629,7 @@ def submit():
         nickname = current_user["nickname"]
         user_id = int(current_user["id"])
     elif nickname:
-        reserved = find_user_by_nickname(nickname)
+        reserved = find_conflicting_user_by_nickname(nickname)
         if reserved is not None:
             return jsonify({"ok": False, "error": "nickname_reserved"}), 403
     else:
@@ -755,7 +777,7 @@ def register_view():
         if not errors:
             if find_user_by_email(email_value) is not None:
                 errors.append("Cette adresse e-mail est déjà utilisée.")
-            if find_user_by_nickname(nickname_value) is not None:
+            if find_conflicting_user_by_nickname(nickname_value) is not None:
                 errors.append("Ce surnom est déjà réservé.")
 
         if not errors:
@@ -880,7 +902,7 @@ def google_complete():
                 limit = 0
             if limit and len(nickname_value) > limit:
                 errors.append(f"Ton surnom doit faire au maximum {limit} caractères.")
-        if not errors and find_user_by_nickname(nickname_value) is not None:
+        if not errors and find_conflicting_user_by_nickname(nickname_value) is not None:
             errors.append("Ce surnom est déjà réservé.")
 
         if not errors:
