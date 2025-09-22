@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+{% if not current_user_payload %}
+<div class="mb-4 flex flex-col items-stretch gap-2 sm:flex-row sm:justify-end">
+  <a href="{{ url_for('login_view') }}" class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white/70 px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/40 dark:bg-slate-900/40 dark:text-rose-200 dark:hover:bg-slate-800">Se connecter</a>
+  <a href="{{ url_for('register_view') }}" class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700">S'inscrire</a>
+</div>
+{% endif %}
 <div class="grid gap-6">
   <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
     <h1 class="text-3xl font-black mb-2" data-i18n="home.title">Un check fun & sérieux pour savoir si tu dois poser le verre</h1>
@@ -19,11 +25,6 @@
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
       </svg>
       <span>Ton pseudo vérifié : <strong>{{ current_user_payload.nickname }}</strong></span>
-    </div>
-    {% else %}
-    <div class="mt-3 flex gap-2 text-sm">
-      <a href="{{ url_for('login_view') }}" class="px-4 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-200 dark:hover:bg-slate-800">Se connecter</a>
-      <a href="{{ url_for('register_view') }}" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700">S'inscrire</a>
     </div>
     {% endif %}
   </section>
