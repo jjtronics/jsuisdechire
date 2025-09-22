@@ -503,6 +503,34 @@ def api_admin_delete_scores():
     db.commit()
     return jsonify({"ok": True, "deleted": ids})
 
+@app.get("/api/nickname/check")
+def api_nickname_check():
+    settings = get_settings()
+    nickname = (request.args.get("nickname") or "").strip()
+    max_len_raw = settings.get("nickname_max_length")
+    try:
+        max_len = int(max_len_raw)
+    except (TypeError, ValueError):
+        max_len = 0
+    if max_len > 512:
+        max_len = 512
+    if max_len > 0:
+        nickname = nickname[:max_len]
+    if not nickname:
+        return jsonify({"ok": False, "error": "missing_nickname"}), 400
+
+    current_user = get_current_user()
+    reserved = find_user_by_nickname(nickname)
+    available = reserved is None
+    if reserved is not None and current_user is not None:
+        try:
+            available = int(reserved["id"]) == int(current_user["id"])
+        except (TypeError, ValueError, KeyError):
+            available = False
+
+    return jsonify({"ok": True, "available": bool(available)})
+
+
 @app.post("/api/submit")
 def submit():
     data = request.get_json(silent=True) or {}

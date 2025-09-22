@@ -85,7 +85,7 @@
       modal.classList.add('hidden');
     }
 
-    function validateNickname(){
+    async function validateNickname(){
       const rawValue = input.value;
       const sanitized = sanitizeNickname(rawValue);
       if (!sanitized){
@@ -98,6 +98,41 @@
         showError('home.nickname_too_long');
         input.focus();
         return;
+      }
+      confirmBtn.disabled = true;
+      confirmBtn.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch(`/api/nickname/check?nickname=${encodeURIComponent(sanitized)}`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!response.ok){
+          showError('home.nickname_check_failed');
+          input.focus();
+          return;
+        }
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (err) {}
+        if (!payload || !payload.ok){
+          showError('home.nickname_check_failed');
+          input.focus();
+          return;
+        }
+        if (!payload.available){
+          showError('home.nickname_reserved');
+          input.focus();
+          return;
+        }
+      } catch (err){
+        console.error(err);
+        showError('home.nickname_check_failed');
+        input.focus();
+        return;
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.removeAttribute('aria-busy');
       }
       errorEl.classList.add('hidden');
       localStorage.setItem('jsd:nick', sanitized);
