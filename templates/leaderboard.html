@@ -136,10 +136,10 @@
   {% set current_page = page|default(1, true) %}
   {% set per_page_value = per_page|default(50, true) %}
   {% set rank_start = rank_offset|default((current_page - 1) * per_page_value, true) %}
-  {% if current_page == 1 %}
-  {% set first = rows[0] if rows|length > 0 else None %}
-  {% set second = rows[1] if rows|length > 1 else None %}
-  {% set third = rows[2] if rows|length > 2 else None %}
+  {% set podium_entries = podium_rows|default([], true) %}
+  {% set first = podium_entries[0] if podium_entries|length > 0 else None %}
+  {% set second = podium_entries[1] if podium_entries|length > 1 else None %}
+  {% set third = podium_entries[2] if podium_entries|length > 2 else None %}
   {% if first or second or third %}
   <div class="mb-10" data-podium>
     <div class="mx-auto flex max-w-5xl flex-row flex-nowrap items-stretch justify-center gap-2 text-center sm:gap-6 sm:items-end sm:justify-center">
@@ -219,7 +219,6 @@
       {% endif %}
     </div>
   </div>
-  {% endif %}
   {% endif %}
   <div class="w-full overflow-x-auto">
   {% set active_sort_key = sort_key|default('total_score', true) %}

@@ -644,8 +644,7 @@ def leaderboard():
         order_clauses.append(clause)
     order_sql = ", ".join(order_clauses)
 
-    query = db.execute(
-        f"""
+    base_select = """
         SELECT scores.*, users.id AS verified_user_id
         FROM scores
         LEFT JOIN users ON (
@@ -654,6 +653,19 @@ def leaderboard():
                 scores.user_id IS NULL AND LOWER(users.nickname) = LOWER(COALESCE(scores.nickname, ''))
             )
         )
+    """
+
+    podium_rows = db.execute(
+        base_select
+        + """
+        ORDER BY scores.total_score DESC, scores.created_at ASC, scores.id ASC
+        LIMIT 3
+        """
+    ).fetchall()
+
+    query = db.execute(
+        base_select
+        + f"""
         ORDER BY {order_sql}
         LIMIT ? OFFSET ?
         """,
@@ -676,6 +688,7 @@ def leaderboard():
         sort_key=sort_key,
         sort_order=sort_order,
         sort_defaults={key: cfg["default_order"] for key, cfg in LEADERBOARD_SORTS.items()},
+        podium_rows=podium_rows,
     )
 
 @app.get("/api/settings")
