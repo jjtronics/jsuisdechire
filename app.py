@@ -410,7 +410,13 @@ def results_page():
 @app.route("/leaderboard")
 def leaderboard():
     db = get_db()
-    rows = db.execute(
+    per_page = 50
+    page = request.args.get("page", default=1, type=int) or 1
+    if page < 1:
+        page = 1
+
+    offset = (page - 1) * per_page
+    query = db.execute(
         """
         SELECT scores.*, users.id AS verified_user_id
         FROM scores
@@ -421,10 +427,25 @@ def leaderboard():
             )
         )
         ORDER BY total_score DESC, created_at DESC, id DESC
-        LIMIT 50
-        """
+        LIMIT ? OFFSET ?
+        """,
+        (per_page + 1, offset),
     ).fetchall()
-    return render_template("leaderboard.html", rows=rows, app_name=APP_NAME)
+
+    has_next = len(query) > per_page
+    rows = list(query[:per_page])
+    has_prev = page > 1
+
+    return render_template(
+        "leaderboard.html",
+        rows=rows,
+        app_name=APP_NAME,
+        page=page,
+        per_page=per_page,
+        has_next=has_next,
+        has_prev=has_prev,
+        rank_offset=offset,
+    )
 
 @app.get("/api/settings")
 def api_settings():

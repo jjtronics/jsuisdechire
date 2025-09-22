@@ -133,6 +133,10 @@
 </style>
 <div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
   <h1 class="text-2xl font-black mb-4" data-i18n="leaderboard.heading">Classement</h1>
+  {% set current_page = page|default(1, true) %}
+  {% set per_page_value = per_page|default(50, true) %}
+  {% set rank_start = rank_offset|default((current_page - 1) * per_page_value, true) %}
+  {% if current_page == 1 %}
   {% set first = rows[0] if rows|length > 0 else None %}
   {% set second = rows[1] if rows|length > 1 else None %}
   {% set third = rows[2] if rows|length > 2 else None %}
@@ -216,8 +220,9 @@
     </div>
   </div>
   {% endif %}
+  {% endif %}
   <div class="w-full overflow-x-auto">
-  <table class="min-w-full text-xs sm:text-sm" data-sortable>
+  <table class="min-w-full text-xs sm:text-sm" data-sortable data-rank-offset="{{ rank_start }}">
     <thead class="text-left text-gray-500 dark:text-slate-300">
       <tr>
         <th scope="col" class="py-2" data-i18n="leaderboard.rank">#</th>
@@ -268,7 +273,7 @@
     <tbody>
       {% for r in rows %}
       <tr class="border-t border-white/20" data-nickname="{{ r['nickname'] or '' }}">
-        <td class="py-2">{{ loop.index }}</td>
+        <td class="py-2">{{ rank_start + loop.index }}</td>
         <td>
           <span class="inline-flex items-center gap-1">
             <span>{{ r['nickname'] or '—' }}</span>
@@ -295,6 +300,49 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
+  {% set has_prev_page = has_prev|default(False, true) %}
+  {% set has_next_page = has_next|default(False, true) %}
+  <div class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+    <p class="text-sm text-slate-600 dark:text-slate-300/80">
+      {% if rows %}
+      Affichage {{ rank_start + 1 }}–{{ rank_start + rows|length }} du classement
+      {% else %}
+      Page {{ current_page }}
+      {% endif %}
+    </p>
+    <div class="flex items-center gap-3">
+      {% set prev_classes = "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-150" %}
+      <a
+        {% if has_prev_page %}
+        href="{{ url_for('leaderboard', page=current_page - 1) }}"
+        rel="prev"
+        class="{{ prev_classes }} bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
+        {% else %}
+        class="{{ prev_classes }} cursor-not-allowed bg-white/10 text-slate-400/80 opacity-60 dark:bg-slate-800/70 dark:text-slate-400/70"
+        aria-disabled="true"
+        tabindex="-1"
+        {% endif %}
+      >
+        <span aria-hidden="true">←</span>
+        <span>Précédent</span>
+      </a>
+      {% set next_classes = "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-150" %}
+      <a
+        {% if has_next_page %}
+        href="{{ url_for('leaderboard', page=current_page + 1) }}"
+        rel="next"
+        class="{{ next_classes }} bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
+        {% else %}
+        class="{{ next_classes }} cursor-not-allowed bg-white/10 text-slate-400/80 opacity-60 dark:bg-slate-800/70 dark:text-slate-400/70"
+        aria-disabled="true"
+        tabindex="-1"
+        {% endif %}
+      >
+        <span>Suivant</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
   </div>
   <div class="mt-8 flex justify-center">
     <a
@@ -328,6 +376,7 @@
 
     const tbody = table.querySelector('tbody');
     const headers = Array.from(table.querySelectorAll('th[data-sort-key]'));
+    const rankOffset = Number(table.dataset.rankOffset || '0');
 
     const resetIndicators = () => {
       headers.forEach((header) => {
@@ -361,7 +410,7 @@
       Array.from(tbody.rows).forEach((row, index) => {
         const cell = row.cells[0];
         if (cell) {
-          cell.textContent = index + 1;
+          cell.textContent = rankOffset + index + 1;
         }
       });
     };
