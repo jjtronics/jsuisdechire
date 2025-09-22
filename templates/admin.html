@@ -114,6 +114,19 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     },
     {
+      id: 'email',
+      title: 'Paramètres SMTP',
+      description: 'Configure le serveur SMTP utilisé pour envoyer les emails automatiques (comme la réinitialisation de mot de passe).',
+      fields: [
+        {k:'smtp_host', label:'Serveur SMTP', type:'text'},
+        {k:'smtp_port', label:'Port', type:'number', step:'1', min:'1'},
+        {k:'smtp_username', label:"Nom d'utilisateur", type:'text'},
+        {k:'smtp_password', label:'Mot de passe SMTP', type:'password'},
+        {k:'smtp_sender', label:"Adresse d'expédition", type:'email'},
+        {k:'smtp_security', label:'Sécurité', type:'select', options:[['none','Aucune'], ['starttls','STARTTLS'], ['ssl','SSL/TLS']]}
+      ]
+    },
+    {
       id: 'reaction',
       title: 'admin.groups.reaction.title',
       description: 'admin.groups.reaction.description',
