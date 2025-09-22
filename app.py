@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect
+from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, send_from_directory
 import sqlite3, os, time, datetime, json, hashlib
 from functools import lru_cache, wraps
 from pathlib import Path
@@ -49,6 +49,11 @@ assert get_asset_version(), "Asset version must not be empty"
 @app.context_processor
 def inject_app_settings():
     return {"app_settings": get_settings()}
+
+
+@app.route("/sw.js")
+def service_worker():
+    return send_from_directory(app.static_folder or "static", "sw.js")
 
 DEFAULT_SETTINGS = {
     "rxn_trials": 5,

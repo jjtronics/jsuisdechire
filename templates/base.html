@@ -84,7 +84,7 @@
       });
 
       if ('serviceWorker' in navigator) {
-        addEventListener('load', () => navigator.serviceWorker.register('{{ asset_url('sw.js') }}'));
+        addEventListener('load', () => navigator.serviceWorker.register('{{ url_for("service_worker", v=asset_version) }}'));
       }
     </script>
   </body>
