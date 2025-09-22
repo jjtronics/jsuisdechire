@@ -458,6 +458,60 @@ def api_admin_clear():
     db.commit()
     return jsonify({"ok": True})
 
+@app.get("/api/admin/users")
+@require_admin
+def api_admin_users():
+    rows = get_db().execute("SELECT id, login, email, nickname, role, created_at, password_hash, google_id FROM users ORDER BY created_at DESC").fetchall()
+    payload = []
+    for row in rows:
+        payload.append({
+            "id": int(row["id"]),
+            "login": row["login"],
+            "email": row["email"],
+            "nickname": row["nickname"],
+            "role": row["role"],
+            "created_at": row["created_at"],
+            "has_password": bool(row["password_hash"]),
+            "has_google": bool(row["google_id"]),
+        })
+    return jsonify(payload)
+
+
+@app.post("/api/admin/users/<int:user_id>/reset-password")
+@require_admin
+def api_admin_reset_user_password(user_id: int):
+    user = get_user_by_id(user_id)
+    if user is None:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+
+    data = request.get_json(silent=True) or {}
+    password = (data.get("password") or "").strip()
+    if len(password) < 8:
+        return jsonify({"ok": False, "error": "password_too_short"}), 400
+
+    db = get_db()
+    db.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (generate_password_hash(password), int(user_id)),
+    )
+    db.commit()
+    return jsonify({"ok": True, "user_id": int(user_id)})
+
+
+@app.post("/api/admin/users/<int:user_id>/delete")
+@require_admin
+def api_admin_delete_user(user_id: int):
+    user = get_user_by_id(user_id)
+    if user is None:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+
+    db = get_db()
+    db.execute("UPDATE scores SET user_id = NULL WHERE user_id = ?", (int(user_id),))
+    db.execute("DELETE FROM users WHERE id = ?", (int(user_id),))
+    db.commit()
+    return jsonify({"ok": True, "deleted": int(user_id)})
+
+
 @app.get("/api/admin/scores")
 @require_admin
 def api_admin_scores():
