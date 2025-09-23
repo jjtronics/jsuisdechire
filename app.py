@@ -629,6 +629,48 @@ def t4():
 def results_page():
     return render_template("results.html", app_name=APP_NAME)
 
+LATEST_SCORES_CTE = """
+WITH normalized_scores AS (
+    SELECT
+        scores.*,
+        CASE
+            WHEN scores.user_id IS NOT NULL THEN 'user:' || CAST(scores.user_id AS TEXT)
+            ELSE 'nick:' || LOWER(COALESCE(scores.nickname, ''))
+        END AS group_key
+    FROM scores
+),
+ranked_scores AS (
+    SELECT
+        normalized_scores.*,
+        ROW_NUMBER() OVER (
+            PARTITION BY normalized_scores.group_key
+            ORDER BY normalized_scores.created_at DESC, normalized_scores.id DESC
+        ) AS row_rank
+    FROM normalized_scores
+),
+latest_scores AS (
+    SELECT
+        id,
+        created_at,
+        nickname,
+        total_score,
+        rxn_score,
+        rxn_median,
+        rxn_mean,
+        str_score,
+        str_accuracy,
+        str_mean,
+        prs_score,
+        prs_error,
+        time_to_catch_ms,
+        bal_score,
+        bal_std,
+        user_id
+    FROM ranked_scores
+    WHERE row_rank = 1
+)
+"""
+
 LEADERBOARD_SORTS = {
     "total_score": {
         "expression": "scores.total_score",
@@ -698,12 +740,12 @@ def leaderboard():
         order_clauses.append(clause)
     order_sql = ", ".join(order_clauses)
 
-    base_select = """
+    base_select = LATEST_SCORES_CTE + """
         SELECT
             scores.*,
             CASE WHEN users.id IS NOT NULL THEN users.id END AS verified_user_id,
             CASE WHEN users.id IS NOT NULL THEN users.avatar_path END AS avatar_path
-        FROM scores
+        FROM latest_scores AS scores
         LEFT JOIN users ON (
             users.id = scores.user_id
             OR (
@@ -985,15 +1027,36 @@ def submit():
     db.commit()
 
     row_id = cursor.lastrowid or 0
-    ahead = db.execute(
-        """
-        SELECT COUNT(*) FROM scores
-        WHERE total_score > ?
-           OR (total_score = ? AND (created_at > ? OR (created_at = ? AND id > ?)))
+    ranking = db.execute(
+        LATEST_SCORES_CTE
+        + """
+        SELECT
+            SUM(
+                CASE
+                    WHEN scores.total_score > ?
+                        OR (
+                            scores.total_score = ?
+                            AND (
+                                scores.created_at > ?
+                                OR (scores.created_at = ? AND scores.id > ?)
+                            )
+                        )
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS ahead_count,
+            COUNT(*) AS total_count
+        FROM latest_scores AS scores
         """,
-        (total, total, created_at, created_at, row_id)
-    ).fetchone()[0]
-    total_entries = db.execute("SELECT COUNT(*) FROM scores").fetchone()[0]
+        (total, total, created_at, created_at, row_id),
+    ).fetchone()
+
+    if isinstance(ranking, sqlite3.Row):
+        ahead = ranking["ahead_count"] or 0
+        total_entries = ranking["total_count"] or 0
+    else:
+        ahead = (ranking[0] if ranking and len(ranking) > 0 else 0) or 0
+        total_entries = (ranking[1] if ranking and len(ranking) > 1 else 0) or 0
 
     return jsonify({
         "ok": True,
