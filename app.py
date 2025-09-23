@@ -1203,9 +1203,11 @@ def profile_view():
     errors = []
     success_message = None
     avatar_url = asset_url(user["avatar_path"]) if user["avatar_path"] else None
+    last_action = None
 
     if request.method == "POST":
         action = request.form.get("action") or "upload"
+        last_action = action
         if action == "remove":
             if user["avatar_path"]:
                 _delete_avatar_file(user["avatar_path"])
@@ -1216,6 +1218,76 @@ def profile_view():
                 avatar_url = None
             else:
                 errors.append("Tu n'as pas encore d'avatar à supprimer.")
+        elif action == "update_email":
+            email_value = (request.form.get("email") or "").strip()
+            password_value = request.form.get("email_password") or ""
+            has_password = bool(user["password_hash"])
+
+            if not email_value or "@" not in email_value:
+                errors.append("Entre une adresse e-mail valide.")
+
+            if has_password:
+                if not password_value:
+                    errors.append("Entre ton mot de passe actuel pour confirmer.")
+                elif not check_password_hash(user["password_hash"], password_value):
+                    errors.append("Ton mot de passe actuel est incorrect.")
+
+            if not errors:
+                other_user = find_user_by_email(email_value)
+                if other_user and int(other_user["id"]) != int(user["id"]):
+                    errors.append("Cette adresse e-mail est déjà utilisée.")
+
+            if not errors:
+                current_email = (user["email"] or "").strip()
+                normalized_current = current_email.lower()
+                normalized_new = email_value.lower()
+
+                if normalized_new == normalized_current and email_value == current_email:
+                    success_message = "Ton adresse e-mail est déjà à jour."
+                else:
+                    db = get_db()
+                    db.execute(
+                        "UPDATE users SET email = ? WHERE id = ?",
+                        (email_value, int(user["id"])),
+                    )
+                    db.commit()
+                    success_message = "Ton adresse e-mail a été mise à jour."
+
+                user = get_user_by_id(int(user["id"]))
+                g.current_user = user
+                avatar_url = asset_url(user["avatar_path"]) if user["avatar_path"] else None
+        elif action == "update_password":
+            has_password = bool(user["password_hash"])
+            current_password = request.form.get("current_password") or ""
+            new_password = request.form.get("new_password") or ""
+            confirm_password = request.form.get("confirm_password") or ""
+
+            if has_password:
+                if not current_password:
+                    errors.append("Entre ton mot de passe actuel.")
+                elif not check_password_hash(user["password_hash"], current_password):
+                    errors.append("Ton mot de passe actuel est incorrect.")
+
+            if len(new_password) < 8:
+                errors.append("Ton nouveau mot de passe doit faire au moins 8 caractères.")
+            if new_password != confirm_password:
+                errors.append("Les deux nouveaux mots de passe ne correspondent pas.")
+
+            if not errors:
+                db = get_db()
+                db.execute(
+                    "UPDATE users SET password_hash = ? WHERE id = ?",
+                    (generate_password_hash(new_password), int(user["id"])),
+                )
+                db.commit()
+                success_message = (
+                    "Ton mot de passe a été mis à jour."
+                    if has_password
+                    else "Ton mot de passe a été défini."
+                )
+                user = get_user_by_id(int(user["id"]))
+                g.current_user = user
+                avatar_url = asset_url(user["avatar_path"]) if user["avatar_path"] else None
         else:
             file = request.files.get("avatar")
             if not file or not file.filename:
@@ -1238,6 +1310,11 @@ def profile_view():
                     user = get_user_by_id(int(user["id"]))
                     g.current_user = user
                     avatar_url = asset_url(relative_path)
+
+    has_password = bool(user and user["password_hash"])
+    email_form_value = (user["email"] or "") if user else ""
+    if last_action == "update_email" and errors:
+        email_form_value = (request.form.get("email") or "").strip()
 
     page = request.args.get("page", default=1, type=int) or 1
     if page < 1:
@@ -1318,6 +1395,8 @@ def profile_view():
         user=user,
         avatar_url=avatar_url,
         has_avatar=bool(user and user["avatar_path"]),
+        has_password=has_password,
+        email_form_value=email_form_value,
         max_avatar_size_label=MAX_AVATAR_SIZE_LABEL,
         allowed_avatar_formats=format_labels,
         score_rows=score_rows,
