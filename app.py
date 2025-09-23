@@ -1179,6 +1179,76 @@ def profile_view():
                     g.current_user = user
                     avatar_url = asset_url(relative_path)
 
+    page = request.args.get("page", default=1, type=int) or 1
+    if page < 1:
+        page = 1
+
+    per_page = 25
+    offset = (page - 1) * per_page
+
+    allowed_sort_keys = {
+        "total_score",
+        "rxn_score",
+        "str_score",
+        "prs_score",
+        "bal_score",
+        "created_at",
+    }
+
+    requested_sort = (request.args.get("sort", "") or "").strip().lower()
+    if requested_sort not in allowed_sort_keys:
+        sort_key = "created_at"
+    else:
+        sort_key = requested_sort
+
+    sort_config = LEADERBOARD_SORTS.get(sort_key, LEADERBOARD_SORTS["created_at"])
+
+    requested_order = (request.args.get("order", "") or "").strip().lower()
+    if requested_order not in {"asc", "desc"}:
+        sort_order = sort_config["default_order"]
+    else:
+        sort_order = requested_order
+
+    sort_direction = "ASC" if sort_order == "asc" else "DESC"
+    order_clauses = [f"{sort_config['expression']} {sort_direction}"]
+    for clause in sort_config.get("secondary", []):
+        order_clauses.append(clause)
+    order_sql = ", ".join(order_clauses)
+
+    score_filters = []
+    score_params = []
+
+    user_id = int(user["id"]) if user and user["id"] else None
+    if user_id:
+        score_filters.append("scores.user_id = ?")
+        score_params.append(user_id)
+
+    nickname = (user["nickname"] or "") if user else ""
+    nickname = nickname.strip()
+    if nickname:
+        score_filters.append("(scores.user_id IS NULL AND LOWER(COALESCE(scores.nickname, '')) = LOWER(?))")
+        score_params.append(nickname)
+
+    score_rows = []
+    has_next = False
+    if score_filters:
+        where_sql = " OR ".join(score_filters)
+        db = get_db()
+        query = db.execute(
+            f"""
+            SELECT scores.*
+            FROM scores
+            WHERE {where_sql}
+            ORDER BY {order_sql}
+            LIMIT ? OFFSET ?
+            """,
+            (*score_params, per_page + 1, offset),
+        ).fetchall()
+        has_next = len(query) > per_page
+        score_rows = [dict(row) for row in query[:per_page]]
+
+    has_prev = page > 1
+
     format_labels = sorted({"JPG" if key == "jpeg" else key.upper() for key in ALLOWED_AVATAR_FORMATS.keys()})
     return render_template(
         "profile.html",
@@ -1190,6 +1260,17 @@ def profile_view():
         has_avatar=bool(user and user["avatar_path"]),
         max_avatar_size_label=MAX_AVATAR_SIZE_LABEL,
         allowed_avatar_formats=format_labels,
+        score_rows=score_rows,
+        score_page=page,
+        score_has_next=has_next,
+        score_has_prev=has_prev,
+        score_rank_offset=offset,
+        score_sort_key=sort_key,
+        score_sort_order=sort_order,
+        score_sort_defaults={
+            key: cfg["default_order"] for key, cfg in LEADERBOARD_SORTS.items() if key in allowed_sort_keys
+        },
+        score_per_page=per_page,
     )
 
 
