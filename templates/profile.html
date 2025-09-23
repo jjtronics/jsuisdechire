@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto">
+  <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
+    <h1 class="text-2xl font-black mb-2">Mon avatar</h1>
+    <p class="text-sm text-gray-600 dark:text-slate-300">Ta photo s'affiche dans le classement. Choisis une image carrée et bien centrée pour un rendu propre sur mobile.</p>
+    {% if success_message %}
+    <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+      {{ success_message }}
+    </div>
+    {% endif %}
+    {% if errors %}
+    <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
+      <ul class="list-disc space-y-1 pl-4">
+        {% for err in errors %}
+        <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    <div class="mt-6 flex flex-col items-center gap-4">
+      <div class="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-white/60 bg-gradient-to-br from-rose-100 via-rose-200 to-rose-300 text-2xl font-bold text-white shadow-lg dark:border-white/10 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900" aria-hidden="true">
+        {% if avatar_url %}
+        <img id="avatarPreview" src="{{ avatar_url }}" alt="Avatar actuel" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+        {% else %}
+        <span id="avatarInitial">{{ (user['nickname'] or 'Joueur')[:1]|upper }}</span>
+        {% endif %}
+      </div>
+      <p class="text-xs text-gray-500 dark:text-slate-400 text-center">Affiché en rond ~96px dans le classement.</p>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="mt-6 grid gap-4" id="avatarForm">
+      <div>
+        <label for="avatar" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Téléverser une image</label>
+        <input
+          id="avatar"
+          name="avatar"
+          type="file"
+          accept="image/png,image/jpeg"
+          class="mt-2 block w-full cursor-pointer rounded-xl border border-gray-200 bg-white/90 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        />
+        <p class="mt-2 text-xs text-gray-500 dark:text-slate-400">PNG ou JPG · {{ max_avatar_size_kb }} Ko max · Formats acceptés : {{ allowed_avatar_formats | join(', ') }}.</p>
+      </div>
+      <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2">Mettre à jour mon avatar</button>
+    </form>
+    <form method="post" class="mt-4">
+      <input type="hidden" name="action" value="remove" />
+      <button type="submit" class="text-xs text-rose-500 hover:underline disabled:opacity-40" {% if not has_avatar %}disabled{% endif %}>Retirer mon avatar</button>
+    </form>
+  </section>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('avatar');
+    let preview = document.getElementById('avatarPreview');
+    const placeholder = document.getElementById('avatarInitial');
+    if (!input) {
+      return;
+    }
+    input.addEventListener('change', () => {
+      const [file] = input.files || [];
+      if (!file) {
+        return;
+      }
+      if (!file.type || !/^image\/(png|jpeg)$/.test(file.type)) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (!preview) {
+          preview = document.createElement('img');
+          preview.id = 'avatarPreview';
+          preview.alt = 'Aperçu avatar';
+          preview.className = 'h-full w-full object-cover';
+          if (placeholder) {
+            placeholder.replaceWith(preview);
+          }
+        }
+        preview.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+</script>
+{% endblock %}
