@@ -1,12 +1,9 @@
 {% extends "base.html" %}
 {% macro render_avatar(path, name, size='md') -%}
-  {%- set classes = 'leaderboard-avatar leaderboard-avatar-' ~ size -%}
-  {%- set label = (name or 'Joueur') -%}
-  {%- set initial = (label[:1] if label else 'J')|upper -%}
   {%- if path -%}
+    {%- set classes = 'leaderboard-avatar leaderboard-avatar-' ~ size -%}
+    {%- set label = (name or 'Joueur') -%}
     <img src="{{ asset_url(path) }}" alt="Avatar de {{ label }}" class="{{ classes }}" loading="lazy" decoding="async" />
-  {%- else -%}
-    <span class="{{ classes }} leaderboard-avatar-placeholder" aria-hidden="true">{{ initial }}</span>
   {%- endif -%}
 {%- endmacro %}
 {% block content %}
