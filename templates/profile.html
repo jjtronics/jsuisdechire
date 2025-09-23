@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-md mx-auto">
-  <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
-    <h1 class="text-2xl font-black mb-2">Mon avatar</h1>
+<div class="grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
+  <section class="rounded-2xl border border-white/30 bg-white/90 p-6 shadow dark:bg-slate-900/60">
+    <h1 class="mb-2 text-2xl font-black">Mon avatar</h1>
     <p class="text-sm text-gray-600 dark:text-slate-300">Ta photo s'affiche dans le classement. Choisis une image carrée et bien centrée pour un rendu propre sur mobile.</p>
     {% if success_message %}
     <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
@@ -26,7 +26,7 @@
         <span id="avatarInitial">{{ (user['nickname'] or 'Joueur')[:1]|upper }}</span>
         {% endif %}
       </div>
-      <p class="text-xs text-gray-500 dark:text-slate-400 text-center">Affiché en rond ~96px dans le classement.</p>
+      <p class="text-center text-xs text-gray-500 dark:text-slate-400">Affiché en rond ~96px dans le classement.</p>
     </div>
     <form method="post" enctype="multipart/form-data" class="mt-6 grid gap-4" id="avatarForm">
       <div>
@@ -44,8 +44,196 @@
     </form>
     <form method="post" class="mt-4">
       <input type="hidden" name="action" value="remove" />
-      <button type="submit" class="text-xs text-rose-500 hover:underline disabled:opacity-40" {% if not has_avatar %}disabled{% endif %}>Retirer mon avatar</button>
+      <button type="submit" class="text-xs text-rose-500 hover:underline disabled:opacity-40" {% if not has_avatar %}disabled{%endif %}>Retirer mon avatar</button>
     </form>
+  </section>
+  <section class="rounded-2xl border border-white/30 bg-white/90 p-6 shadow dark:bg-slate-900/60">
+    <style>
+      .sort-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        width: 100%;
+        padding: 0;
+        background: none;
+        border: none;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+      }
+
+      .sort-button:focus-visible {
+        outline: 2px solid rgb(244 63 94 / 0.7);
+        outline-offset: 2px;
+      }
+
+      .sort-indicator {
+        font-size: 0.65rem;
+        opacity: 0.6;
+        transform: translateY(-0.05rem);
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .sort-indicator {
+          transition: opacity 0.15s ease;
+        }
+      }
+
+      th[data-sort-key] .sort-button:hover .sort-indicator {
+        opacity: 0.9;
+      }
+    </style>
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 class="text-2xl font-black">Mes scores</h2>
+        <p class="text-sm text-gray-600 dark:text-slate-300">Historique de tes parties enregistrées. Trie et explore ton évolution.</p>
+      </div>
+    </div>
+    <div class="mt-4 w-full overflow-x-auto">
+      {% set rows = score_rows|default([], true) %}
+      {% set active_sort_key = score_sort_key|default('created_at', true) %}
+      {% set active_sort_order = score_sort_order|default('desc', true) %}
+      {% set sort_defaults = score_sort_defaults|default({}, true) %}
+      <table class="min-w-full text-xs sm:text-sm">
+        <thead class="text-left text-gray-500 dark:text-slate-300">
+          <tr>
+            <th scope="col" class="py-2">#</th>
+            {% set key = 'total_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Total</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
+            {% set key = 'rxn_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Réaction</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
+            {% set key = 'str_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Stroop</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
+            {% set key = 'prs_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Poursuite</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
+            {% set key = 'bal_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Équilibre</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
+            {% set key = 'created_at' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Date</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr class="border-t border-white/20">
+            <td class="py-2">{{ score_rank_offset + loop.index }}</td>
+            <td class="font-semibold" data-sort-value="{{ row['total_score'] if row['total_score'] is not none else '' }}">{{ row['total_score']|round(1) if row['total_score'] is not none else '—' }}</td>
+            <td data-sort-value="{{ row['rxn_score'] if row['rxn_score'] is not none else '' }}">{{ row['rxn_score']|round(1) if row['rxn_score'] is not none else '—' }}</td>
+            <td data-sort-value="{{ row['str_score'] if row['str_score'] is not none else '' }}">{{ row['str_score']|round(1) if row['str_score'] is not none else '—' }}</td>
+            <td data-sort-value="{{ row['prs_score'] if row['prs_score'] is not none else '' }}">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</td>
+            <td data-sort-value="{{ row['bal_score'] if row['bal_score'] is not none else '' }}">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</td>
+            <td data-sort-value="{{ row['created_at'] }}">
+              <time
+                class="js-account-local-time"
+                data-timestamp="{{ row['created_at'] }}"
+                datetime="{{ row['created_at'] | int | datetime }}"
+              >{{ row['created_at'] | int | datetime }}</time>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="py-6 text-center text-sm text-gray-500 dark:text-slate-300">Tu n'as pas encore enregistré de score.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% set has_prev_page = score_has_prev|default(False, true) %}
+    {% set has_next_page = score_has_next|default(False, true) %}
+    <div class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+      <p class="text-sm text-slate-600 dark:text-slate-300/80">
+        {% if rows %}
+        Affichage {{ score_rank_offset + 1 }}–{{ score_rank_offset + rows|length }} de tes scores
+        {% else %}
+        Page {{ score_page|default(1, true) }}
+        {% endif %}
+      </p>
+      <div class="flex items-center gap-3">
+        {% set prev_classes = "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-150" %}
+        <a
+          {% if has_prev_page %}
+          href="{{ url_for('profile_view', page=score_page - 1, sort=active_sort_key, order=active_sort_order) }}"
+          rel="prev"
+          class="{{ prev_classes }} bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
+          {% else %}
+          class="{{ prev_classes }} cursor-not-allowed bg-white/10 text-slate-400/80 opacity-60 dark:bg-slate-800/70 dark:text-slate-400/70"
+          aria-disabled="true"
+          tabindex="-1"
+          {% endif %}
+        >
+          <span aria-hidden="true">←</span>
+          <span>Précédent</span>
+        </a>
+        {% set next_classes = "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-150" %}
+        <a
+          {% if has_next_page %}
+          href="{{ url_for('profile_view', page=score_page + 1, sort=active_sort_key, order=active_sort_order) }}"
+          rel="next"
+          class="{{ next_classes }} bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
+          {% else %}
+          class="{{ next_classes }} cursor-not-allowed bg-white/10 text-slate-400/80 opacity-60 dark:bg-slate-800/70 dark:text-slate-400/70"
+          aria-disabled="true"
+          tabindex="-1"
+          {% endif %}
+        >
+          <span>Suivant</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
   </section>
 </div>
 <script>
@@ -78,6 +266,20 @@
         preview.src = event.target.result;
       };
       reader.readAsDataURL(file);
+    });
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    document.querySelectorAll('.js-account-local-time').forEach((el) => {
+      const ts = Number(el.dataset.timestamp);
+      if (!Number.isFinite(ts)) {
+        return;
+      }
+      const date = new Date(ts * 1000);
+      el.textContent = fmt.format(date);
+      el.setAttribute('datetime', date.toISOString());
     });
   });
 </script>
