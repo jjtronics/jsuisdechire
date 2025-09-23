@@ -1,6 +1,6 @@
 
 from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, send_from_directory
-import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl
+import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr
 from functools import lru_cache, wraps
 from pathlib import Path
 from typing import Optional
@@ -18,6 +18,13 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "data.sqlite")
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
+
+MAX_AVATAR_BYTES = 256 * 1024
+ALLOWED_AVATAR_FORMATS = {"png": ".png", "jpeg": ".jpg"}
+UPLOAD_SUBDIR = "uploads"
+STATIC_ROOT = Path(app.static_folder or Path(__file__).parent / "static")
+AVATAR_UPLOAD_FOLDER = STATIC_ROOT / UPLOAD_SUBDIR
+AVATAR_UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 google_oauth = None
 if OAuth is not None:
@@ -80,12 +87,18 @@ def inject_auth_context():
     user = get_current_user()
     payload = None
     if user is not None:
+        avatar_url = None
+        avatar_path = user.get("avatar_path") if isinstance(user, dict) else user["avatar_path"]
+        if avatar_path:
+            avatar_url = asset_url(avatar_path)
         payload = {
             "id": int(user["id"]),
             "login": user["login"],
             "email": user["email"],
             "nickname": user["nickname"],
             "role": user["role"],
+            "avatar_path": avatar_path,
+            "avatar_url": avatar_url,
         }
     return {
         "current_user": user,
@@ -177,7 +190,8 @@ def ensure_schema(db=None):
         nickname TEXT NOT NULL UNIQUE COLLATE NOCASE,
         password_hash TEXT,
         role TEXT NOT NULL DEFAULT 'player',
-        google_id TEXT UNIQUE
+        google_id TEXT UNIQUE,
+        avatar_path TEXT
     )''')
     db.execute('''CREATE TABLE IF NOT EXISTS password_resets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,6 +206,9 @@ def ensure_schema(db=None):
     score_columns = {row["name"] for row in db.execute("PRAGMA table_info(scores)").fetchall()}
     if "user_id" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN user_id INTEGER")
+    user_columns = {row["name"] for row in db.execute("PRAGMA table_info(users)").fetchall()}
+    if "avatar_path" not in user_columns:
+        db.execute("ALTER TABLE users ADD COLUMN avatar_path TEXT")
     db.commit()
     db.commit()
 
@@ -491,8 +508,35 @@ Si tu n'es pas à l'origine de cette demande, ignore simplement cet email.
     return send_email_via_smtp(subject=subject, body=body, recipient=recipient)
 
 
+def _delete_avatar_file(path: Optional[str]) -> None:
+    if not path:
+        return
+    candidate = STATIC_ROOT / path
+    try:
+        if candidate.is_file():
+            candidate.unlink()
+    except OSError:
+        pass
+
+
+def _store_avatar_bytes(user_id: int, data: bytes, extension: str) -> str:
+    timestamp = int(time.time())
+    filename = f"user_{user_id}_{timestamp}{extension}"
+    full_path = AVATAR_UPLOAD_FOLDER / filename
+    with full_path.open("wb") as handle:
+        handle.write(data)
+    relative_path = f"{UPLOAD_SUBDIR}/{filename}"
+    return relative_path
+
+
+def _set_user_avatar_path(user_id: int, avatar_path: Optional[str]) -> None:
+    db = get_db()
+    db.execute("UPDATE users SET avatar_path = ? WHERE id = ?", (avatar_path, int(user_id)))
+    db.commit()
+
+
 def create_user(*, login: str, email: str, nickname: str, password: Optional[str], role: str = DEFAULT_USER_ROLE,
-                google_id: Optional[str] = None) -> sqlite3.Row:
+                google_id: Optional[str] = None, avatar_path: Optional[str] = None) -> sqlite3.Row:
     login_value = (login or "").strip()
     email_value = (email or "").strip()
     nickname_value = (nickname or "").strip()
@@ -503,10 +547,19 @@ def create_user(*, login: str, email: str, nickname: str, password: Optional[str
     db = get_db()
     db.execute(
         """
-        INSERT INTO users (created_at, login, email, nickname, password_hash, role, google_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (created_at, login, email, nickname, password_hash, role, google_id, avatar_path)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (created_at, login_value, email_value, nickname_value, password_hash, role or DEFAULT_USER_ROLE, google_id),
+        (
+            created_at,
+            login_value,
+            email_value,
+            nickname_value,
+            password_hash,
+            role or DEFAULT_USER_ROLE,
+            google_id,
+            avatar_path,
+        ),
     )
     db.commit()
     return find_user_by_login(login_value)
@@ -645,7 +698,7 @@ def leaderboard():
     order_sql = ", ".join(order_clauses)
 
     base_select = """
-        SELECT scores.*, users.id AS verified_user_id
+        SELECT scores.*, users.id AS verified_user_id, users.avatar_path AS avatar_path
         FROM scores
         LEFT JOIN users ON (
             users.id = scores.user_id
@@ -747,7 +800,7 @@ def api_admin_clear():
 @app.get("/api/admin/users")
 @require_admin
 def api_admin_users():
-    rows = get_db().execute("SELECT id, login, email, nickname, role, created_at, password_hash, google_id FROM users ORDER BY created_at DESC").fetchall()
+    rows = get_db().execute("SELECT id, login, email, nickname, role, created_at, password_hash, google_id, avatar_path FROM users ORDER BY created_at DESC").fetchall()
     payload = []
     for row in rows:
         payload.append({
@@ -759,6 +812,7 @@ def api_admin_users():
             "created_at": row["created_at"],
             "has_password": bool(row["password_hash"]),
             "has_google": bool(row["google_id"]),
+            "avatar_path": row["avatar_path"],
         })
     return jsonify(payload)
 
@@ -1072,6 +1126,65 @@ def reset_password_view(token: str):
         app_name=APP_NAME,
         invalid=False,
         error=error,
+    )
+
+
+@app.route("/profile", methods=["GET", "POST"])
+def profile_view():
+    user = get_current_user()
+    if user is None:
+        return redirect(url_for("login_view", next=request.url))
+
+    errors = []
+    success_message = None
+    avatar_url = asset_url(user["avatar_path"]) if user["avatar_path"] else None
+
+    if request.method == "POST":
+        action = request.form.get("action") or "upload"
+        if action == "remove":
+            if user["avatar_path"]:
+                _delete_avatar_file(user["avatar_path"])
+                _set_user_avatar_path(int(user["id"]), None)
+                success_message = "Ton avatar a été supprimé."
+                user = get_user_by_id(int(user["id"]))
+                g.current_user = user
+                avatar_url = None
+            else:
+                errors.append("Tu n'as pas encore d'avatar à supprimer.")
+        else:
+            file = request.files.get("avatar")
+            if not file or not file.filename:
+                errors.append("Choisis une image à téléverser.")
+            else:
+                data = file.read(MAX_AVATAR_BYTES + 1)
+                image_format = None
+                if len(data) > MAX_AVATAR_BYTES:
+                    errors.append("Ton image est trop lourde (max 256 Ko).")
+                else:
+                    image_format = imghdr.what(None, data)
+                    if image_format not in ALLOWED_AVATAR_FORMATS:
+                        errors.append("Format d'image non pris en charge. Utilise un PNG ou un JPG.")
+                if not errors and image_format:
+                    extension = ALLOWED_AVATAR_FORMATS[image_format]
+                    _delete_avatar_file(user["avatar_path"])
+                    relative_path = _store_avatar_bytes(int(user["id"]), data, extension)
+                    _set_user_avatar_path(int(user["id"]), relative_path)
+                    success_message = "Ton avatar a été mis à jour."
+                    user = get_user_by_id(int(user["id"]))
+                    g.current_user = user
+                    avatar_url = asset_url(relative_path)
+
+    format_labels = sorted({"JPG" if key == "jpeg" else key.upper() for key in ALLOWED_AVATAR_FORMATS.keys()})
+    return render_template(
+        "profile.html",
+        app_name=APP_NAME,
+        errors=errors,
+        success_message=success_message,
+        user=user,
+        avatar_url=avatar_url,
+        has_avatar=bool(user and user["avatar_path"]),
+        max_avatar_size_kb=MAX_AVATAR_BYTES // 1024,
+        allowed_avatar_formats=format_labels,
     )
 
 
