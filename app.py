@@ -701,10 +701,16 @@ def leaderboard():
     base_select = """
         SELECT
             scores.*,
-            CASE WHEN scores.user_id IS NOT NULL THEN users.id END AS verified_user_id,
-            CASE WHEN scores.user_id IS NOT NULL THEN users.avatar_path END AS avatar_path
+            CASE WHEN users.id IS NOT NULL THEN users.id END AS verified_user_id,
+            CASE WHEN users.id IS NOT NULL THEN users.avatar_path END AS avatar_path
         FROM scores
-        LEFT JOIN users ON users.id = scores.user_id
+        LEFT JOIN users ON (
+            users.id = scores.user_id
+            OR (
+                scores.user_id IS NULL
+                AND LOWER(users.nickname) = LOWER(COALESCE(scores.nickname, ''))
+            )
+        )
     """
 
     podium_rows = db.execute(
