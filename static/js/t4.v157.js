@@ -204,6 +204,11 @@
     s = Math.max(0, Math.min(100, Math.round(s)));
     const durationMs=Math.round(Math.max(0, performance.now()-measureStart));
     const stdStored = Number.isFinite(std) ? Number(std.toFixed(4)) : null;
+    if(window.jsdSession && typeof window.jsdSession.invalidateSubmission==='function'){
+      window.jsdSession.invalidateSubmission();
+    }else{
+      try{localStorage.removeItem('jsd:score_submitted');localStorage.removeItem('jsd:last_submission');}catch(err){}
+    }
     localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:durationMs, std_g:stdStored, score:s }));
     localStorage.setItem('jsd:done:t4','1');
     if (window.jsdSession && typeof window.jsdSession.submitScore === 'function'){
@@ -246,6 +251,11 @@
       const score=Math.max(0, Math.min(100, Math.round(100*(1-(stdPx-4)/(20-4)))));
       finished=true;
       const durationMs=Math.round(Math.max(0, performance.now()-fallbackStart));
+      if(window.jsdSession && typeof window.jsdSession.invalidateSubmission==='function'){
+        window.jsdSession.invalidateSubmission();
+      }else{
+        try{localStorage.removeItem('jsd:score_submitted');localStorage.removeItem('jsd:last_submission');}catch(err){}
+      }
       localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:durationMs, std_px:stdPx, score }));
       localStorage.setItem('jsd:done:t4','1');
       if (window.jsdSession && typeof window.jsdSession.submitScore === 'function'){

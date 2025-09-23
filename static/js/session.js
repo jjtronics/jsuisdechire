@@ -89,6 +89,11 @@
     }
   }
 
+  function invalidateSubmission(){
+    setSubmissionState(null);
+    setLastSubmissionInfo(null);
+  }
+
   function getLastSubmissionInfo(){
     return readJson('jsd:last_submission');
   }
@@ -162,7 +167,8 @@
   function resetProgress(options){
     options = options || {};
     const keepNickname = options.keepNickname !== false;
-    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted','jsd:last_submission']
+    invalidateSubmission();
+    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal']
       .forEach(key => localStorage.removeItem(key));
     if (!keepNickname){
       localStorage.removeItem('jsd:nick');
@@ -179,6 +185,7 @@
     submissionState,
     getNicknameMaxLength,
     sanitizeNickname,
-    getLastSubmissionInfo
+    getLastSubmissionInfo,
+    invalidateSubmission
   };
 })();

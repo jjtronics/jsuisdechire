@@ -79,6 +79,11 @@
     const acc=rounds>0?rec.filter(x=>x.ok).length/rounds:0;
     const mean=rounds>0?rec.reduce((a,b)=>a+(b.dt||0),0)/rounds:0;
     const score=computeScore(acc, mean);
+    if(window.jsdSession && typeof window.jsdSession.invalidateSubmission==='function'){
+      window.jsdSession.invalidateSubmission();
+    }else{
+      try{localStorage.removeItem('jsd:score_submitted');localStorage.removeItem('jsd:last_submission');}catch(err){}
+    }
     localStorage.setItem("jsd:str", JSON.stringify({rounds,accuracy:acc,mean,score}));
     localStorage.setItem("jsd:done:t2","1");
     const next=document.getElementById("next");

@@ -137,6 +137,11 @@
     if (!payload){
       payload = { score: 0 };
     }
+    if(window.jsdSession && typeof window.jsdSession.invalidateSubmission==='function'){
+      window.jsdSession.invalidateSubmission();
+    }else{
+      try{localStorage.removeItem('jsd:score_submitted');localStorage.removeItem('jsd:last_submission');}catch(err){}
+    }
     localStorage.setItem("jsd:prs", JSON.stringify(payload));
     localStorage.setItem("jsd:done:t3","1");
     document.getElementById("next").classList.remove("opacity-50","pointer-events-none");
