@@ -216,7 +216,7 @@
     }
     btn.textContent=t('t4.fallback_status_done');
     document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
-    setTimeout(()=>location.href='/results', 600);
+    setTimeout(()=>location.href='/t5', 600);
   }
 
   function startFallback(){
@@ -263,7 +263,7 @@
       }
       fbStatus.textContent=t('t4.fallback_status_done');
       document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
-      setTimeout(()=>location.href='/results', 600);
+      setTimeout(()=>location.href='/t5', 600);
     }
     area.addEventListener('contextmenu', e=>e.preventDefault());
     area.addEventListener('selectstart', e=>e.preventDefault());

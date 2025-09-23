@@ -135,6 +135,13 @@ DEFAULT_SETTINGS = {
     "bal_low_good": 0.02,
     "bal_high_bad": 0.10,
     "bal_lin_rel_tol": 0.15,
+    "mem_pairs": 8,
+    "mem_initial_reveal_ms": 1500,
+    "mem_mismatch_hide_ms": 900,
+    "mem_accuracy_weight": 0.6,
+    "mem_speed_weight": 0.4,
+    "mem_time_best_ms": 45000,
+    "mem_time_worst_ms": 120000,
     "nickname_max_length": 32,
     "smtp_host": "",
     "smtp_port": 587,
@@ -177,7 +184,8 @@ def ensure_schema(db=None):
         rxn_score INTEGER, rxn_median REAL, rxn_mean REAL,
         str_score INTEGER, str_accuracy REAL, str_mean REAL,
         prs_score INTEGER, prs_error REAL, time_to_catch_ms REAL,
-        bal_score INTEGER, bal_std REAL
+        bal_score INTEGER, bal_std REAL,
+        mem_score REAL, mem_time_ms INTEGER, mem_errors INTEGER
     )''')
     db.execute('''CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
@@ -207,6 +215,13 @@ def ensure_schema(db=None):
     score_columns = {row["name"] for row in db.execute("PRAGMA table_info(scores)").fetchall()}
     if "user_id" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN user_id INTEGER")
+        score_columns.add("user_id")
+    if "mem_score" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN mem_score REAL")
+    if "mem_time_ms" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN mem_time_ms INTEGER")
+    if "mem_errors" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN mem_errors INTEGER")
     user_columns = {row["name"] for row in db.execute("PRAGMA table_info(users)").fetchall()}
     if "avatar_path" not in user_columns:
         db.execute("ALTER TABLE users ADD COLUMN avatar_path TEXT")
@@ -625,6 +640,10 @@ def t3():
 def t4():
     return render_template("t4.html", app_name=APP_NAME)
 
+@app.route("/t5")
+def t5():
+    return render_template("t5.html", app_name=APP_NAME)
+
 @app.route("/results")
 def results_page():
     return render_template("results.html", app_name=APP_NAME)
@@ -662,6 +681,9 @@ latest_scores AS (
         time_to_catch_ms,
         bal_score,
         bal_std,
+        mem_score,
+        mem_time_ms,
+        mem_errors,
         user_id
     FROM ranked_scores
     WHERE row_rank = 1
@@ -686,6 +708,11 @@ LEADERBOARD_SORTS = {
     },
     "prs_score": {
         "expression": "scores.prs_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "mem_score": {
+        "expression": "scores.mem_score",
         "default_order": "desc",
         "secondary": ["scores.created_at DESC", "scores.id DESC"],
     },
@@ -918,6 +945,9 @@ def api_admin_scores():
             "time_to_catch_ms": row["time_to_catch_ms"],
             "bal_score": row["bal_score"],
             "bal_std": row["bal_std"],
+            "mem_score": row["mem_score"],
+            "mem_time_ms": row["mem_time_ms"],
+            "mem_errors": row["mem_errors"],
         })
     return jsonify(payload)
 
@@ -1009,17 +1039,22 @@ def submit():
         "time_to_catch_ms": data.get("prs", {}).get("time_to_catch_ms"),
         "bal_score": data.get("bal", {}).get("score"),
         "bal_std": data.get("bal", {}).get("std_g"),
+        "mem_score": data.get("mem", {}).get("score"),
+        "mem_time_ms": data.get("mem", {}).get("elapsed_ms"),
+        "mem_errors": data.get("mem", {}).get("mistakes"),
     }
     db = get_db()
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
          fields['prs_score'], fields['prs_error'], fields['time_to_catch_ms'],
-         fields['bal_score'], fields['bal_std'], user_id)
+         fields['bal_score'], fields['bal_std'],
+         fields['mem_score'], fields['mem_time_ms'], fields['mem_errors'],
+         user_id)
     )
     db.commit()
 
