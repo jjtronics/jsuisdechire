@@ -46,6 +46,98 @@
       <input type="hidden" name="action" value="remove" />
       <button type="submit" class="text-xs text-rose-500 hover:underline disabled:opacity-40" {% if not has_avatar %}disabled{%endif %}>Retirer mon avatar</button>
     </form>
+    <div class="mt-10 space-y-10">
+      <section>
+        <h2 class="text-xl font-bold">Mon adresse e-mail</h2>
+        <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">Modifie ton adresse de contact. Elle sert aussi pour la connexion.</p>
+        <form method="post" class="mt-4 grid gap-4">
+          <input type="hidden" name="action" value="update_email" />
+          <div>
+            <label for="profileEmail" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Nouvelle adresse e-mail</label>
+            <input
+              id="profileEmail"
+              name="email"
+              type="email"
+              value="{{ email_form_value }}"
+              autocomplete="email"
+              required
+              class="mt-2 block w-full rounded-xl border border-gray-200 bg-white/90 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+          </div>
+          <div>
+            <label for="profileEmailPassword" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Mot de passe actuel</label>
+            <input
+              id="profileEmailPassword"
+              name="email_password"
+              type="password"
+              autocomplete="current-password"
+              {% if has_password %}required{% endif %}
+              class="mt-2 block w-full rounded-xl border border-gray-200 bg-white/90 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+            <p class="mt-2 text-xs text-gray-500 dark:text-slate-400">
+              {% if has_password %}
+              Entre ton mot de passe actuel pour confirmer ce changement.
+              {% else %}
+              Ce champ est facultatif si tu n'as pas encore défini de mot de passe.
+              {% endif %}
+            </p>
+          </div>
+          <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2">Mettre à jour mon e-mail</button>
+        </form>
+      </section>
+      <section>
+        <h2 class="text-xl font-bold">Mon mot de passe</h2>
+        <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">
+          {% if has_password %}
+          Choisis un nouveau mot de passe pour sécuriser ton compte.
+          {% else %}
+          Définis un mot de passe pour pouvoir te connecter sans passer par Google.
+          {% endif %}
+        </p>
+        <form method="post" class="mt-4 grid gap-4">
+          <input type="hidden" name="action" value="update_password" />
+          <div>
+            <label for="profileCurrentPassword" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Mot de passe actuel</label>
+            <input
+              id="profileCurrentPassword"
+              name="current_password"
+              type="password"
+              autocomplete="current-password"
+              {% if has_password %}required{% endif %}
+              class="mt-2 block w-full rounded-xl border border-gray-200 bg-white/90 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="profileNewPassword" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Nouveau mot de passe</label>
+              <input
+                id="profileNewPassword"
+                name="new_password"
+                type="password"
+                autocomplete="new-password"
+                required
+                minlength="8"
+                class="mt-2 block w-full rounded-xl border border-gray-200 bg-white/90 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </div>
+            <div>
+              <label for="profileConfirmPassword" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Confirmer le mot de passe</label>
+              <input
+                id="profileConfirmPassword"
+                name="confirm_password"
+                type="password"
+                autocomplete="new-password"
+                required
+                minlength="8"
+                class="mt-2 block w-full rounded-xl border border-gray-200 bg-white/90 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-slate-400">Ton mot de passe doit contenir au moins 8 caractères.</p>
+          <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2">Mettre à jour mon mot de passe</button>
+        </form>
+      </section>
+    </div>
   </section>
   <section class="rounded-2xl border border-white/30 bg-white/90 p-6 shadow dark:bg-slate-900/60">
     <style>
