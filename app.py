@@ -633,10 +633,7 @@ LATEST_SCORES_CTE = """
 WITH normalized_scores AS (
     SELECT
         scores.*,
-        CASE
-            WHEN scores.user_id IS NOT NULL THEN 'user:' || CAST(scores.user_id AS TEXT)
-            ELSE 'nick:' || LOWER(COALESCE(scores.nickname, ''))
-        END AS group_key
+        LOWER(COALESCE(scores.nickname, '')) AS group_key
     FROM scores
 ),
 ranked_scores AS (
