@@ -140,7 +140,7 @@
       if (window.jsdSession && typeof window.jsdSession.resetProgress === 'function'){
         window.jsdSession.resetProgress({ keepNickname: true });
       } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:bal','jsd:score_submitted']
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:mem','jsd:bal','jsd:score_submitted']
           .forEach(key => localStorage.removeItem(key));
       }
       hideModal();
