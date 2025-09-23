@@ -68,6 +68,11 @@
     const med=median(recent);
     const mean=recent.reduce((a,b)=>a+b,0)/recent.length;
     const score=computeScore(med);
+    if(window.jsdSession && typeof window.jsdSession.invalidateSubmission==='function'){
+      window.jsdSession.invalidateSubmission();
+    }else{
+      try{localStorage.removeItem('jsd:score_submitted');localStorage.removeItem('jsd:last_submission');}catch(err){}
+    }
     localStorage.setItem("jsd:rxn", JSON.stringify({trials:cfg.trials, values:recent, median:med, mean, score}));
     localStorage.setItem("jsd:done:t1","1");
     const next=document.getElementById("next");
