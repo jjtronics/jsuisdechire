@@ -19,7 +19,8 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
 
-MAX_AVATAR_BYTES = 256 * 1024
+MAX_AVATAR_BYTES = 5 * 1024 * 1024
+MAX_AVATAR_SIZE_LABEL = f"{MAX_AVATAR_BYTES // (1024 * 1024)} Mo"
 ALLOWED_AVATAR_FORMATS = {"png": ".png", "jpeg": ".jpg"}
 UPLOAD_SUBDIR = "uploads"
 STATIC_ROOT = Path(app.static_folder or Path(__file__).parent / "static")
@@ -1159,7 +1160,7 @@ def profile_view():
                 data = file.read(MAX_AVATAR_BYTES + 1)
                 image_format = None
                 if len(data) > MAX_AVATAR_BYTES:
-                    errors.append("Ton image est trop lourde (max 256 Ko).")
+                    errors.append(f"Ton image est trop lourde (max {MAX_AVATAR_SIZE_LABEL}).")
                 else:
                     image_format = imghdr.what(None, data)
                     if image_format not in ALLOWED_AVATAR_FORMATS:
@@ -1183,7 +1184,7 @@ def profile_view():
         user=user,
         avatar_url=avatar_url,
         has_avatar=bool(user and user["avatar_path"]),
-        max_avatar_size_kb=MAX_AVATAR_BYTES // 1024,
+        max_avatar_size_label=MAX_AVATAR_SIZE_LABEL,
         allowed_avatar_formats=format_labels,
     )
 
