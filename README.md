@@ -43,11 +43,12 @@
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows : .venv\Scripts\activate
-pip install flask werkzeug
+pip install flask werkzeug standard-imghdr
 export FLASK_ENV=development  # optionnel pour le debug
 python app.py  # démarre sur 0.0.0.0:9001
 ```
 
+- Le paquet `standard-imghdr` fournit le module `imghdr`, retiré de la bibliothèque standard depuis Python 3.13, afin d'éviter les `ModuleNotFoundError` sur Debian 13.
 - L'application écoute sur `http://localhost:9001`.
 - La base SQLite (`data.sqlite`) est créée automatiquement.
 - Variables utiles :
@@ -111,10 +112,11 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install flask werkzeug
+pip install flask werkzeug standard-imghdr
 python app.py  # defaults to 0.0.0.0:9001
 ```
 
+- The `standard-imghdr` package ships the `imghdr` module that left the Python 3.13 standard library, preventing `ModuleNotFoundError` on Debian 13 deployments.
 - App runs at `http://localhost:9001`.
 - SQLite database is created automatically.
 - Optional env vars:
