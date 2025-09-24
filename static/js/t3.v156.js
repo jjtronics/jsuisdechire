@@ -12,7 +12,7 @@
   area.append(hint);
   const target=el("div","absolute w-10 h-10 rounded-full border-2"); target.style.borderColor="#10b981"; target.style.background="#ecfdf5"; area.append(target);
   const btnWrap=el("div","flex items-center justify-center mt-3",""); const btn=el("button","px-4 py-2 rounded-xl bg-black text-white",t("t3.button_start")); btnWrap.append(btn);
-  const countdownWrap=el("div","mt-2 flex justify-center","");
+  const countdownWrap=el("div","mb-4 flex justify-center","");
   const countdownDisplay=el("div","flex items-center gap-2 px-5 py-2 rounded-xl border-2 border-black/80 bg-gradient-to-r from-rose-600 via-amber-500 to-yellow-400 text-white font-mono text-lg tracking-widest shadow-lg",'<span aria-hidden="true">💣</span><span class="countdown-value">--.-</span><span aria-hidden="true">s</span><span aria-hidden="true">|</span><span class="attempts-value">--</span><span aria-hidden="true">x</span><span class="sr-only countdown-aria">--.- seconds remaining, -- attempts left</span>');
   countdownDisplay.setAttribute('role','status');
   countdownDisplay.setAttribute('aria-live','polite');
@@ -45,7 +45,7 @@
     const attemptsText=params ? `${Math.max(0,(params.maxAttempts||0)-misses)}` : '--';
     countdownAria.textContent=`${secondsText} seconds remaining, ${attemptsText} attempts left`;
   }
-  box.append(area,btnWrap,countdownWrap);
+  box.append(countdownWrap,area,btnWrap);
 
   const rand=(a,b)=>a + Math.random()*(b-a);
   async function fetchSettings(){
