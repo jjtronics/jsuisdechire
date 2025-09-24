@@ -30,10 +30,6 @@
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <a href="/" class="font-extrabold text-xl tracking-tight">jsuisdechire<span class="text-rose-500">.com</span></a>
           <div class="flex items-center gap-2 flex-wrap justify-end">
-            <button id="themeToggle" type="button" class="p-2 rounded-lg text-rose-600 hover:bg-rose-100 transition dark:text-rose-200 dark:hover:bg-slate-800" data-i18n-attr="aria-label:nav.theme_toggle">
-              <span class="block dark:hidden" aria-hidden="true">☀️</span>
-              <span class="hidden dark:block" aria-hidden="true">🌙</span>
-            </button>
             <select id="langSelect" class="text-sm rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700 px-2 py-1"></select>
             <a href="/leaderboard" class="text-sm px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700" data-i18n="nav.leaderboard">Top</a>
             {% if current_user_payload %}
