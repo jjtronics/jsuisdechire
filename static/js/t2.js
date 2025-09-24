@@ -1,4 +1,8 @@
 (function(){
+  const flow = window.jsdFlow || null;
+  if (flow && typeof flow.isActive === 'function' && !flow.isActive('t2')){
+    return;
+  }
   const t=(window.i18n)||((key)=>key);
   const el=(tag,cls,html)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e;};
   const box=document.getElementById("t2");
@@ -88,7 +92,8 @@
     localStorage.setItem("jsd:done:t2","1");
     const next=document.getElementById("next");
     if(next){next.classList.remove("opacity-50","pointer-events-none");}
-    setTimeout(()=>location.href="/t3", 500);
+    const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t2') : '/t3';
+    setTimeout(()=>{ location.href = nextRoute; }, 500);
   }
 
   function choose(cssColor){

@@ -10,8 +10,9 @@
     <meta name="theme-color" content="#f43f5e" />
     <link rel="icon" href="{{ asset_url('icons/icon-192.png') }}">
     <script defer src="{{ asset_url('js/i18n.js') }}"></script>
-    <script defer src="{{ asset_url('js/core.js') }}"></script>
     <script defer src="{{ asset_url('js/session.js') }}"></script>
+    <script defer src="{{ asset_url('js/flow.js') }}"></script>
+    <script defer src="{{ asset_url('js/core.js') }}"></script>
     <script>
       window.jsdConfig = window.jsdConfig || {};
       window.jsdConfig.settings = {{ app_settings | tojson | safe }};

@@ -8,9 +8,16 @@
   </div>
   <div id="t2" class="hidden"></div>
   <div class="flex justify-between">
-    <a href="/t1" class="px-4 py-2 rounded-xl border" data-i18n="common.back">Retour</a>
-    <a id="next" href="/t3" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.next">Suivant</a>
+    <a href="/t1" class="px-4 py-2 rounded-xl border" data-i18n="common.back" data-flow-back="1">Retour</a>
+    <a id="next" href="/t3" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.next" data-default-i18n="common.next" data-results-i18n="common.view_results">Suivant</a>
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.jsdFlow && typeof window.jsdFlow.setupPage === 'function'){
+      window.jsdFlow.setupPage('t2', { nextSelector: '#next', backSelector: '[data-flow-back]', hideBackIfFirst: true });
+    }
+  });
+</script>
 <script defer src="{{ asset_url('js/t2.js') }}"></script>
 {% endblock %}

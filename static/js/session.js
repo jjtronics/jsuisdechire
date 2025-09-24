@@ -173,7 +173,7 @@
     options = options || {};
     const keepNickname = options.keepNickname !== false;
     invalidateSubmission();
-    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:mem','jsd:bal']
+    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:mem','jsd:bal','jsd:test_sequence_v1']
       .forEach(key => localStorage.removeItem(key));
     if (!keepNickname){
       localStorage.removeItem('jsd:nick');

@@ -52,10 +52,28 @@
     const errorEl = document.getElementById('nicknameError');
     const t = window.i18n || ((key) => key);
     const sessionApi = window.jsdSession || {};
+    const flowApi = window.jsdFlow || null;
     const currentUser = window.jsdCurrentUser || null;
     const getNicknameMaxLength = typeof sessionApi.getNicknameMaxLength === 'function' ? sessionApi.getNicknameMaxLength : () => 0;
     const sanitizeNickname = typeof sessionApi.sanitizeNickname === 'function' ? sessionApi.sanitizeNickname : (value) => (value || '').trim();
     const nicknameMaxLength = getNicknameMaxLength();
+    const defaultStartHref = startLink.getAttribute('href') || '/t1';
+
+    function computeStartRoute(){
+      if (flowApi && typeof flowApi.prepareNewRun === 'function'){
+        return flowApi.prepareNewRun();
+      }
+      return defaultStartHref;
+    }
+
+    function resetProgress(){
+      if (sessionApi && typeof sessionApi.resetProgress === 'function'){
+        sessionApi.resetProgress({ keepNickname: true });
+      } else {
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:mem','jsd:bal','jsd:score_submitted','jsd:last_submission','jsd:test_sequence_v1']
+          .forEach(key => { try { localStorage.removeItem(key); } catch (err){} });
+      }
+    }
 
     if (!startLink || !modal || !input || !confirmBtn || !cancelBtn){
       return;
@@ -137,21 +155,17 @@
       }
       errorEl.classList.add('hidden');
       localStorage.setItem('jsd:nick', sanitized);
-      if (window.jsdSession && typeof window.jsdSession.resetProgress === 'function'){
-        window.jsdSession.resetProgress({ keepNickname: true });
-      } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:mem','jsd:bal','jsd:score_submitted']
-          .forEach(key => localStorage.removeItem(key));
-      }
+      resetProgress();
       hideModal();
-      window.location.href = startLink.getAttribute('href');
+      window.location.href = computeStartRoute();
     }
 
     startLink.addEventListener('click', (event) => {
       event.preventDefault();
       if (currentUser && currentUser.nickname){
         try { localStorage.setItem('jsd:nick', currentUser.nickname); } catch (err) {}
-        window.location.href = startLink.getAttribute('href');
+        resetProgress();
+        window.location.href = computeStartRoute();
         return;
       }
       showModal();

@@ -1,4 +1,8 @@
 (function(){
+  const flow = window.jsdFlow || null;
+  if (flow && typeof flow.isActive === 'function' && !flow.isActive('t1')){
+    return;
+  }
   const t=(window.i18n)||((key)=>key);
   const el=(tag,cls,html)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e;};
   const BASE_CLASS="h-36 rounded-xl flex items-center justify-center text-lg font-semibold cursor-pointer select-none transition-colors bg-gray-100 dark:bg-slate-800";
@@ -80,7 +84,8 @@
     area.classList.add("opacity-60");
     area.style.cursor="default";
     area.textContent=t("t1.done");
-    setTimeout(()=>location.href="/t2",600);
+    const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t1') : '/t2';
+    setTimeout(()=>{ location.href = nextRoute; },600);
   }
 
   area.addEventListener("click",()=>{
