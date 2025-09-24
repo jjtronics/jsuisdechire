@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, send_from_directory
+from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, make_response
 import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr
 from functools import lru_cache, wraps
 from pathlib import Path
@@ -121,7 +121,12 @@ def inject_auth_context():
 
 @app.route("/sw.js")
 def service_worker():
-    return send_from_directory(app.static_folder or "static", "sw.js")
+    response = make_response(render_template("sw.js"))
+    response.headers["Content-Type"] = "application/javascript"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 DEFAULT_SETTINGS = {
     "rxn_trials": 5,
