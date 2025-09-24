@@ -67,6 +67,15 @@
     line-height: 1.35rem;
   }
 
+  [data-podium] .placement-rank {
+    font-size: 0.54rem;
+    line-height: 0.72rem;
+  }
+
+  [data-podium] .placement-rank-suffix {
+    font-size: 0.72rem;
+  }
+
   .score-highlight {
     position: relative;
     border-radius: 2rem;
@@ -196,7 +205,7 @@
         <div class="relative w-full max-w-[13rem] overflow-hidden rounded-[2rem] border border-white/40 bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 text-slate-700 shadow-[0_1.5rem_3rem_-1.4rem_rgba(15,23,42,0.45)] dark:border-white/10 dark:from-white/10 dark:via-white/5 dark:to-white/10 dark:text-white" data-nickname="{{ second['nickname'] or '' }}">
           <div class="absolute inset-x-6 -bottom-10 h-16 rounded-full bg-slate-500/20 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-3 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
-            <span class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500/80 dark:text-slate-200/70">2<sup class="text-[0.6rem] font-semibold">e</sup></span>
+            <span class="placement-rank text-xs font-semibold uppercase tracking-[0.4em] text-slate-500/80 dark:text-slate-200/70">2<sup class="placement-rank-suffix font-semibold">e</sup></span>
             {{ render_avatar(second['avatar_path'] if second['verified_user_id'] else None, second['nickname'], 'lg') }}
             <div class="flex items-center justify-center gap-2 text-lg font-bold leading-tight break-words" title="{{ second_name }}">
               <span>{{ second_name[:10] ~ ('…' if second_name|length > 10 else '') }}</span>
@@ -219,7 +228,7 @@
         <div class="relative w-full max-w-[15rem] overflow-hidden rounded-[2.5rem] border border-amber-200/60 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-500 text-amber-950 shadow-[0_2rem_3.5rem_-1.8rem_rgba(249,115,22,0.55)] dark:border-amber-400/40 dark:from-amber-300/20 dark:via-amber-400/25 dark:to-amber-500/25 dark:text-amber-50" data-nickname="{{ first['nickname'] or '' }}">
           <div class="absolute inset-x-6 -bottom-14 h-20 rounded-full bg-amber-500/40 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-4 px-5 pt-8 pb-6 sm:px-7 sm:pt-10 sm:pb-7">
-            <span class="text-xs font-extrabold uppercase tracking-[0.5em] text-amber-700/80 dark:text-amber-200/80">1<sup class="text-[0.6rem] font-semibold">er</sup></span>
+            <span class="placement-rank text-xs font-extrabold uppercase tracking-[0.5em] text-amber-700/80 dark:text-amber-200/80">1<sup class="placement-rank-suffix font-semibold">er</sup></span>
             {{ render_avatar(first['avatar_path'] if first['verified_user_id'] else None, first['nickname'], 'xl') }}
             <div class="flex items-center justify-center gap-2 text-2xl font-black leading-tight drop-shadow-sm break-words" title="{{ first_name }}">
               <span>{{ first_name[:10] ~ ('…' if first_name|length > 10 else '') }}</span>
@@ -241,7 +250,7 @@
         <div class="relative w-full max-w-[13rem] overflow-hidden rounded-[2rem] border border-[#b87333]/60 bg-gradient-to-br from-[#f2d3a3] via-[#c68035] to-[#87471b] text-[#3f1e0a] shadow-[0_1.6rem_3.1rem_-1.6rem_rgba(130,60,15,0.55)] dark:border-[#c98a4d]/35 dark:from-[#72411b]/30 dark:via-[#a9652a]/35 dark:to-[#c6833a]/35 dark:text-[#fde9cf]" data-nickname="{{ third['nickname'] or '' }}">
           <div class="absolute inset-x-6 -bottom-10 h-16 rounded-full bg-[#b46b2a]/40 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-3 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
-            <span class="text-xs font-semibold uppercase tracking-[0.4em] text-[#8b4d1d] dark:text-[#f6d1a0]/80">3<sup class="text-[0.6rem] font-semibold">e</sup></span>
+            <span class="placement-rank text-xs font-semibold uppercase tracking-[0.4em] text-[#8b4d1d] dark:text-[#f6d1a0]/80">3<sup class="placement-rank-suffix font-semibold">e</sup></span>
             {{ render_avatar(third['avatar_path'] if third['verified_user_id'] else None, third['nickname'], 'lg') }}
             <div class="flex items-center justify-center gap-2 text-lg font-bold leading-tight break-words" title="{{ third_name }}">
               <span>{{ third_name[:10] ~ ('…' if third_name|length > 10 else '') }}</span>
