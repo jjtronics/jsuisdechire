@@ -4,6 +4,8 @@
     fr: {
       "nav.theme_toggle": "Basculer le thème",
       "nav.leaderboard": "SCORES",
+      "nav.profile": "Mon profil",
+      "nav.logout": "Se déconnecter",
       "footer.tagline": "Reste en vibe, hydrate-toi et si ça tourne trop, appelle un taxi.",
       "footer.disclaimer": "Ce n'est pas un dispositif médical. Si tu as bu : ne conduis jamais. · Dev par JJC",
 
@@ -248,6 +250,8 @@
     en: {
       "nav.theme_toggle": "Toggle theme",
       "nav.leaderboard": "Leaderboard",
+      "nav.profile": "My profile",
+      "nav.logout": "Log out",
       "footer.tagline": "Stay in the vibe, hydrate, and if things start spinning, call a cab.",
       "footer.disclaimer": "This is not a medical device. If you drank: never drive. · Dev by JJC",
 
@@ -492,6 +496,8 @@
     it: {
       "nav.theme_toggle": "Cambia tema",
       "nav.leaderboard": "Classifica",
+      "nav.profile": "Il mio profilo",
+      "nav.logout": "Esci",
       "footer.tagline": "Resta nel mood, idratati e se tutto gira troppo, chiama un taxi.",
       "footer.disclaimer": "Non è un dispositivo medico. Se hai bevuto: non guidare mai. · Dev da JJC",
 
