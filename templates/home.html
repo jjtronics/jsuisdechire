@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-{% if not current_user_payload %}
-<div class="mb-4 flex flex-row flex-wrap items-start gap-2 sm:flex-row sm:justify-start">
+<div class="mb-4 flex flex-row flex-wrap items-center gap-2 sm:flex-row sm:justify-start">
+  {% if not current_user_payload %}
   <a href="{{ url_for('login_view') }}" class="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white/70 px-3 py-1.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/40 dark:bg-slate-900/40 dark:text-rose-200 dark:hover:bg-slate-800">Se connecter</a>
   <a href="{{ url_for('register_view') }}" class="inline-flex items-center justify-center rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700">S'inscrire</a>
+  {% endif %}
+  <button id="themeToggle" type="button" class="inline-flex items-center justify-center rounded-lg border border-transparent px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 dark:text-rose-200 dark:hover:bg-slate-800" data-i18n-attr="aria-label:nav.theme_toggle">
+    <span class="block dark:hidden" aria-hidden="true">☀️</span>
+    <span class="hidden dark:block" aria-hidden="true">🌙</span>
+  </button>
 </div>
-{% endif %}
 <div class="grid gap-6">
   <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
     <h1 class="text-3xl font-black mb-2" data-i18n="home.title">Un check fun & sérieux pour savoir si tu dois poser le verre</h1>
