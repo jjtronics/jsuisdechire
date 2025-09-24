@@ -92,7 +92,13 @@
             </p>
           </div>
           <p class="text-xs text-gray-500 dark:text-slate-400 max-w-md" data-i18n="footer.disclaimer">
-            Ce n'est pas un dispositif médical. Si tu as bu : ne conduis jamais. · Dev par JJC
+            Ce n'est pas un dispositif médical. Si tu as bu : ne conduis jamais.<br />
+            <a
+              href="{{ url_for('credits_view') }}"
+              class="inline-flex mt-2 items-center justify-center rounded-full bg-rose-600 px-4 py-1.5 font-semibold uppercase tracking-wide text-white shadow transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-rose-50 dark:focus-visible:ring-offset-slate-900"
+            >
+              Crédits
+            </a>
           </p>
         </div>
       </footer>

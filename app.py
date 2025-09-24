@@ -654,6 +654,11 @@ def t5():
 def results_page():
     return render_template("results.html", app_name=APP_NAME)
 
+
+@app.route("/credits")
+def credits_view():
+    return render_template("credits.html", app_name=APP_NAME)
+
 LATEST_SCORES_CTE = """
 WITH normalized_scores AS (
     SELECT
