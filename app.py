@@ -779,10 +779,18 @@ def leaderboard():
         )
     """
 
+    podium_order_sql = ", ".join(
+        [
+            "scores.total_score DESC",
+            "scores.created_at DESC",
+            "scores.id DESC",
+        ]
+    )
+
     podium_rows = db.execute(
         base_select
-        + """
-        ORDER BY scores.total_score DESC, scores.created_at ASC, scores.id ASC
+        + f"""
+        ORDER BY {podium_order_sql}
         LIMIT 3
         """
     ).fetchall()
