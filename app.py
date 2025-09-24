@@ -51,16 +51,27 @@ def get_asset_version() -> str:
         return env_version
 
     static_folder = Path(app.static_folder or Path(__file__).parent / "static")
+    template_folder = Path(app.template_folder or Path(__file__).parent / "templates")
     hasher = hashlib.sha256()
 
-    if static_folder.exists():
-        for path in sorted(static_folder.rglob("*")):
-            if path.is_file():
-                relative_path = path.relative_to(static_folder).as_posix().encode("utf-8")
-                hasher.update(relative_path)
-                with path.open("rb") as handle:
-                    for chunk in iter(lambda: handle.read(8192), b""):
-                        hasher.update(chunk)
+    def update_from_folder(prefix: bytes, folder: Path) -> None:
+        if not folder.exists():
+            return
+
+        for path in sorted(folder.rglob("*")):
+            if not path.is_file():
+                continue
+
+            relative_path = path.relative_to(folder).as_posix().encode("utf-8")
+            hasher.update(prefix)
+            hasher.update(relative_path)
+
+            with path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(8192), b""):
+                    hasher.update(chunk)
+
+    update_from_folder(b"static\0", static_folder)
+    update_from_folder(b"templates\0", template_folder)
 
     return hasher.hexdigest()
 
