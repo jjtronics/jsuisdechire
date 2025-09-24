@@ -1,4 +1,8 @@
 (function(){
+  const flow = window.jsdFlow || null;
+  if (flow && typeof flow.isActive === 'function' && !flow.isActive('t5')){
+    return;
+  }
   const box = document.getElementById('t5');
   if(!box){ return; }
   const t = (window.i18n) || ((key)=>key);
@@ -221,8 +225,9 @@
     grid.classList.add('pointer-events-none');
     grid.classList.add('opacity-60');
 
+    const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t5') : '/results';
     setTimeout(()=>{
-      location.href = '/results';
+      location.href = nextRoute;
     }, 700);
   }
 

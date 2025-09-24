@@ -142,6 +142,12 @@ DEFAULT_SETTINGS = {
     "mem_speed_weight": 0.4,
     "mem_time_best_ms": 45000,
     "mem_time_worst_ms": 120000,
+    "session_total_games": 5,
+    "game_rxn_enabled": True,
+    "game_str_enabled": True,
+    "game_prs_enabled": True,
+    "game_bal_enabled": True,
+    "game_mem_enabled": True,
     "nickname_max_length": 32,
     "smtp_host": "",
     "smtp_port": 587,
@@ -1035,21 +1041,33 @@ def submit():
             return jsonify({"ok": False, "error": "nickname_reserved"}), 403
     else:
         return jsonify({"ok": False, "error": "missing_nickname"}), 400
+    def _section(name):
+        section = data.get(name)
+        return section if isinstance(section, dict) else {}
+
+    sections = {
+        "rxn": _section("rxn"),
+        "str": _section("str"),
+        "prs": _section("prs"),
+        "bal": _section("bal"),
+        "mem": _section("mem"),
+    }
+
     fields = {
-        "rxn_score": data.get("rxn", {}).get("score"),
-        "rxn_median": data.get("rxn", {}).get("median"),
-        "rxn_mean": data.get("rxn", {}).get("mean"),
-        "str_score": data.get("str", {}).get("score"),
-        "str_accuracy": data.get("str", {}).get("accuracy"),
-        "str_mean": data.get("str", {}).get("mean"),
-        "prs_score": data.get("prs", {}).get("score"),
-        "prs_error": data.get("prs", {}).get("mean_error_px"),
-        "time_to_catch_ms": data.get("prs", {}).get("time_to_catch_ms"),
-        "bal_score": data.get("bal", {}).get("score"),
-        "bal_std": data.get("bal", {}).get("std_g"),
-        "mem_score": data.get("mem", {}).get("score"),
-        "mem_time_ms": data.get("mem", {}).get("elapsed_ms"),
-        "mem_errors": data.get("mem", {}).get("mistakes"),
+        "rxn_score": sections["rxn"].get("score"),
+        "rxn_median": sections["rxn"].get("median"),
+        "rxn_mean": sections["rxn"].get("mean"),
+        "str_score": sections["str"].get("score"),
+        "str_accuracy": sections["str"].get("accuracy"),
+        "str_mean": sections["str"].get("mean"),
+        "prs_score": sections["prs"].get("score"),
+        "prs_error": sections["prs"].get("mean_error_px"),
+        "time_to_catch_ms": sections["prs"].get("time_to_catch_ms"),
+        "bal_score": sections["bal"].get("score"),
+        "bal_std": sections["bal"].get("std_g"),
+        "mem_score": sections["mem"].get("score"),
+        "mem_time_ms": sections["mem"].get("elapsed_ms"),
+        "mem_errors": sections["mem"].get("mistakes"),
     }
     db = get_db()
     ensure_schema(db)

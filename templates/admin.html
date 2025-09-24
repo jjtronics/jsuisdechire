@@ -114,6 +114,19 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     },
     {
+      id: 'games',
+      title: 'admin.groups.games.title',
+      description: 'admin.groups.games.description',
+      fields: [
+        {k:'game_rxn_enabled', label:'admin.fields.games.reaction_enabled', type:'checkbox'},
+        {k:'game_str_enabled', label:'admin.fields.games.stroop_enabled', type:'checkbox'},
+        {k:'game_prs_enabled', label:'admin.fields.games.pursuit_enabled', type:'checkbox'},
+        {k:'game_bal_enabled', label:'admin.fields.games.balance_enabled', type:'checkbox'},
+        {k:'game_mem_enabled', label:'admin.fields.games.memory_enabled', type:'checkbox'},
+        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'5'}
+      ]
+    },
+    {
       id: 'email',
       title: 'Paramètres SMTP',
       description: 'Configure le serveur SMTP utilisé pour envoyer les emails automatiques (comme la réinitialisation de mot de passe).',
@@ -199,6 +212,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function fieldRow(f, val){
     const card = el('div','rounded-2xl border border-white/40 bg-white/80 dark:bg-slate-900/50 p-4 space-y-3 shadow-sm');
     const labelId = `field-${f.k}`;
+
+    if (f.type === 'checkbox'){
+      const control = el('input','h-4 w-4 rounded border border-slate-300 dark:border-slate-600');
+      control.type = 'checkbox';
+      control.id = labelId;
+      control.dataset.key = f.k;
+      control.checked = val === undefined ? true : !!val;
+      const wrapper = el('label','flex items-center gap-3 text-sm font-semibold text-slate-800 dark:text-slate-200');
+      wrapper.setAttribute('for', labelId);
+      wrapper.append(control, el('span','', t(f.label)));
+      card.append(wrapper);
+      if (f.helper){
+        card.append(el('p','text-xs text-slate-500 dark:text-slate-400', t(f.helper)));
+      }
+      return card;
+    }
+
     const label = el('label','block text-sm font-semibold text-slate-800 dark:text-slate-200', t(f.label));
     label.setAttribute('for', labelId);
 
@@ -253,9 +283,19 @@ document.addEventListener('DOMContentLoaded', () => {
   async function save(){
     const data={};
     wrap.querySelectorAll('input,select').forEach(elm=>{
-      let v = elm.value;
-      if (elm.type==='number'){ const raw=(v||'').toString().trim().replace(',', '.'); const num=parseFloat(raw); v=isNaN(num)?null:num; }
-      data[elm.dataset.key] = v;
+      const key = elm.dataset.key;
+      if (!key) return;
+      let v;
+      if (elm.type==='checkbox'){
+        v = elm.checked;
+      } else if (elm.type==='number'){
+        const raw=(elm.value||'').toString().trim().replace(',', '.');
+        const num=parseFloat(raw);
+        v=isNaN(num)?null:num;
+      } else {
+        v = elm.value;
+      }
+      data[key] = v;
     });
     const r = await fetch('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     const j = await r.json();

@@ -5,8 +5,8 @@
   <p class="px-4 py-3 rounded-xl bg-rose-100/80 border border-rose-200/60 text-rose-900 text-base font-semibold leading-relaxed shadow-sm dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-100" data-i18n="t3.notice" data-max-attempts="{{ app_settings.prs_max_attempts|int }}" data-i18n-param-max_attempts="{{ app_settings.prs_max_attempts|int }}">Clique sur Démarrer : le cercle se met à bouger dans tous les sens, tu dois cliquer le plus vite possible dessus pour stopper sa progression. Attention tu n'as que {{ app_settings.prs_max_attempts|int }} essais.</p>
   <div id="t3"></div>
   <div class="flex justify-between">
-    <a href="/t2" class="px-4 py-2 rounded-xl border" data-i18n="common.back">Retour</a>
-    <a id="next" href="/t4" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.next">Suivant</a>
+    <a href="/t2" class="px-4 py-2 rounded-xl border" data-i18n="common.back" data-flow-back="1">Retour</a>
+    <a id="next" href="/t4" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.next" data-default-i18n="common.next" data-results-i18n="common.view_results">Suivant</a>
   </div>
 </div>
 <script>
@@ -23,6 +23,13 @@
     notice.textContent = t('t3.notice', { max_attempts: fallback });
     notice.setAttribute('data-max-attempts', fallback);
     notice.setAttribute('data-i18n-param-max_attempts', fallback);
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.jsdFlow && typeof window.jsdFlow.setupPage === 'function'){
+      window.jsdFlow.setupPage('t3', { nextSelector: '#next', backSelector: '[data-flow-back]', hideBackIfFirst: true });
+    }
   });
 </script>
 <script defer src="{{ asset_url('js/t3.v156.js') }}"></script>

@@ -1,4 +1,8 @@
 (function(){
+  const flow = window.jsdFlow || null;
+  if (flow && typeof flow.isActive === 'function' && !flow.isActive('t3')){
+    return;
+  }
   const t=(window.i18n)||((key)=>key);
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
   const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
@@ -145,7 +149,8 @@
     localStorage.setItem("jsd:prs", JSON.stringify(payload));
     localStorage.setItem("jsd:done:t3","1");
     document.getElementById("next").classList.remove("opacity-50","pointer-events-none");
-    setTimeout(()=>location.href="/t4", 600);
+    const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t3') : '/t4';
+    setTimeout(()=>{ location.href = nextRoute; }, 600);
     setCountdown(0);
     detach();
   }
