@@ -61,6 +61,9 @@
   const n=el("span","font-black",formatScore(total)); head.append(n,el("span","","/100")); box.append(head);
   const summaryMessage=(()=>{
     if(!Number.isFinite(total)) return null;
+    if(cheatDetected && normalizedTotal===-42){
+      return t("results.summary_cheater");
+    }
     const tiers=[
       {limit:10, key:"results.summary_tier0"},
       {limit:20, key:"results.summary_tier1"},
