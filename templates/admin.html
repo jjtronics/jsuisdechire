@@ -3,38 +3,38 @@
 <div class="space-y-6">
   <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-3">
     <h1 class="text-2xl font-black" data-i18n="admin.heading">Admin · Calibration</h1>
-    <p class="text-sm text-gray-600 dark:text-slate-300">Cette page est protégée par un couple login/mot de passe. Par défaut : <strong>admin / jsuisdechire</strong>. Utilise le formulaire ci-dessous pour les modifier.</p>
+    <p class="text-sm text-gray-600 dark:text-slate-300" data-i18n-html="admin.intro_html">Cette page est protégée par un couple login/mot de passe. Par défaut : <strong>admin / jsuisdechire</strong>. Utilise le formulaire ci-dessous pour les modifier.</p>
   </section>
 
   <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-5">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="space-y-1">
-        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Identifiants d'accès</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-300">Renseigne ton mot de passe actuel pour modifier le login et/ou définir un nouveau mot de passe.</p>
+        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.credentials.title">Identifiants d'accès</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.credentials.description">Renseigne ton mot de passe actuel pour modifier le login et/ou définir un nouveau mot de passe.</p>
       </div>
       <form action="{{ url_for('admin_logout') }}" method="post">
-        <button class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" type="submit">Se déconnecter</button>
+        <button class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" type="submit" data-i18n="nav.logout">Se déconnecter</button>
       </form>
     </div>
     <form id="credentialsForm" class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <label class="block space-y-2">
-        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Login</span>
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.login.login_label">Login</span>
         <input id="adminLogin" type="text" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="username" required>
       </label>
       <label class="block space-y-2">
-        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Nouveau mot de passe</span>
-        <input id="adminNewPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" placeholder="Laisse vide pour ne pas changer">
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.credentials.new_password_label">Nouveau mot de passe</span>
+        <input id="adminNewPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" data-i18n-attr="placeholder:admin.credentials.new_password_placeholder" placeholder="Laisse vide pour ne pas changer">
       </label>
       <label class="block space-y-2">
-        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Confirmation</span>
-        <input id="adminConfirmPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" placeholder="Répète le mot de passe">
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.credentials.confirm_label">Confirmation</span>
+        <input id="adminConfirmPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" data-i18n-attr="placeholder:admin.credentials.confirm_placeholder" placeholder="Répète le mot de passe">
       </label>
       <label class="block space-y-2">
-        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Mot de passe actuel</span>
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.credentials.current_password_label">Mot de passe actuel</span>
         <input id="adminCurrentPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="current-password" required>
       </label>
       <div class="md:col-span-2 lg:col-span-4 flex flex-wrap items-center gap-3">
-        <button id="credentialsSubmit" type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700">Mettre à jour</button>
+        <button id="credentialsSubmit" type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="admin.credentials.submit">Mettre à jour</button>
         <p id="credentialsMsg" class="text-sm text-gray-500"></p>
       </div>
     </form>
@@ -45,8 +45,8 @@
   <section id="userManagement" class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-4">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="space-y-1">
-        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Gestion des utilisateurs</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-300">Réinitialise les mots de passe ou supprime les comptes créés.</p>
+        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.users.title">Gestion des utilisateurs</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.users.description">Réinitialise les mots de passe ou supprime les comptes créés.</p>
       </div>
       <p id="userMsg" class="text-sm text-gray-500"></p>
     </div>
@@ -54,13 +54,13 @@
       <table id="userTable" class="min-w-full text-sm text-left text-slate-700 dark:text-slate-200">
         <thead>
           <tr class="bg-slate-100/60 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            <th class="px-3 py-2 font-semibold">Login</th>
-            <th class="px-3 py-2 font-semibold">Email</th>
-            <th class="px-3 py-2 font-semibold">Surnom</th>
-            <th class="px-3 py-2 font-semibold">Rôle</th>
-            <th class="px-3 py-2 font-semibold">Méthodes</th>
-            <th class="px-3 py-2 font-semibold">Créé le</th>
-            <th class="px-3 py-2 font-semibold text-right">Actions</th>
+            <th class="px-3 py-2 font-semibold" data-i18n="admin.users.table.login">Login</th>
+            <th class="px-3 py-2 font-semibold" data-i18n="admin.users.table.email">Email</th>
+            <th class="px-3 py-2 font-semibold" data-i18n="admin.users.table.nickname">Surnom</th>
+            <th class="px-3 py-2 font-semibold" data-i18n="admin.users.table.role">Rôle</th>
+            <th class="px-3 py-2 font-semibold" data-i18n="admin.users.table.methods">Méthodes</th>
+            <th class="px-3 py-2 font-semibold" data-i18n="admin.users.table.created_at">Créé le</th>
+            <th class="px-3 py-2 font-semibold text-right" data-i18n="admin.users.table.actions">Actions</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -76,7 +76,7 @@
     <div class="flex flex-wrap items-center gap-3">
       <button id="saveBtn" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="admin.save_button">Enregistrer</button>
       <button id="clearBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" data-i18n="admin.clear_button">Vider les scores</button>
-      <button id="editScoresBtn" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" data-open-label="Éditer les scores" data-close-label="Fermer l'éditeur">Éditer les scores</button>
+      <button id="editScoresBtn" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" data-i18n="admin.scores.open_label" data-i18n-attr="data-open-label:admin.scores.open_label,data-close-label:admin.scores.close_label,data-confirm-label:admin.scores.confirm_delete">Éditer les scores</button>
       <p id="msg" class="text-sm text-gray-500"></p>
     </div>
   </section>
@@ -84,11 +84,11 @@
   <section id="scoreEditor" class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-4 hidden">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Gestion des scores</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-300">Filtre, trie et sélectionne les entrées à supprimer.</p>
+        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.scores.title">Gestion des scores</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.scores.description">Filtre, trie et sélectionne les entrées à supprimer.</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <button id="deleteSelectedBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30" disabled>Supprimer la sélection</button>
+        <button id="deleteSelectedBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30" data-i18n="admin.scores.delete_selected" disabled>Supprimer la sélection</button>
         <p id="scoreMsg" class="text-sm text-gray-500"></p>
       </div>
     </div>
@@ -104,6 +104,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const t = window.i18n || ((key) => key);
+  const translateOrFallback = (key, fallback) => {
+    const value = t(key);
+    return value === key ? fallback : value;
+  };
   const GROUPS = [
     {
       id: 'general',
@@ -128,15 +132,15 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       id: 'email',
-      title: 'Paramètres SMTP',
-      description: 'Configure le serveur SMTP utilisé pour envoyer les emails automatiques (comme la réinitialisation de mot de passe).',
+      title: 'admin.groups.email.title',
+      description: 'admin.groups.email.description',
       fields: [
-        {k:'smtp_host', label:'Serveur SMTP', type:'text'},
-        {k:'smtp_port', label:'Port', type:'number', step:'1', min:'1'},
-        {k:'smtp_username', label:"Nom d'utilisateur", type:'text'},
-        {k:'smtp_password', label:'Mot de passe SMTP', type:'password'},
-        {k:'smtp_sender', label:"Adresse d'expédition", type:'email'},
-        {k:'smtp_security', label:'Sécurité', type:'select', options:[['none','Aucune'], ['starttls','STARTTLS'], ['ssl','SSL/TLS']]}
+        {k:'smtp_host', label:'admin.fields.email.host', type:'text'},
+        {k:'smtp_port', label:'admin.fields.email.port', type:'number', step:'1', min:'1'},
+        {k:'smtp_username', label:'admin.fields.email.username', type:'text'},
+        {k:'smtp_password', label:'admin.fields.email.password', type:'password'},
+        {k:'smtp_sender', label:'admin.fields.email.sender', type:'email'},
+        {k:'smtp_security', label:'admin.fields.email.security', type:'select', options:[['none','admin.fields.email.security.none'], ['starttls','admin.fields.email.security.starttls'], ['ssl','admin.fields.email.security.ssl']]}
       ]
     },
     {
@@ -332,26 +336,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const cell = document.createElement('td');
         cell.colSpan = 7;
         cell.className = 'px-3 py-3 text-center text-slate-500 dark:text-slate-300';
-        cell.textContent = 'Aucun utilisateur enregistré pour le moment.';
+        cell.textContent = translateOrFallback('admin.users.empty', 'Aucun utilisateur enregistré pour le moment.');
         emptyRow.append(cell);
         userBody.append(emptyRow);
         return;
       }
+
+      const emptyValue = translateOrFallback('common.none', '—');
 
       list.forEach(user => {
         const row = document.createElement('tr');
         row.className = 'border-b border-slate-100 dark:border-slate-800/60';
 
         const method = [];
-        if (user.has_password) method.push('Mot de passe');
-        if (user.has_google) method.push('Google');
-        if (!method.length) method.push('—');
+        if (user.has_password) method.push(translateOrFallback('admin.users.method.password', 'Mot de passe'));
+        if (user.has_google) method.push(translateOrFallback('admin.users.method.google', 'Google'));
+        if (!method.length) method.push(translateOrFallback('admin.users.method.none', '—'));
 
         const cells = [
-          user.login || '—',
-          user.email || '—',
-          user.nickname || '—',
-          user.role || '—',
+          user.login || emptyValue,
+          user.email || emptyValue,
+          user.nickname || emptyValue,
+          user.role || emptyValue,
           method.join(', '),
           formatUserDate(user.created_at),
         ];
@@ -374,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.dataset.action = 'reset';
         resetBtn.dataset.id = String(user.id);
         resetBtn.className = 'inline-flex items-center px-3 py-1 mr-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40';
-        resetBtn.textContent = 'Réinitialiser';
+        resetBtn.textContent = translateOrFallback('admin.users.reset_password', 'Réinitialiser');
         actionsCell.append(resetBtn);
 
         const deleteBtn = document.createElement('button');
@@ -382,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.dataset.action = 'delete';
         deleteBtn.dataset.id = String(user.id);
         deleteBtn.className = 'inline-flex items-center px-3 py-1 rounded-lg border border-red-400 text-red-600 hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30';
-        deleteBtn.textContent = 'Supprimer';
+        deleteBtn.textContent = translateOrFallback('admin.users.delete', 'Supprimer');
         actionsCell.append(deleteBtn);
 
         row.append(actionsCell);
@@ -396,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function refreshUsers(showLoading = true){
       if (showLoading){
-        setUserMessage('Chargement…');
+        setUserMessage(translateOrFallback('common.loading', 'Chargement…'));
       }
       try {
         const resp = await fetch('/api/admin/users', { cache: 'no-store' });
@@ -410,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         console.error('users', err);
-        setUserMessage('Impossible de charger les utilisateurs.');
+        setUserMessage(translateOrFallback('admin.users.error_load', 'Impossible de charger les utilisateurs.'));
       }
     }
 
@@ -421,13 +427,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!userId) return;
 
       if (btn.dataset.action === 'reset'){
-        const password = prompt('Nouveau mot de passe (8 caractères minimum) :');
+        const password = prompt(translateOrFallback('admin.users.prompt_new_password', 'Nouveau mot de passe (8 caractères minimum) :'));
         if (password === null) return;
         if ((password || '').trim().length < 8){
-          alert('Le mot de passe doit contenir au moins 8 caractères.');
+          alert(translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.'));
           return;
         }
-        setUserMessage('Réinitialisation en cours…');
+        setUserMessage(translateOrFallback('admin.users.reset_in_progress', 'Réinitialisation en cours…'));
         try {
           const resp = await fetch(`/api/admin/users/${userId}/reset-password`, {
             method: 'POST',
@@ -437,33 +443,33 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!resp.ok){
             const data = await resp.json().catch(()=>({}));
             if (data && data.error === 'password_too_short'){
-              alert('Le mot de passe doit contenir au moins 8 caractères.');
+              alert(translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.'));
             }
             throw new Error('reset_failed');
           }
-          setUserMessage('Mot de passe mis à jour ✅');
+          setUserMessage(translateOrFallback('admin.users.reset_success', 'Mot de passe mis à jour ✅'));
         } catch (err) {
           console.error('reset', err);
-          setUserMessage('Impossible de réinitialiser le mot de passe.');
+          setUserMessage(translateOrFallback('admin.users.reset_error', 'Impossible de réinitialiser le mot de passe.'));
         }
         await refreshUsers(false);
         return;
       }
 
       if (btn.dataset.action === 'delete'){
-        if (!confirm('Supprimer ce compte ? Cette action est irréversible.')){
+        if (!confirm(translateOrFallback('admin.users.confirm_delete', 'Supprimer ce compte ? Cette action est irréversible.'))){
           return;
         }
-        setUserMessage('Suppression en cours…');
+        setUserMessage(translateOrFallback('admin.users.delete_in_progress', 'Suppression en cours…'));
         try {
           const resp = await fetch(`/api/admin/users/${userId}/delete`, { method: 'POST' });
           if (!resp.ok){
             throw new Error('delete_failed');
           }
-          setUserMessage('Compte supprimé ✅');
+          setUserMessage(translateOrFallback('admin.users.delete_success', 'Compte supprimé ✅'));
         } catch (err) {
           console.error('delete', err);
-          setUserMessage('Impossible de supprimer le compte.');
+          setUserMessage(translateOrFallback('admin.users.delete_error', 'Impossible de supprimer le compte.'));
         }
         await refreshUsers(false);
       }
@@ -499,11 +505,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPassword = currentPasswordInput.value;
 
     if (!login){
-      credentialsMsg.textContent = 'Le login est obligatoire.';
+      credentialsMsg.textContent = translateOrFallback('admin.credentials.login_required', 'Le login est obligatoire.');
       return;
     }
     if (newPassword !== confirm){
-      credentialsMsg.textContent = 'La confirmation du mot de passe ne correspond pas.';
+      credentialsMsg.textContent = translateOrFallback('admin.credentials.confirm_mismatch', 'La confirmation du mot de passe ne correspond pas.');
       return;
     }
 
@@ -527,13 +533,13 @@ document.addEventListener('DOMContentLoaded', () => {
       newPasswordInput.value = '';
       confirmInput.value = '';
       currentPasswordInput.value = '';
-      credentialsMsg.textContent = 'Identifiants mis à jour ✅';
+      credentialsMsg.textContent = translateOrFallback('admin.credentials.updated', 'Identifiants mis à jour ✅');
     } else {
       const errData = await res.json().catch(()=>({}));
       if (errData && errData.error === 'invalid_password'){
-        credentialsMsg.textContent = 'Mot de passe actuel incorrect.';
+        credentialsMsg.textContent = translateOrFallback('admin.credentials.invalid_password', 'Mot de passe actuel incorrect.');
       } else {
-        credentialsMsg.textContent = 'Impossible de mettre à jour les identifiants.';
+        credentialsMsg.textContent = translateOrFallback('admin.credentials.update_error', 'Impossible de mettre à jour les identifiants.');
       }
     }
   }
@@ -585,11 +591,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let masterCheckbox = null;
     const indicatorMap = new Map();
-
-    function translateOrFallback(key, fallback) {
-      const value = t(key);
-      return value === key ? fallback : value;
-    }
 
     function getColumn(key) {
       return SCORE_COLUMNS.find(col => col.key === key) || SCORE_COLUMNS[0];
