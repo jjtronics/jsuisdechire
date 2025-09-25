@@ -34,7 +34,6 @@
       "home.nickname_reserved": "Surnom déjà utilisé, choisis-en un autre.",
       "home.nickname_check_failed": "Impossible de vérifier le surnom. Réessaie.",
       "home.verified_nickname": "Ton pseudo vérifié :",
-
       "auth.login.title": "Se connecter",
       "auth.login.description": "Rentre ton login ou ton email pour retrouver ton pseudo vérifié.",
       "auth.login.identifier_label": "Login ou email",
@@ -78,6 +77,7 @@
       "auth.google_complete.title": "Choisis ton surnom",
       "auth.google_complete.description_prefix": "Ton compte Google",
       "auth.google_complete.description_suffix": "est bien connecté. Il reste à réserver ton surnom vérifié.",
+      
       "auth.google_complete.nickname_label": "Surnom",
       "auth.google_complete.nickname_hint": "{max} caractères max.",
       "auth.google_complete.submit": "Valider mon surnom",
@@ -386,6 +386,7 @@
       "auth.google_complete.title": "Pick your nickname",
       "auth.google_complete.description_prefix": "Your Google account",
       "auth.google_complete.description_suffix": "is linked. Time to reserve your verified nickname.",
+      
       "auth.google_complete.nickname_label": "Nickname",
       "auth.google_complete.nickname_hint": "{max} characters max.",
       "auth.google_complete.submit": "Confirm my nickname",
@@ -651,6 +652,7 @@
       "home.nickname_check_failed": "Impossibile verificare il soprannome. Riprova.",
       "home.verified_nickname": "Soprannome verificato:",
 
+
       "auth.login.title": "Accedi",
       "auth.login.description": "Inserisci login o email per ritrovare il tuo soprannome verificato.",
       "auth.login.identifier_label": "Login o email",
@@ -694,6 +696,7 @@
       "auth.google_complete.title": "Scegli il tuo soprannome",
       "auth.google_complete.description_prefix": "Il tuo account Google",
       "auth.google_complete.description_suffix": "è collegato. Devi solo prenotare il tuo soprannome verificato.",
+
       "auth.google_complete.nickname_label": "Soprannome",
       "auth.google_complete.nickname_hint": "{max} caratteri max.",
       "auth.google_complete.submit": "Conferma il mio soprannome",
