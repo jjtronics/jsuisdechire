@@ -199,20 +199,21 @@
       </div>
     </div>
     {% endif %}
-    <div class="mt-4 hidden w-full overflow-x-auto sm:block">
+    <div class="mt-4 w-full overflow-x-auto">
+      {% if rows %}
       {% set active_sort_key = score_sort_key|default('created_at', true) %}
       {% set active_sort_order = score_sort_order|default('desc', true) %}
       {% set sort_defaults = score_sort_defaults|default({}, true) %}
-      <table class="min-w-full text-xs sm:text-sm">
+      <table class="min-w-full text-[11px] sm:text-sm">
         <thead class="text-left text-gray-500 dark:text-slate-300">
           <tr>
-            <th scope="col" class="py-2">#</th>
+            <th scope="col" class="px-2 py-1.5 sm:py-2">#</th>
             {% set key = 'total_score' %}
             {% set default_order = sort_defaults.get(key, 'desc') %}
             {% set is_active = active_sort_key == key %}
             {% set current_order = active_sort_order if is_active else '' %}
             {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
-            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
               <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
                 <span>Total</span>
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
@@ -223,7 +224,7 @@
             {% set is_active = active_sort_key == key %}
             {% set current_order = active_sort_order if is_active else '' %}
             {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
-            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
               <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
                 <span>Réaction</span>
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
@@ -234,7 +235,7 @@
             {% set is_active = active_sort_key == key %}
             {% set current_order = active_sort_order if is_active else '' %}
             {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
-            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
               <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
                 <span>Stroop</span>
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
@@ -245,7 +246,7 @@
             {% set is_active = active_sort_key == key %}
             {% set current_order = active_sort_order if is_active else '' %}
             {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
-            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
               <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
                 <span>Poursuite</span>
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
@@ -256,7 +257,7 @@
             {% set is_active = active_sort_key == key %}
             {% set current_order = active_sort_order if is_active else '' %}
             {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
-            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
               <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
                 <span>Mémoire</span>
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
@@ -267,7 +268,7 @@
             {% set is_active = active_sort_key == key %}
             {% set current_order = active_sort_order if is_active else '' %}
             {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
-            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
               <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
                 <span>Équilibre</span>
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
@@ -278,7 +279,7 @@
             {% set is_active = active_sort_key == key %}
             {% set current_order = active_sort_order if is_active else '' %}
             {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
-            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
               <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
                 <span>Date</span>
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
@@ -289,14 +290,14 @@
         <tbody>
           {% for row in rows %}
           <tr class="border-t border-white/20">
-            <td class="py-2">{{ score_rank_offset + loop.index }}</td>
-            <td class="font-semibold" data-sort-value="{{ row['total_score'] if row['total_score'] is not none else '' }}">{{ row['total_score']|round(1) if row['total_score'] is not none else '—' }}</td>
-            <td data-sort-value="{{ row['rxn_score'] if row['rxn_score'] is not none else '' }}">{{ row['rxn_score']|round(1) if row['rxn_score'] is not none else '—' }}</td>
-            <td data-sort-value="{{ row['str_score'] if row['str_score'] is not none else '' }}">{{ row['str_score']|round(1) if row['str_score'] is not none else '—' }}</td>
-            <td data-sort-value="{{ row['prs_score'] if row['prs_score'] is not none else '' }}">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</td>
-            <td data-sort-value="{{ row['mem_score'] if row['mem_score'] is not none else '' }}">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</td>
-            <td data-sort-value="{{ row['bal_score'] if row['bal_score'] is not none else '' }}">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</td>
-            <td data-sort-value="{{ row['created_at'] }}">
+            <td class="px-2 py-1.5 sm:py-2">{{ score_rank_offset + loop.index }}</td>
+            <td class="px-2 py-1.5 font-semibold sm:py-2" data-sort-value="{{ row['total_score'] if row['total_score'] is not none else '' }}">{{ row['total_score']|round(1) if row['total_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['rxn_score'] if row['rxn_score'] is not none else '' }}">{{ row['rxn_score']|round(1) if row['rxn_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['str_score'] if row['str_score'] is not none else '' }}">{{ row['str_score']|round(1) if row['str_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['prs_score'] if row['prs_score'] is not none else '' }}">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['mem_score'] if row['mem_score'] is not none else '' }}">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['bal_score'] if row['bal_score'] is not none else '' }}">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['created_at'] }}">
               <time
                 class="js-account-local-time"
                 data-timestamp="{{ row['created_at'] }}"
@@ -307,48 +308,6 @@
           {% endfor %}
         </tbody>
       </table>
-    </div>
-    <div class="mt-4 space-y-3 sm:hidden">
-      {% if rows %}
-      {% for row in rows %}
-      <article class="rounded-2xl border border-rose-100/60 bg-white/90 p-4 text-xs shadow-sm dark:border-white/10 dark:bg-slate-800/70">
-        <div class="flex items-baseline justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-[11px] font-semibold uppercase tracking-wide text-white">
-              {{ score_rank_offset + loop.index }}
-            </span>
-            <p class="text-sm font-semibold text-gray-800 dark:text-slate-100">Total {{ row['total_score']|round(1) if row['total_score'] is not none else '—' }}</p>
-          </div>
-          <time
-            class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-slate-400 js-account-local-time"
-            data-timestamp="{{ row['created_at'] }}"
-            datetime="{{ row['created_at'] | int | datetime }}"
-          >{{ row['created_at'] | int | datetime }}</time>
-        </div>
-        <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
-          <div>
-            <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">Réaction</dt>
-            <dd class="text-sm font-semibold text-gray-800 dark:text-slate-100">{{ row['rxn_score']|round(1) if row['rxn_score'] is not none else '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">Stroop</dt>
-            <dd class="text-sm font-semibold text-gray-800 dark:text-slate-100">{{ row['str_score']|round(1) if row['str_score'] is not none else '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">Poursuite</dt>
-            <dd class="text-sm font-semibold text-gray-800 dark:text-slate-100">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">Mémoire</dt>
-            <dd class="text-sm font-semibold text-gray-800 dark:text-slate-100">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">Équilibre</dt>
-            <dd class="text-sm font-semibold text-gray-800 dark:text-slate-100">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</dd>
-          </div>
-        </dl>
-      </article>
-      {% endfor %}
       {% else %}
       <p class="rounded-2xl border border-rose-100/60 bg-white/90 p-4 text-center text-sm text-gray-600 shadow-sm dark:border-white/10 dark:bg-slate-800/70 dark:text-slate-200">
         Tu n'as pas encore enregistré de score.
