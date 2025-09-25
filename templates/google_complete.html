@@ -3,7 +3,11 @@
 <div class="max-w-xl mx-auto">
   <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
     <h1 class="text-2xl font-black mb-3" data-i18n="auth.google_complete.title">Choisis ton surnom</h1>
-    <p class="text-sm text-gray-600 dark:text-slate-300 mb-4" data-i18n="auth.google_complete.description" data-i18n-param-email="{{ pending.email }}">Ton compte Google <strong>{{ pending.email }}</strong> est bien connecté. Il reste à réserver ton surnom vérifié.</p>
+    <p class="text-sm text-gray-600 dark:text-slate-300 mb-4">
+      <span data-i18n="auth.google_complete.description_prefix">Ton compte Google</span>
+      <strong class="font-semibold">{{ pending.email }}</strong>
+      <span data-i18n="auth.google_complete.description_suffix">est bien connecté. Il reste à réserver ton surnom vérifié.</span>
+    </p>
     {% if errors %}
     <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
       <ul class="list-disc space-y-1 pl-4">

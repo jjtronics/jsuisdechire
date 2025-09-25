@@ -33,8 +33,7 @@
       "home.nickname_too_long": "Le surnom est trop long. Raccourcis-le pour continuer.",
       "home.nickname_reserved": "Surnom déjà utilisé, choisis-en un autre.",
       "home.nickname_check_failed": "Impossible de vérifier le surnom. Réessaie.",
-      "home.verified_nickname": "Ton pseudo vérifié : <strong>{nickname}</strong>",
-
+      "home.verified_nickname": "Ton pseudo vérifié :",
       "auth.login.title": "Se connecter",
       "auth.login.description": "Rentre ton login ou ton email pour retrouver ton pseudo vérifié.",
       "auth.login.identifier_label": "Login ou email",
@@ -76,7 +75,9 @@
       "auth.reset.confirm_label": "Confirmation",
       "auth.reset.submit": "Mettre à jour le mot de passe",
       "auth.google_complete.title": "Choisis ton surnom",
-      "auth.google_complete.description": "Ton compte Google <strong>{email}</strong> est bien connecté. Il reste à réserver ton surnom vérifié.",
+      "auth.google_complete.description_prefix": "Ton compte Google",
+      "auth.google_complete.description_suffix": "est bien connecté. Il reste à réserver ton surnom vérifié.",
+      
       "auth.google_complete.nickname_label": "Surnom",
       "auth.google_complete.nickname_hint": "{max} caractères max.",
       "auth.google_complete.submit": "Valider mon surnom",
@@ -340,7 +341,7 @@
       "home.nickname_too_long": "Nickname is too long. Shorten it to continue.",
       "home.nickname_reserved": "Nickname already used, pick another one.",
       "home.nickname_check_failed": "Couldn't verify the nickname. Try again.",
-      "home.verified_nickname": "Verified nickname: <strong>{nickname}</strong>",
+      "home.verified_nickname": "Verified nickname:",
 
       "auth.login.title": "Log in",
       "auth.login.description": "Enter your login or email to retrieve your verified nickname.",
@@ -383,7 +384,9 @@
       "auth.reset.confirm_label": "Confirmation",
       "auth.reset.submit": "Update password",
       "auth.google_complete.title": "Pick your nickname",
-      "auth.google_complete.description": "Your Google account <strong>{email}</strong> is linked. Time to reserve your verified nickname.",
+      "auth.google_complete.description_prefix": "Your Google account",
+      "auth.google_complete.description_suffix": "is linked. Time to reserve your verified nickname.",
+      
       "auth.google_complete.nickname_label": "Nickname",
       "auth.google_complete.nickname_hint": "{max} characters max.",
       "auth.google_complete.submit": "Confirm my nickname",
@@ -647,7 +650,8 @@
       "home.nickname_too_long": "Il soprannome è troppo lungo. Accorcialo per continuare.",
       "home.nickname_reserved": "Soprannome già utilizzato, scegline un altro.",
       "home.nickname_check_failed": "Impossibile verificare il soprannome. Riprova.",
-      "home.verified_nickname": "Soprannome verificato: <strong>{nickname}</strong>",
+      "home.verified_nickname": "Soprannome verificato:",
+
 
       "auth.login.title": "Accedi",
       "auth.login.description": "Inserisci login o email per ritrovare il tuo soprannome verificato.",
@@ -690,7 +694,9 @@
       "auth.reset.confirm_label": "Conferma",
       "auth.reset.submit": "Aggiorna password",
       "auth.google_complete.title": "Scegli il tuo soprannome",
-      "auth.google_complete.description": "Il tuo account Google <strong>{email}</strong> è collegato. Devi solo prenotare il tuo soprannome verificato.",
+      "auth.google_complete.description_prefix": "Il tuo account Google",
+      "auth.google_complete.description_suffix": "è collegato. Devi solo prenotare il tuo soprannome verificato.",
+
       "auth.google_complete.nickname_label": "Soprannome",
       "auth.google_complete.nickname_hint": "{max} caratteri max.",
       "auth.google_complete.submit": "Conferma il mio soprannome",
@@ -963,26 +969,63 @@
 
   let activeLang = currentLang();
 
-  function translate(key, vars){
+  function escapeHtml(value){
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function translate(key, vars, options){
     vars = vars || {};
+    options = options || {};
+    const html = options.html === true;
+    const htmlSafe = options.htmlSafe || {};
     const lang = activeLang || 'fr';
     const source = (DICT[lang] && DICT[lang][key]) || (DICT.fr && DICT.fr[key]) || key;
     return source.replace(/\{(\w+)\}/g, (_, name)=>{
-      return Object.prototype.hasOwnProperty.call(vars, name) ? vars[name] : `{${name}}`;
+      if (!Object.prototype.hasOwnProperty.call(vars, name)){
+        return `{${name}}`;
+      }
+      const rawValue = vars[name];
+      const stringValue = rawValue == null ? '' : String(rawValue);
+      if (!html){
+        return stringValue;
+      }
+      if (htmlSafe && htmlSafe[name]){
+        return stringValue;
+      }
+      return escapeHtml(stringValue);
     });
   }
 
   function extractParams(el){
     const params = {};
+    const htmlSafe = {};
     let hasParams = false;
     el.getAttributeNames().forEach(attrName=>{
+      if (attrName.startsWith('data-i18n-param-html-')){
+        const paramName = attrName.slice('data-i18n-param-html-'.length);
+        if (!paramName) return;
+        params[paramName] = el.getAttribute(attrName);
+        htmlSafe[paramName] = true;
+        hasParams = true;
+        return;
+      }
       if (!attrName.startsWith('data-i18n-param-')) return;
       const paramName = attrName.slice('data-i18n-param-'.length);
       if (!paramName) return;
-      params[paramName] = el.getAttribute(attrName);
+      if (!Object.prototype.hasOwnProperty.call(params, paramName)){
+        params[paramName] = el.getAttribute(attrName);
+      }
+      if (!Object.prototype.hasOwnProperty.call(htmlSafe, paramName)){
+        htmlSafe[paramName] = false;
+      }
       hasParams = true;
     });
-    return hasParams ? params : null;
+    return hasParams ? { params, htmlSafe } : null;
   }
 
   function apply(){
@@ -993,13 +1036,18 @@
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       const key = el.getAttribute('data-i18n');
       if (!key) return;
-      const params = extractParams(el);
-      el.textContent = translate(key, params || undefined);
+      const paramsInfo = extractParams(el);
+      el.textContent = translate(key, paramsInfo ? paramsInfo.params : undefined);
     });
 
     document.querySelectorAll('[data-i18n-html]').forEach(el=>{
       const key = el.getAttribute('data-i18n-html');
-      if (key) el.innerHTML = translate(key);
+      if (!key) return;
+      const paramsInfo = extractParams(el);
+      el.innerHTML = translate(key, paramsInfo ? paramsInfo.params : undefined, {
+        html: true,
+        htmlSafe: paramsInfo ? paramsInfo.htmlSafe : undefined
+      });
     });
 
     document.querySelectorAll('[data-i18n-attr]').forEach(el=>{

@@ -40,8 +40,9 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
       </svg>
-      <span data-i18n="home.verified_nickname" data-i18n-param-nickname="{{ current_user_payload.nickname }}">
-        Ton pseudo vérifié : <strong>{{ current_user_payload.nickname }}</strong>
+      <span class="inline-flex items-baseline gap-1">
+        <span data-i18n="home.verified_nickname">Ton pseudo vérifié :</span>
+        <strong class="font-semibold">{{ current_user_payload.nickname }}</strong>
       </span>
     </div>
     {% endif %}
