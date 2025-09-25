@@ -170,9 +170,16 @@
   };
 
   const render = () => {
-    const rect = canvas.getBoundingClientRect();
-    const width = Math.max(160, Math.round(rect.width || canvas.clientWidth || 0));
-    const height = Math.max(140, Math.round(rect.height || canvas.clientHeight || 0));
+    const canvasRect = canvas.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const resolvedWidth =
+      canvasRect.width || canvas.clientWidth || containerRect.width || container.clientWidth || 0;
+    const resolvedHeight =
+      canvasRect.height || canvas.clientHeight || containerRect.height || container.clientHeight || 0;
+
+    const width = Math.max(160, Math.round(resolvedWidth));
+    const height = Math.max(140, Math.round(resolvedHeight));
     if (!width || !height) {
       return;
     }

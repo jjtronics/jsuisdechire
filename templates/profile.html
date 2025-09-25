@@ -193,7 +193,7 @@
             class="absolute inset-0 h-full w-full"
             role="img"
             aria-label="Graphique de l'évolution du score total"
-            data-scores="{{ rows|tojson }}"
+            data-scores="{{ rows|tojson|forceescape }}"
           ></canvas>
         </div>
       </div>
