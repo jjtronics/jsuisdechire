@@ -144,7 +144,8 @@
 
       "results.heading": "Résultats",
       "results.total_label": "Score global",
-      "results.summary_tier0": "🚨 « Alerte tricheur repéré : veuillez applaudir ce champion du mode clown 🤡. »",
+      "results.summary_tier0": "Ton foie a ragequit. Taxi obligatoire et un grand verre d'eau en prime.",
+      "results.summary_cheater": "🚨 « Alerte tricheur repéré : veuillez applaudir ce champion du mode clown 🤡. »",
       "results.summary_tier1": "La gravité t'a blacklisté·e : file te jeter dans ton lit.",
       "results.summary_tier2": "Même ton chat ferait mieux. Moonwalk direction oreiller.",
       "results.summary_tier3": "On a connu des lamas plus stables. Va respirer dehors.",
@@ -538,7 +539,8 @@
 
       "results.heading": "Results",
       "results.total_label": "Overall score",
-      "results.summary_tier0": "🚨 “Cheater alert spotted: please applaud this champion of clown mode 🤡.”",
+      "results.summary_tier0": "Your liver rage-quit. Summon a cab and chug a glass of water.",
+      "results.summary_cheater": "🚨 “Cheater alert spotted: please applaud this champion of clown mode 🤡.”",
       "results.summary_tier1": "Gravity blacklisted you—go collapse into bed.",
       "results.summary_tier2": "Even your cat would score higher. Moonwalk home.",
       "results.summary_tier3": "We’ve seen llamas steadier than you. Grab some fresh air.",
@@ -934,7 +936,8 @@
 
       "results.heading": "Risultati",
       "results.total_label": "Punteggio globale",
-      "results.summary_tier0": "🚨 « Allerta imbroglione individuato: applaudite questo campione della modalità clown 🤡. »",
+      "results.summary_tier0": "Il fegato ha ragequittato. Taxi subito e un bicchierone d'acqua.",
+      "results.summary_cheater": "🚨 « Allerta imbroglione individuato: applaudite questo campione della modalità clown 🤡. »",
       "results.summary_tier1": "La gravità ti ha messo in panchina: vai a collassare a letto.",
       "results.summary_tier2": "Persino il tuo gatto farebbe meglio. Rientra in moonwalk verso casa.",
       "results.summary_tier3": "Abbiamo visto lama più stabili. Prendi aria e lascia stare il bancone.",
