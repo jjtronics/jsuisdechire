@@ -41,7 +41,13 @@
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                <span class="sr-only">Mon compte ({{ current_user_payload.nickname }})</span>
+                <span
+                  class="sr-only"
+                  data-i18n="nav.account_label"
+                  data-i18n-param-nickname="{{ current_user_payload.nickname }}"
+                >
+                  Mon compte ({{ current_user_payload.nickname }})
+                </span>
                 <span class="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/50 bg-gradient-to-br from-rose-100 via-rose-200 to-rose-300 text-sm font-semibold text-white shadow-lg transition group-hover:scale-[1.03] dark:border-white/10 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900">
                   {% if current_user_payload.avatar_url %}
                   <img src="{{ current_user_payload.avatar_url }}" alt="Avatar de {{ current_user_payload.nickname }}" class="h-full w-full object-cover" loading="lazy" decoding="async" />
