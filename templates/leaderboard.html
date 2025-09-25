@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% macro render_avatar(path, name, size='md', cheater=False, cheat_path=None) -%}
+{% macro render_avatar(path, name, size='md', cheater=False, cheat_path=None, has_account=True) -%}
   {%- set label = (name or 'Joueur') -%}
   {%- set final_path = cheat_path if cheater and cheat_path else path -%}
   {%- set extra = ' leaderboard-avatar-cheater' if cheater else '' -%}
@@ -9,7 +9,9 @@
   {%- else -%}
     {%- set alt_text = 'Avatar de ' ~ label -%}
   {%- endif -%}
-  {%- if final_path -%}
+  {%- if not cheater and not has_account -%}
+    {# Aucun avatar à afficher pour les scores non liés à un compte #}
+  {%- elif final_path -%}
     <img src="{{ asset_url(final_path) }}" alt="{{ alt_text }}" class="{{ classes }}" loading="lazy" decoding="async" />
   {%- else -%}
     <span class="{{ classes }} leaderboard-avatar-placeholder" aria-hidden="true">{{ label[:1]|upper }}</span>
@@ -255,7 +257,7 @@
           <div class="absolute inset-x-6 -bottom-10 h-16 rounded-full bg-slate-500/20 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-3 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
             <span class="placement-rank text-xs font-semibold uppercase tracking-[0.4em] text-slate-500/80 dark:text-slate-200/70">2<sup class="placement-rank-suffix font-semibold">e</sup></span>
-            {{ render_avatar(second['avatar_path'] if second['verified_user_id'] else None, second['nickname'], 'lg', second['is_cheater'], second['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path')) }}
+            {{ render_avatar(second['avatar_path'] if second['verified_user_id'] else None, second['nickname'], 'lg', second['is_cheater'], second['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path'), second['verified_user_id'] is not none) }}
             <div class="flex items-center justify-center gap-2 text-lg font-bold leading-tight break-words" title="{{ second_name }}">
               <span>{{ second_name[:10] ~ ('…' if second_name|length > 10 else '') }}</span>
               {% if second['is_cheater'] %}
@@ -281,7 +283,7 @@
           <div class="absolute inset-x-6 -bottom-14 h-20 rounded-full bg-amber-500/40 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-4 px-5 pt-8 pb-6 sm:px-7 sm:pt-10 sm:pb-7">
             <span class="placement-rank text-xs font-extrabold uppercase tracking-[0.5em] text-amber-700/80 dark:text-amber-200/80">1<sup class="placement-rank-suffix font-semibold">er</sup></span>
-            {{ render_avatar(first['avatar_path'] if first['verified_user_id'] else None, first['nickname'], 'xl', first['is_cheater'], first['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path')) }}
+            {{ render_avatar(first['avatar_path'] if first['verified_user_id'] else None, first['nickname'], 'xl', first['is_cheater'], first['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path'), first['verified_user_id'] is not none) }}
             <div class="flex items-center justify-center gap-2 text-2xl font-black leading-tight drop-shadow-sm break-words" title="{{ first_name }}">
               <span>{{ first_name[:10] ~ ('…' if first_name|length > 10 else '') }}</span>
               {% if first['is_cheater'] %}
@@ -306,7 +308,7 @@
           <div class="absolute inset-x-6 -bottom-10 h-16 rounded-full bg-[#b46b2a]/40 blur-3xl"></div>
           <div class="relative flex flex-col items-center gap-3 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
             <span class="placement-rank text-xs font-semibold uppercase tracking-[0.4em] text-[#8b4d1d] dark:text-[#f6d1a0]/80">3<sup class="placement-rank-suffix font-semibold">e</sup></span>
-            {{ render_avatar(third['avatar_path'] if third['verified_user_id'] else None, third['nickname'], 'lg', third['is_cheater'], third['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path')) }}
+            {{ render_avatar(third['avatar_path'] if third['verified_user_id'] else None, third['nickname'], 'lg', third['is_cheater'], third['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path'), third['verified_user_id'] is not none) }}
             <div class="flex items-center justify-center gap-2 text-lg font-bold leading-tight break-words" title="{{ third_name }}">
               <span>{{ third_name[:10] ~ ('…' if third_name|length > 10 else '') }}</span>
               {% if third['is_cheater'] %}
@@ -440,7 +442,7 @@
         <td class="py-2">{{ rank_start + loop.index }}</td>
         <td>
           <div class="flex items-center gap-2">
-            {{ render_avatar(r['avatar_path'] if r['verified_user_id'] else None, r['nickname'], 'sm', is_cheater, r['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path')) }}
+            {{ render_avatar(r['avatar_path'] if r['verified_user_id'] else None, r['nickname'], 'sm', is_cheater, r['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path'), r['verified_user_id'] is not none) }}
             <span class="inline-flex items-center gap-2">
               <span>{{ r['nickname'] or '—' }}</span>
               {% if is_cheater %}
