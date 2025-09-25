@@ -1,6 +1,6 @@
 
 from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, make_response
-import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr
+import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr, math
 from functools import lru_cache, wraps
 from pathlib import Path
 from typing import Optional
@@ -151,6 +151,10 @@ DEFAULT_SETTINGS = {
     "bal_low_good": 0.02,
     "bal_high_bad": 0.10,
     "bal_lin_rel_tol": 0.15,
+    "bal_cheat_detection_enabled": True,
+    "bal_cheat_std_threshold": 0.006,
+    "bal_cheat_min_events": 25,
+    "bal_cheat_avatar_path": "icons/dunce-cap.svg",
     "mem_pairs": 8,
     "mem_initial_reveal_ms": 1500,
     "mem_mismatch_hide_ms": 900,
@@ -207,7 +211,11 @@ def ensure_schema(db=None):
         str_score INTEGER, str_accuracy REAL, str_mean REAL,
         prs_score INTEGER, prs_error REAL, time_to_catch_ms REAL,
         bal_score INTEGER, bal_std REAL,
-        mem_score REAL, mem_time_ms INTEGER, mem_errors INTEGER
+        mem_score REAL, mem_time_ms INTEGER, mem_errors INTEGER,
+        is_cheater INTEGER DEFAULT 0,
+        cheat_reason TEXT,
+        cheat_details TEXT,
+        cheat_avatar_path TEXT
     )''')
     db.execute('''CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
@@ -244,6 +252,14 @@ def ensure_schema(db=None):
         db.execute("ALTER TABLE scores ADD COLUMN mem_time_ms INTEGER")
     if "mem_errors" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN mem_errors INTEGER")
+    if "is_cheater" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN is_cheater INTEGER DEFAULT 0")
+    if "cheat_reason" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN cheat_reason TEXT")
+    if "cheat_details" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN cheat_details TEXT")
+    if "cheat_avatar_path" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN cheat_avatar_path TEXT")
     user_columns = {row["name"] for row in db.execute("PRAGMA table_info(users)").fetchall()}
     if "avatar_path" not in user_columns:
         db.execute("ALTER TABLE users ADD COLUMN avatar_path TEXT")
@@ -711,7 +727,11 @@ latest_scores AS (
         mem_score,
         mem_time_ms,
         mem_errors,
-        user_id
+        user_id,
+        is_cheater,
+        cheat_reason,
+        cheat_details,
+        cheat_avatar_path
     FROM ranked_scores
     WHERE row_rank = 1
 )
@@ -834,6 +854,24 @@ def leaderboard():
     has_next = len(query) > per_page
     rows = list(query[:per_page])
     has_prev = page > 1
+
+    def _adapt_rows(iterable):
+        adapted = []
+        for row in iterable:
+            mapping = dict(row)
+            raw_details = mapping.get("cheat_details")
+            if isinstance(raw_details, str):
+                try:
+                    mapping["cheat_details"] = json.loads(raw_details)
+                except json.JSONDecodeError:
+                    mapping["cheat_details"] = None
+            else:
+                mapping["cheat_details"] = None
+            adapted.append(mapping)
+        return adapted
+
+    podium_rows = _adapt_rows(podium_rows)
+    rows = _adapt_rows(rows)
 
     return render_template(
         "leaderboard.html",
@@ -1074,6 +1112,22 @@ def submit():
         "mem": _section("mem"),
     }
 
+    def _parse_float(value):
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(parsed):
+            return None
+        return parsed
+
+    def _parse_int(value):
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed
+
     fields = {
         "rxn_score": sections["rxn"].get("score"),
         "rxn_median": sections["rxn"].get("median"),
@@ -1090,18 +1144,61 @@ def submit():
         "mem_time_ms": sections["mem"].get("elapsed_ms"),
         "mem_errors": sections["mem"].get("mistakes"),
     }
+
+    bal_section = sections["bal"]
+    cheat_settings_enabled = bool(settings.get("bal_cheat_detection_enabled"))
+    cheat_threshold_value = _parse_float(settings.get("bal_cheat_std_threshold"))
+    cheat_min_events_value = _parse_int(settings.get("bal_cheat_min_events"))
+    raw_cheat_avatar_path = settings.get("bal_cheat_avatar_path")
+    cheat_avatar_path = (
+        raw_cheat_avatar_path.strip()
+        if isinstance(raw_cheat_avatar_path, str) and raw_cheat_avatar_path.strip()
+        else None
+    )
+    cheat_detected = False
+    cheat_reason = None
+    cheat_details = None
+
+    if cheat_settings_enabled and isinstance(bal_section, dict):
+        mode = bal_section.get("mode")
+        std_value = _parse_float(bal_section.get("std_g"))
+        events_value = _parse_int(bal_section.get("events") or bal_section.get("event_count"))
+        reported_cheat = bal_section.get("cheat") if isinstance(bal_section.get("cheat"), dict) else {}
+        threshold = cheat_threshold_value if (cheat_threshold_value is not None and cheat_threshold_value >= 0) else None
+        min_events = cheat_min_events_value if (cheat_min_events_value is not None and cheat_min_events_value > 0) else 0
+        meets_event_requirement = events_value is None or events_value >= min_events
+        if mode == "sensors" and threshold is not None and std_value is not None and meets_event_requirement:
+            if std_value <= threshold:
+                cheat_detected = True
+                cheat_reason = "bal_std_low"
+        cheat_details = {
+            "std_g": std_value,
+            "threshold": threshold,
+            "events": events_value,
+            "min_events": min_events,
+            "reported": bool(reported_cheat.get("detected")),
+        }
+
+    if cheat_detected:
+        total = -42
+
+    cheat_details_json = json.dumps(cheat_details) if cheat_details else None
     db = get_db()
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
          fields['prs_score'], fields['prs_error'], fields['time_to_catch_ms'],
          fields['bal_score'], fields['bal_std'],
          fields['mem_score'], fields['mem_time_ms'], fields['mem_errors'],
-         user_id)
+         user_id,
+         1 if cheat_detected else 0,
+         cheat_reason,
+         cheat_details_json,
+         cheat_avatar_path if cheat_detected else None)
     )
     db.commit()
 

@@ -37,6 +37,9 @@
   }
 
   function computeTotal(parts){
+    if (parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
+      return -42;
+    }
     const weights = { rxn:0.25, str:0.25, prs:0.25, mem:0.15, bal:0.1 };
     let score = 0;
     let weightSum = 0;
