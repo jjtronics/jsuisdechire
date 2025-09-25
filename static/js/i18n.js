@@ -353,7 +353,7 @@
       "admin.helpers.balance.cheat_enabled": "Active la détection des téléphones posés sur une surface.",
       "admin.helpers.balance.cheat_std_threshold": "Si l'écart-type mesuré est inférieur ou égal à ce seuil, le score est marqué comme triche.",
       "admin.helpers.balance.cheat_min_events": "Nombre minimal de mesures avant de signaler une triche.",
-      "admin.helpers.balance.cheat_avatar_path": "Chemin (dans /static) de l'avatar utilisé pour afficher un bonnet d'âne.",
+      "admin.helpers.balance.cheat_avatar_path": "Chemin (dans /static) de l'avatar utilisé pour afficher une tête de clown.",
 
       "admin.scores.title": "Gestion des scores",
       "admin.scores.description": "Filtre, trie et sélectionne les entrées à supprimer.",
@@ -748,7 +748,7 @@
       "admin.helpers.balance.cheat_enabled": "Enable detection when the phone rests on a surface.",
       "admin.helpers.balance.cheat_std_threshold": "If the deviation is at or below this value, the score is flagged as cheating.",
       "admin.helpers.balance.cheat_min_events": "Minimum number of samples before flagging a cheater.",
-      "admin.helpers.balance.cheat_avatar_path": "Path (inside /static) for the dunce-cap avatar.",
+      "admin.helpers.balance.cheat_avatar_path": "Path (inside /static) for the clown-head avatar.",
 
       "admin.scores.title": "Score management",
       "admin.scores.description": "Filter, sort and select entries to delete.",
@@ -1145,7 +1145,7 @@
       "admin.helpers.balance.cheat_enabled": "Attiva il rilevamento quando il telefono è appoggiato su un tavolo.",
       "admin.helpers.balance.cheat_std_threshold": "Se la deviazione standard è minore o uguale a questo valore, il punteggio viene marcato come imbroglio.",
       "admin.helpers.balance.cheat_min_events": "Numero minimo di campioni prima di segnalare un imbroglio.",
-      "admin.helpers.balance.cheat_avatar_path": "Percorso (in /static) dell'avatar con cappello da somaro.",
+      "admin.helpers.balance.cheat_avatar_path": "Percorso (in /static) dell'avatar con testa da clown.",
 
       "admin.scores.title": "Gestione punteggi",
       "admin.scores.description": "Filtra, ordina e seleziona le voci da eliminare.",

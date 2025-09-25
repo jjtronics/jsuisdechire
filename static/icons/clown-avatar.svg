@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Avatar clown</title>
+  <desc id="desc">Illustration d'une tête de clown avec un nez rouge et un large sourire.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="100%" stop-color="#fde68a" />
+    </linearGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f87171" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#f87171" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="64" fill="url(#bg)" />
+  <g transform="translate(0 10)">
+    <path d="M52 92c12-46 56-68 76-68s64 22 76 68" fill="#f97316" />
+    <path d="M60 98c8-32 48-54 68-54s60 22 68 54" fill="#ef4444" />
+    <path d="M56 108c0-52 40-84 72-84s72 32 72 84-32 102-72 102-72-50-72-102z" fill="#fee2b7" />
+    <ellipse cx="92" cy="156" rx="30" ry="32" fill="#fff" />
+    <ellipse cx="164" cy="156" rx="30" ry="32" fill="#fff" />
+    <circle cx="128" cy="150" r="18" fill="#ef4444" />
+    <path d="M98 172c12 16 20 20 30 20s18-4 30-20" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="92" cy="156" r="10" fill="#0f172a" />
+    <circle cx="164" cy="156" r="10" fill="#0f172a" />
+    <g transform="translate(92 178)">
+      <ellipse cx="-18" cy="0" rx="22" ry="18" fill="url(#cheek)" />
+    </g>
+    <g transform="translate(164 178)">
+      <ellipse cx="18" cy="0" rx="22" ry="18" fill="url(#cheek)" />
+    </g>
+    <path d="M108 116c-2-8-10-14-20-14-12 0-22 8-22 18" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round" />
+    <path d="M148 116c2-8 10-14 20-14 12 0 22 8 22 18" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round" />
+    <path d="M128 44l12-24 12 24" fill="none" stroke="#1d4ed8" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="140" cy="18" r="14" fill="#22d3ee" stroke="#0ea5e9" stroke-width="6" />
+  </g>
+</svg>

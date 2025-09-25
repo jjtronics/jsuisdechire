@@ -154,7 +154,7 @@ DEFAULT_SETTINGS = {
     "bal_cheat_detection_enabled": True,
     "bal_cheat_std_threshold": 0.006,
     "bal_cheat_min_events": 25,
-    "bal_cheat_avatar_path": "icons/dunce-cap.svg",
+    "bal_cheat_avatar_path": "icons/clown-avatar.svg",
     "mem_pairs": 8,
     "mem_initial_reveal_ms": 1500,
     "mem_mismatch_hide_ms": 900,
