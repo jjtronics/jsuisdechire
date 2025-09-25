@@ -234,6 +234,17 @@
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
               </a>
             </th>
+            {% set key = 'mem_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Mémoire</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
             {% set key = 'bal_score' %}
             {% set default_order = sort_defaults.get(key, 'desc') %}
             {% set is_active = active_sort_key == key %}
@@ -266,6 +277,7 @@
             <td data-sort-value="{{ row['rxn_score'] if row['rxn_score'] is not none else '' }}">{{ row['rxn_score']|round(1) if row['rxn_score'] is not none else '—' }}</td>
             <td data-sort-value="{{ row['str_score'] if row['str_score'] is not none else '' }}">{{ row['str_score']|round(1) if row['str_score'] is not none else '—' }}</td>
             <td data-sort-value="{{ row['prs_score'] if row['prs_score'] is not none else '' }}">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</td>
+            <td data-sort-value="{{ row['mem_score'] if row['mem_score'] is not none else '' }}">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</td>
             <td data-sort-value="{{ row['bal_score'] if row['bal_score'] is not none else '' }}">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</td>
             <td data-sort-value="{{ row['created_at'] }}">
               <time
@@ -277,7 +289,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="7" class="py-6 text-center text-sm text-gray-500 dark:text-slate-300">Tu n'as pas encore enregistré de score.</td>
+            <td colspan="8" class="py-6 text-center text-sm text-gray-500 dark:text-slate-300">Tu n'as pas encore enregistré de score.</td>
           </tr>
           {% endfor %}
         </tbody>

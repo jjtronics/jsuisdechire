@@ -1410,6 +1410,7 @@ def profile_view():
         "rxn_score",
         "str_score",
         "prs_score",
+        "mem_score",
         "bal_score",
         "created_at",
     }
