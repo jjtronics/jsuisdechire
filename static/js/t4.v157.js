@@ -30,6 +30,13 @@
     let high=norm(s.bal_high_bad,0.10);
     const linTolRaw=norm(s.bal_lin_rel_tol,0.15);
     const linTol=(Number.isFinite(linTolRaw) && linTolRaw>=0)?linTolRaw:0.15;
+    const cheatEnabledRaw=s.bal_cheat_detection_enabled;
+    const cheatEnabled=cheatEnabledRaw===undefined?true:!!cheatEnabledRaw;
+    const cheatThresholdRaw=norm(s.bal_cheat_std_threshold,0.006);
+    const cheatThreshold=Number.isFinite(cheatThresholdRaw)?cheatThresholdRaw:null;
+    const cheatMinEventsRaw=norm(s.bal_cheat_min_events,25);
+    const cheatMinEvents=Number.isFinite(cheatMinEventsRaw)?Math.max(0,Math.round(cheatMinEventsRaw)):0;
+    const cheatAvatarPath=typeof s.bal_cheat_avatar_path==='string'?s.bal_cheat_avatar_path:null;
     if(!isFinite(high) || high<=low){
       high=low+0.02;
     }
@@ -38,11 +45,16 @@
       duration,
       low_good:Math.max(0,low),
       high_bad:Math.max(0,high),
-      lin_rel_tol:linTol
+      lin_rel_tol:linTol,
+      cheat_enabled:cheatEnabled,
+      cheat_std_threshold:cheatThreshold,
+      cheat_min_events:cheatMinEvents,
+      cheat_avatar_path:cheatAvatarPath
     };
   }
 
   let started=false, finished=false, events=0, lastTs=0, note="", src={dm:false};
+  let cheatState={detected:false};
   let stats={count:0, mean:0, m2:0};
   let watchdog=null, endTimer=null, fallbackMode=false, measureStart=0;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
@@ -87,6 +99,32 @@
     motionValue.textContent=t('t4.motion_indicator_value',{value:std.toFixed(3)});
   }
 
+  function detectCheat(stdValue, eventCount){
+    const result={detected:false};
+    if(Number.isFinite(stdValue)){
+      result.std_g=stdValue;
+    }
+    const threshold=Number(ST.cheat_std_threshold);
+    if(Number.isFinite(threshold)){
+      result.threshold=threshold;
+    }
+    const minEventsRaw=Number(ST.cheat_min_events);
+    const minEvents=Number.isFinite(minEventsRaw)?Math.max(0,Math.round(minEventsRaw)):0;
+    result.min_events=minEvents;
+    if(Number.isFinite(eventCount)){
+      result.events=eventCount;
+    }
+    if(!ST.cheat_enabled || !Number.isFinite(threshold) || typeof result.std_g!=='number'){
+      return result;
+    }
+    const meetsEvents=(!('events' in result)) || result.events>=minEvents;
+    if(meetsEvents && result.std_g<=threshold){
+      result.detected=true;
+      result.reason='std_threshold';
+    }
+    return result;
+  }
+
   function updateStatus(extra=""){
     const lines=[
       `HTTPS: ${location.protocol==='https:'}`,
@@ -97,6 +135,9 @@
       `Src: dm=${src.dm}`,
       `Std: ${currentStd().toFixed(4)}`,
       `Mode: ${ST.mode} dur=${ST.duration}ms low=${ST.low_good} high=${ST.high_bad}`,
+      ST.cheat_enabled
+        ? `Cheat: thr=${ST.cheat_std_threshold ?? '—'} minE=${ST.cheat_min_events} flagged=${cheatState && cheatState.detected}`
+        : 'Cheat: disabled',
       note?`Note: ${note}`:""
     ]; if(extra) lines.push(extra);
     status.textContent=lines.filter(Boolean).join("\n");
@@ -208,12 +249,20 @@
     s = Math.max(0, Math.min(100, Math.round(s)));
     const durationMs=Math.round(Math.max(0, performance.now()-measureStart));
     const stdStored = Number.isFinite(std) ? Number(std.toFixed(4)) : null;
+    const cheatRecord = detectCheat(std, stats.count);
+    cheatState = cheatRecord;
     if(window.jsdSession && typeof window.jsdSession.invalidateSubmission==='function'){
       window.jsdSession.invalidateSubmission();
     }else{
       try{localStorage.removeItem('jsd:score_submitted');localStorage.removeItem('jsd:last_submission');}catch(err){}
     }
-    localStorage.setItem('jsd:bal', JSON.stringify({ mode:'sensors', duration_ms:durationMs, std_g:stdStored, score:s }));
+    const payload={ mode:'sensors', duration_ms:durationMs, std_g:stdStored, score:s, events:stats.count };
+    if(cheatRecord && typeof cheatRecord==='object'){
+      const cloned={...cheatRecord};
+      if(cloned.std_g==null && stdStored!=null){ cloned.std_g=stdStored; }
+      payload.cheat=cloned;
+    }
+    localStorage.setItem('jsd:bal', JSON.stringify(payload));
     localStorage.setItem('jsd:done:t4','1');
     if (window.jsdSession && typeof window.jsdSession.submitScore === 'function'){
       window.jsdSession.submitScore().catch(console.error);
@@ -227,6 +276,7 @@
   function startFallback(){
     if (finished) return;
     fallbackMode=true;
+    cheatState={detected:false};
     levelWrap.classList.add('hidden');
     const seconds=Math.max(1,Math.round(ST.duration/1000));
     info.textContent=t('t4.fallback_instruction',{seconds});
@@ -255,13 +305,14 @@
       const stdPx=Math.sqrt(variance);
       const score=Math.max(0, Math.min(100, Math.round(100*(1-(stdPx-4)/(20-4)))));
       finished=true;
+      cheatState={detected:false};
       const durationMs=Math.round(Math.max(0, performance.now()-fallbackStart));
       if(window.jsdSession && typeof window.jsdSession.invalidateSubmission==='function'){
         window.jsdSession.invalidateSubmission();
       }else{
         try{localStorage.removeItem('jsd:score_submitted');localStorage.removeItem('jsd:last_submission');}catch(err){}
       }
-      localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:durationMs, std_px:stdPx, score }));
+      localStorage.setItem('jsd:bal', JSON.stringify({ mode:'touch', duration_ms:durationMs, std_px:stdPx, score, events:points.length }));
       localStorage.setItem('jsd:done:t4','1');
       if (window.jsdSession && typeof window.jsdSession.submitScore === 'function'){
         window.jsdSession.submitScore().catch(console.error);
@@ -297,6 +348,7 @@
   async function start(){
     if (started || finished) return;
     started=true; events=0; lastTs=0; note=''; src={dm:false};
+    cheatState={detected:false};
     resetStats();
     fallbackMode=false;
     gEst={x:0,y:0,z:0}; gInit=false;

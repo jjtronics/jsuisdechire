@@ -15,6 +15,9 @@
   }
 
   function fallbackCompute(parts){
+    if(parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
+      return -42;
+    }
     const w={rxn:0.25,str:0.25,prs:0.25,mem:0.15,bal:0.1}; let score=0,wsum=0;
     if(parts.rxn && Number.isFinite(parts.rxn.score)){score+=parts.rxn.score*w.rxn; wsum+=w.rxn;}
     if(parts.str && Number.isFinite(parts.str.score)){score+=parts.str.score*w.str; wsum+=w.str;}
@@ -42,6 +45,9 @@
     bal=fallbackRead('jsd:bal');
     total=fallbackCompute({rxn,str,prs,mem,bal});
   }
+
+  const cheatDetected=!!(bal && bal.cheat && bal.cheat.detected);
+  const cheatInfo=cheatDetected ? bal.cheat || {} : null;
 
   const normalizedTotal=Number.isFinite(total)?Math.trunc(total):null;
 
@@ -76,6 +82,14 @@
   })();
   if(summaryMessage){
     box.append(el("div","mt-3 text-lg font-semibold text-rose-700 dark:text-rose-300",summaryMessage));
+  }
+
+  if(cheatDetected){
+    const stdValue = Number(cheatInfo && cheatInfo.std_g);
+    const thrValue = Number(cheatInfo && cheatInfo.threshold);
+    const stdLabel = Number.isFinite(stdValue) ? stdValue.toFixed(3) : '—';
+    const thrLabel = Number.isFinite(thrValue) ? thrValue.toFixed(3) : '—';
+    box.append(el("div","mt-3 text-sm font-semibold text-rose-700 dark:text-rose-300",t("results.balance_cheat_detected",{std:stdLabel,threshold:thrLabel})));
   }
 
   const placementBox=el("div","mt-3 text-lg font-semibold text-rose-700 dark:text-rose-300");

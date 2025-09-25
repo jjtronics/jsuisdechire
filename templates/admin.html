@@ -204,7 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'bal_duration_ms', label:'admin.fields.balance.duration', helper:'admin.helpers.balance.duration', type:'number', step:'100', min:'3000', max:'30000'},
         {k:'bal_low_good', label:'admin.fields.balance.low_good', helper:'admin.helpers.balance.low_good', type:'number', step:'0.01', min:'0.01', max:'2'},
         {k:'bal_high_bad', label:'admin.fields.balance.high_bad', helper:'admin.helpers.balance.high_bad', type:'number', step:'0.01', min:'0.02', max:'3'},
-        {k:'bal_lin_rel_tol', label:'admin.fields.balance.rel_tol', helper:'admin.helpers.balance.rel_tol', type:'number', step:'0.01', min:'0'}
+        {k:'bal_lin_rel_tol', label:'admin.fields.balance.rel_tol', helper:'admin.helpers.balance.rel_tol', type:'number', step:'0.01', min:'0'},
+        {k:'bal_cheat_detection_enabled', label:'admin.fields.balance.cheat_enabled', helper:'admin.helpers.balance.cheat_enabled', type:'checkbox'},
+        {k:'bal_cheat_std_threshold', label:'admin.fields.balance.cheat_std_threshold', helper:'admin.helpers.balance.cheat_std_threshold', type:'number', step:'0.001', min:'0'},
+        {k:'bal_cheat_min_events', label:'admin.fields.balance.cheat_min_events', helper:'admin.helpers.balance.cheat_min_events', type:'number', step:'1', min:'0'},
+        {k:'bal_cheat_avatar_path', label:'admin.fields.balance.cheat_avatar_path', helper:'admin.helpers.balance.cheat_avatar_path', type:'text'}
       ]
     }
   ];
