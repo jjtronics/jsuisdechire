@@ -2,8 +2,20 @@
 {% block content %}
 <div class="mb-4 flex w-full flex-row flex-wrap items-center gap-2 sm:flex-row sm:justify-start">
   {% if not current_user_payload %}
-  <a href="{{ url_for('login_view') }}" class="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white/70 px-3 py-1.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/40 dark:bg-slate-900/40 dark:text-rose-200 dark:hover:bg-slate-800">Se connecter</a>
-  <a href="{{ url_for('register_view') }}" class="inline-flex items-center justify-center rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700">S'inscrire</a>
+  <a
+    href="{{ url_for('login_view') }}"
+    class="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white/70 px-3 py-1.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/40 dark:bg-slate-900/40 dark:text-rose-200 dark:hover:bg-slate-800"
+    data-i18n="home.login_button"
+  >
+    Se connecter
+  </a>
+  <a
+    href="{{ url_for('register_view') }}"
+    class="inline-flex items-center justify-center rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700"
+    data-i18n="home.register_button"
+  >
+    S'inscrire
+  </a>
   {% endif %}
   <button id="themeToggle" type="button" class="ml-auto inline-flex items-center justify-center rounded-lg border border-transparent px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 dark:text-rose-200 dark:hover:bg-slate-800" data-i18n-attr="aria-label:nav.theme_toggle">
     <span class="block dark:hidden" aria-hidden="true">☀️</span>
@@ -28,7 +40,10 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
       </svg>
-      <span>Ton pseudo vérifié : <strong>{{ current_user_payload.nickname }}</strong></span>
+      <span class="inline-flex items-baseline gap-1">
+        <span data-i18n="home.verified_nickname">Ton pseudo vérifié :</span>
+        <strong class="font-semibold">{{ current_user_payload.nickname }}</strong>
+      </span>
     </div>
     {% endif %}
   </section>

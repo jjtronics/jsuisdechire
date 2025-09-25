@@ -6,9 +6,14 @@
       "nav.leaderboard": "SCORES",
       "nav.profile": "Mon profil",
       "nav.logout": "Se déconnecter",
+      "nav.account_label": "Mon compte ({nickname})",
       "footer.tagline": "Reste en vibe, hydrate-toi et si ça tourne trop, appelle un taxi.",
       "footer.disclaimer": "Ce n'est pas un dispositif médical. Si tu as bu : ne conduis jamais.",
       "footer.credits_button": "Crédits",
+      "credits.title": "Crédits",
+      "credits.intro": "Ce site a été développé par {author} et remercie tout particulièrement l'aide qui m'a été apportée par :",
+      "credits.outro": "Et j'en oublie sûrement...",
+      "credits.thanks": "Merci à tous pour vos contributions !",
 
       "home.title": "Un check fun & sérieux pour savoir si tu dois poser le verre",
       "home.subtitle": "Anonyme, gratuit. Optimisé pour ton téléphone — si t'es bourré devant ton PC, on peut rien pour toi. Résultats indicatifs uniquement.",
@@ -17,6 +22,8 @@
       "home.list3": "À la fin : ton score est enregistré automatiquement",
       "home.cta_start": "Commencer",
       "home.cta_leaderboard": "Voir le classement",
+      "home.login_button": "Se connecter",
+      "home.register_button": "S'inscrire",
       "home.nickname_title": "Choisis ton surnom",
       "home.nickname_description": "Avant de commencer, choisis un surnom pour le classement.",
       "home.nickname_placeholder": "Ton meilleur blaze",
@@ -26,6 +33,54 @@
       "home.nickname_too_long": "Le surnom est trop long. Raccourcis-le pour continuer.",
       "home.nickname_reserved": "Surnom déjà utilisé, choisis-en un autre.",
       "home.nickname_check_failed": "Impossible de vérifier le surnom. Réessaie.",
+      "home.verified_nickname": "Ton pseudo vérifié :",
+
+      "auth.login.title": "Se connecter",
+      "auth.login.description": "Rentre ton login ou ton email pour retrouver ton pseudo vérifié.",
+      "auth.login.identifier_label": "Login ou email",
+      "auth.login.identifier_placeholder": "tonlogin ou ton@email",
+      "auth.login.password_label": "Mot de passe",
+      "auth.login.submit": "Se connecter",
+      "auth.login.forgot": "Mot de passe perdu ?",
+      "auth.login.separator": "ou",
+      "auth.login.google": "Continuer avec Google",
+      "auth.login.no_account": "Pas encore de compte ?",
+      "auth.login.register_link": "Crée ton compte",
+      "auth.register.title": "Créer mon compte",
+      "auth.register.description": "Réserve ton surnom, vérifie ton pseudo et retrouve tes scores facilement.",
+      "auth.register.email_label": "Adresse e-mail",
+      "auth.register.email_placeholder": "toi@example.com",
+      "auth.register.nickname_label": "Surnom",
+      "auth.register.nickname_placeholder": "Ton blaze unique",
+      "auth.register.nickname_hint": "{max} caractères max.",
+      "auth.register.password_label": "Mot de passe",
+      "auth.register.password_confirm_label": "Confirme ton mot de passe",
+      "auth.register.submit": "Je réserve mon pseudo",
+      "auth.register.separator": "ou",
+      "auth.register.google": "S'inscrire avec Google",
+      "auth.register.has_account": "Tu as déjà un compte ?",
+      "auth.register.login_link": "Connecte-toi ici",
+      "auth.forgot.title": "Mot de passe perdu ?",
+      "auth.forgot.description": "Renseigne ton adresse e-mail et nous t'enverrons un lien pour réinitialiser ton mot de passe.",
+      "auth.forgot.success": "Si un compte correspond à cette adresse, un e-mail vient de partir avec un lien de réinitialisation.",
+      "auth.forgot.email_label": "Adresse e-mail",
+      "auth.forgot.email_placeholder": "ton@email",
+      "auth.forgot.submit": "Envoyer le lien",
+      "auth.forgot.remember": "Tu te souviens de ton mot de passe ?",
+      "auth.forgot.back_to_login": "Retour à la connexion",
+      "auth.reset.title": "Réinitialiser ton mot de passe",
+      "auth.reset.invalid": "Ce lien n'est plus valide. Demande un nouveau lien pour réinitialiser ton mot de passe.",
+      "auth.reset.retry": "Redemander un lien",
+      "auth.reset.description": "Choisis un nouveau mot de passe pour ton compte.",
+      "auth.reset.new_password_label": "Nouveau mot de passe",
+      "auth.reset.confirm_label": "Confirmation",
+      "auth.reset.submit": "Mettre à jour le mot de passe",
+      "auth.google_complete.title": "Choisis ton surnom",
+      "auth.google_complete.description_prefix": "Ton compte Google",
+      "auth.google_complete.description_suffix": "est bien connecté. Il reste à réserver ton surnom vérifié.",
+      "auth.google_complete.nickname_label": "Surnom",
+      "auth.google_complete.nickname_hint": "{max} caractères max.",
+      "auth.google_complete.submit": "Valider mon surnom",
 
       "t1.heading": "Test 1 · Réaction",
       "t1.notice": "Prêt·e ? Dès que le fond passe au VERT, tape plus vite que ton ombre. Si tu tires trop tôt, on recommence !",
@@ -138,6 +193,12 @@
       "leaderboard.date": "Date",
       "leaderboard.empty": "Aucun score pour l'instant.",
 
+      "admin.login.title": "Connexion admin",
+      "admin.login.description": "Entre le login et le mot de passe configurés pour accéder à l'espace d'administration.",
+      "admin.login.login_label": "Login",
+      "admin.login.password_label": "Mot de passe",
+      "admin.login.submit": "Se connecter",
+      "admin.login.default_hint": "Identifiants par défaut : <strong>admin</strong> / <strong>jsuisdechire</strong>.",
       "admin.heading": "Admin · Calibration",
       "admin.subtitle": "Protège cette page via ton reverse proxy (HTTP auth). Les paramètres sont stockés en base et appliqués aux tests au chargement.",
       "admin.save_button": "Enregistrer",
@@ -253,9 +314,14 @@
       "nav.leaderboard": "Leaderboard",
       "nav.profile": "My profile",
       "nav.logout": "Log out",
+      "nav.account_label": "My account ({nickname})",
       "footer.tagline": "Stay in the vibe, hydrate, and if things start spinning, call a cab.",
       "footer.disclaimer": "This is not a medical device. If you drank: never drive.",
       "footer.credits_button": "Credits",
+      "credits.title": "Credits",
+      "credits.intro": "This site was developed by {author} and warmly thanks the help provided by:",
+      "credits.outro": "And I'm surely forgetting some...",
+      "credits.thanks": "Thank you all for your contributions!",
 
       "home.title": "A fun & serious check to know if you should put the glass down",
       "home.subtitle": "Anonymous, free. Optimized for your phone — if you're drunk at your PC, we can't help you. Results are for guidance only.",
@@ -264,6 +330,8 @@
       "home.list3": "At the end: your score is saved automatically",
       "home.cta_start": "Start",
       "home.cta_leaderboard": "See the leaderboard",
+      "home.login_button": "Log in",
+      "home.register_button": "Sign up",
       "home.nickname_title": "Pick your nickname",
       "home.nickname_description": "Before we begin, choose a nickname for the leaderboard.",
       "home.nickname_placeholder": "Your best alias",
@@ -273,6 +341,54 @@
       "home.nickname_too_long": "Nickname is too long. Shorten it to continue.",
       "home.nickname_reserved": "Nickname already used, pick another one.",
       "home.nickname_check_failed": "Couldn't verify the nickname. Try again.",
+      "home.verified_nickname": "Verified nickname:",
+
+      "auth.login.title": "Log in",
+      "auth.login.description": "Enter your login or email to retrieve your verified nickname.",
+      "auth.login.identifier_label": "Login or email",
+      "auth.login.identifier_placeholder": "yourlogin or you@email",
+      "auth.login.password_label": "Password",
+      "auth.login.submit": "Log in",
+      "auth.login.forgot": "Forgot your password?",
+      "auth.login.separator": "or",
+      "auth.login.google": "Continue with Google",
+      "auth.login.no_account": "No account yet?",
+      "auth.login.register_link": "Create your account",
+      "auth.register.title": "Create my account",
+      "auth.register.description": "Reserve your nickname, verify your alias and find your scores easily.",
+      "auth.register.email_label": "Email address",
+      "auth.register.email_placeholder": "you@example.com",
+      "auth.register.nickname_label": "Nickname",
+      "auth.register.nickname_placeholder": "Your unique alias",
+      "auth.register.nickname_hint": "{max} characters max.",
+      "auth.register.password_label": "Password",
+      "auth.register.password_confirm_label": "Confirm your password",
+      "auth.register.submit": "Reserve my nickname",
+      "auth.register.separator": "or",
+      "auth.register.google": "Sign up with Google",
+      "auth.register.has_account": "Already have an account?",
+      "auth.register.login_link": "Log in here",
+      "auth.forgot.title": "Forgot your password?",
+      "auth.forgot.description": "Enter your email address and we'll send you a reset link.",
+      "auth.forgot.success": "If an account matches this email, a reset link is on its way.",
+      "auth.forgot.email_label": "Email address",
+      "auth.forgot.email_placeholder": "you@email",
+      "auth.forgot.submit": "Send the link",
+      "auth.forgot.remember": "Remember your password?",
+      "auth.forgot.back_to_login": "Back to login",
+      "auth.reset.title": "Reset your password",
+      "auth.reset.invalid": "This link is no longer valid. Request a new password reset link.",
+      "auth.reset.retry": "Request a new link",
+      "auth.reset.description": "Choose a new password for your account.",
+      "auth.reset.new_password_label": "New password",
+      "auth.reset.confirm_label": "Confirmation",
+      "auth.reset.submit": "Update password",
+      "auth.google_complete.title": "Pick your nickname",
+      "auth.google_complete.description_prefix": "Your Google account",
+      "auth.google_complete.description_suffix": "is linked. Time to reserve your verified nickname.",
+      "auth.google_complete.nickname_label": "Nickname",
+      "auth.google_complete.nickname_hint": "{max} characters max.",
+      "auth.google_complete.submit": "Confirm my nickname",
 
       "t1.heading": "Test 1 · Reaction",
       "t1.notice": "Ready? As soon as the background turns GREEN, tap faster than your shadow. Jumping the gun means a redo.",
@@ -385,6 +501,12 @@
       "leaderboard.date": "Date",
       "leaderboard.empty": "No score yet.",
 
+      "admin.login.title": "Admin login",
+      "admin.login.description": "Enter the configured login and password to access the admin area.",
+      "admin.login.login_label": "Login",
+      "admin.login.password_label": "Password",
+      "admin.login.submit": "Log in",
+      "admin.login.default_hint": "Default credentials: <strong>admin</strong> / <strong>jsuisdechire</strong>.",
       "admin.heading": "Admin · Calibration",
       "admin.subtitle": "Protect this page through your reverse proxy (HTTP auth). Settings are stored in DB and applied to tests on load.",
       "admin.save_button": "Save",
@@ -500,9 +622,14 @@
       "nav.leaderboard": "Classifica",
       "nav.profile": "Il mio profilo",
       "nav.logout": "Esci",
+      "nav.account_label": "Il mio account ({nickname})",
       "footer.tagline": "Resta nel mood, idratati e se tutto gira troppo, chiama un taxi.",
       "footer.disclaimer": "Non è un dispositivo medico. Se hai bevuto: non guidare mai.",
       "footer.credits_button": "Crediti",
+      "credits.title": "Crediti",
+      "credits.intro": "Questo sito è stato sviluppato da {author} e ringrazia in modo particolare l'aiuto ricevuto da:",
+      "credits.outro": "E sicuramente me ne dimentico qualcuno...",
+      "credits.thanks": "Grazie a tutti per i vostri contributi!",
 
       "home.title": "Un check divertente e serio per capire se devi posare il bicchiere",
       "home.subtitle": "Anonimo, gratuito. Ottimizzato per il tuo telefono — se sei sbronzo davanti al PC, non possiamo aiutarti. Risultati solo indicativi.",
@@ -511,6 +638,8 @@
       "home.list3": "Alla fine: il punteggio viene salvato automaticamente",
       "home.cta_start": "Inizia",
       "home.cta_leaderboard": "Vedi la classifica",
+      "home.login_button": "Accedi",
+      "home.register_button": "Registrati",
       "home.nickname_title": "Scegli il tuo soprannome",
       "home.nickname_description": "Prima di iniziare, scegli un soprannome per la classifica.",
       "home.nickname_placeholder": "Il tuo miglior alias",
@@ -520,6 +649,54 @@
       "home.nickname_too_long": "Il soprannome è troppo lungo. Accorcialo per continuare.",
       "home.nickname_reserved": "Soprannome già utilizzato, scegline un altro.",
       "home.nickname_check_failed": "Impossibile verificare il soprannome. Riprova.",
+      "home.verified_nickname": "Soprannome verificato:",
+
+      "auth.login.title": "Accedi",
+      "auth.login.description": "Inserisci login o email per ritrovare il tuo soprannome verificato.",
+      "auth.login.identifier_label": "Login o email",
+      "auth.login.identifier_placeholder": "iltuologin o tu@email",
+      "auth.login.password_label": "Password",
+      "auth.login.submit": "Accedi",
+      "auth.login.forgot": "Password dimenticata?",
+      "auth.login.separator": "oppure",
+      "auth.login.google": "Continua con Google",
+      "auth.login.no_account": "Non hai ancora un account?",
+      "auth.login.register_link": "Crea il tuo account",
+      "auth.register.title": "Crea il mio account",
+      "auth.register.description": "Prenota il tuo soprannome, verifica il tuo alias e ritrova facilmente i tuoi punteggi.",
+      "auth.register.email_label": "Indirizzo email",
+      "auth.register.email_placeholder": "tu@example.com",
+      "auth.register.nickname_label": "Soprannome",
+      "auth.register.nickname_placeholder": "Il tuo alias unico",
+      "auth.register.nickname_hint": "{max} caratteri max.",
+      "auth.register.password_label": "Password",
+      "auth.register.password_confirm_label": "Conferma la password",
+      "auth.register.submit": "Prenoto il mio soprannome",
+      "auth.register.separator": "oppure",
+      "auth.register.google": "Registrati con Google",
+      "auth.register.has_account": "Hai già un account?",
+      "auth.register.login_link": "Accedi qui",
+      "auth.forgot.title": "Password dimenticata?",
+      "auth.forgot.description": "Inserisci il tuo indirizzo email e ti invieremo un link per reimpostare la password.",
+      "auth.forgot.success": "Se esiste un account per questa email, ti abbiamo inviato un link di reimpostazione.",
+      "auth.forgot.email_label": "Indirizzo email",
+      "auth.forgot.email_placeholder": "tu@email",
+      "auth.forgot.submit": "Invia il link",
+      "auth.forgot.remember": "Ti ricordi la password?",
+      "auth.forgot.back_to_login": "Torna al login",
+      "auth.reset.title": "Reimposta la tua password",
+      "auth.reset.invalid": "Questo link non è più valido. Richiedi un nuovo link per reimpostare la password.",
+      "auth.reset.retry": "Richiedi un nuovo link",
+      "auth.reset.description": "Scegli una nuova password per il tuo account.",
+      "auth.reset.new_password_label": "Nuova password",
+      "auth.reset.confirm_label": "Conferma",
+      "auth.reset.submit": "Aggiorna password",
+      "auth.google_complete.title": "Scegli il tuo soprannome",
+      "auth.google_complete.description_prefix": "Il tuo account Google",
+      "auth.google_complete.description_suffix": "è collegato. Devi solo prenotare il tuo soprannome verificato.",
+      "auth.google_complete.nickname_label": "Soprannome",
+      "auth.google_complete.nickname_hint": "{max} caratteri max.",
+      "auth.google_complete.submit": "Conferma il mio soprannome",
 
       "t1.heading": "Test 1 · Reazione",
       "t1.notice": "Prontə? Quando lo sfondo diventa VERDE, tocca più veloce della tua ombra. Se parti in anticipo, si ricomincia!",
@@ -633,6 +810,12 @@
       "leaderboard.date": "Data",
       "leaderboard.empty": "Nessun punteggio per ora.",
 
+      "admin.login.title": "Accesso admin",
+      "admin.login.description": "Inserisci login e password configurati per accedere all'area di amministrazione.",
+      "admin.login.login_label": "Login",
+      "admin.login.password_label": "Password",
+      "admin.login.submit": "Accedi",
+      "admin.login.default_hint": "Credenziali predefinite: <strong>admin</strong> / <strong>jsuisdechire</strong>.",
       "admin.heading": "Admin · Calibrazione",
       "admin.subtitle": "Proteggi questa pagina tramite il tuo reverse proxy (autenticazione HTTP). I parametri sono salvati nel DB e applicati ai test al caricamento.",
       "admin.save_button": "Salva",
@@ -783,26 +966,63 @@
 
   let activeLang = currentLang();
 
-  function translate(key, vars){
+  function escapeHtml(value){
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function translate(key, vars, options){
     vars = vars || {};
+    options = options || {};
+    const html = options.html === true;
+    const htmlSafe = options.htmlSafe || {};
     const lang = activeLang || 'fr';
     const source = (DICT[lang] && DICT[lang][key]) || (DICT.fr && DICT.fr[key]) || key;
     return source.replace(/\{(\w+)\}/g, (_, name)=>{
-      return Object.prototype.hasOwnProperty.call(vars, name) ? vars[name] : `{${name}}`;
+      if (!Object.prototype.hasOwnProperty.call(vars, name)){
+        return `{${name}}`;
+      }
+      const rawValue = vars[name];
+      const stringValue = rawValue == null ? '' : String(rawValue);
+      if (!html){
+        return stringValue;
+      }
+      if (htmlSafe && htmlSafe[name]){
+        return stringValue;
+      }
+      return escapeHtml(stringValue);
     });
   }
 
   function extractParams(el){
     const params = {};
+    const htmlSafe = {};
     let hasParams = false;
     el.getAttributeNames().forEach(attrName=>{
+      if (attrName.startsWith('data-i18n-param-html-')){
+        const paramName = attrName.slice('data-i18n-param-html-'.length);
+        if (!paramName) return;
+        params[paramName] = el.getAttribute(attrName);
+        htmlSafe[paramName] = true;
+        hasParams = true;
+        return;
+      }
       if (!attrName.startsWith('data-i18n-param-')) return;
       const paramName = attrName.slice('data-i18n-param-'.length);
       if (!paramName) return;
-      params[paramName] = el.getAttribute(attrName);
+      if (!Object.prototype.hasOwnProperty.call(params, paramName)){
+        params[paramName] = el.getAttribute(attrName);
+      }
+      if (!Object.prototype.hasOwnProperty.call(htmlSafe, paramName)){
+        htmlSafe[paramName] = false;
+      }
       hasParams = true;
     });
-    return hasParams ? params : null;
+    return hasParams ? { params, htmlSafe } : null;
   }
 
   function apply(){
@@ -813,13 +1033,18 @@
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       const key = el.getAttribute('data-i18n');
       if (!key) return;
-      const params = extractParams(el);
-      el.textContent = translate(key, params || undefined);
+      const paramsInfo = extractParams(el);
+      el.textContent = translate(key, paramsInfo ? paramsInfo.params : undefined);
     });
 
     document.querySelectorAll('[data-i18n-html]').forEach(el=>{
       const key = el.getAttribute('data-i18n-html');
-      if (key) el.innerHTML = translate(key);
+      if (!key) return;
+      const paramsInfo = extractParams(el);
+      el.innerHTML = translate(key, paramsInfo ? paramsInfo.params : undefined, {
+        html: true,
+        htmlSafe: paramsInfo ? paramsInfo.htmlSafe : undefined
+      });
     });
 
     document.querySelectorAll('[data-i18n-attr]').forEach(el=>{

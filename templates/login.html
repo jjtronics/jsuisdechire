@@ -2,8 +2,8 @@
 {% block content %}
 <div class="max-w-xl mx-auto">
   <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
-    <h1 class="text-2xl font-black mb-3">Se connecter</h1>
-    <p class="text-sm text-gray-600 dark:text-slate-300 mb-4">Rentre ton login ou ton email pour retrouver ton pseudo vérifié.</p>
+    <h1 class="text-2xl font-black mb-3" data-i18n="auth.login.title">Se connecter</h1>
+    <p class="text-sm text-gray-600 dark:text-slate-300 mb-4" data-i18n="auth.login.description">Rentre ton login ou ton email pour retrouver ton pseudo vérifié.</p>
     {% if error %}
     <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
       {{ error }}
@@ -19,7 +19,7 @@
       <input type="hidden" name="next" value="{{ next_url }}" />
       {% endif %}
       <div>
-        <label for="login" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Login ou email</label>
+        <label for="login" class="block text-sm font-semibold text-gray-700 dark:text-slate-200" data-i18n="auth.login.identifier_label">Login ou email</label>
         <input
           id="login"
           name="login"
@@ -29,10 +29,11 @@
           required
           class="mt-1 w-full rounded-xl border border-gray-200 bg-white/90 px-3 py-2 text-base shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-slate-700 dark:bg-slate-800"
           placeholder="tonlogin ou ton@email"
+          data-i18n-attr="placeholder:auth.login.identifier_placeholder"
         />
       </div>
       <div>
-        <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Mot de passe</label>
+        <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-slate-200" data-i18n="auth.login.password_label">Mot de passe</label>
         <input
           id="password"
           name="password"
@@ -43,24 +44,27 @@
           placeholder="••••••••"
         />
       </div>
-      <button type="submit" class="w-full rounded-xl bg-rose-600 py-2 text-white font-semibold hover:bg-rose-700">Se connecter</button>
+      <button type="submit" class="w-full rounded-xl bg-rose-600 py-2 text-white font-semibold hover:bg-rose-700" data-i18n="auth.login.submit">Se connecter</button>
     </form>
     <div class="mt-4 text-center">
-      <a href="{{ url_for('forgot_password_view') }}" class="text-sm text-rose-600 hover:underline">Mot de passe perdu&nbsp;?</a>
+      <a href="{{ url_for('forgot_password_view') }}" class="text-sm text-rose-600 hover:underline" data-i18n="auth.login.forgot">Mot de passe perdu&nbsp;?</a>
     </div>
     {% if google_login_enabled %}
     <div class="mt-6">
       <div class="relative flex items-center justify-center text-xs uppercase tracking-[0.4em] text-gray-400 dark:text-slate-500">
-        <span class="bg-white px-2 dark:bg-slate-900">ou</span>
+        <span class="bg-white px-2 dark:bg-slate-900" data-i18n="auth.login.separator">ou</span>
         <div class="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-slate-700"></div>
       </div>
       <a href="{{ url_for('auth_google_start', next=next_url) if next_url else url_for('auth_google_start') }}" class="mt-4 flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white/90 py-2 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" class="h-5 w-5" />
-        Continuer avec Google
+        <span data-i18n="auth.login.google">Continuer avec Google</span>
       </a>
     </div>
     {% endif %}
-    <p class="mt-6 text-sm text-gray-600 dark:text-slate-300">Pas encore de compte ? <a href="{{ url_for('register_view') }}" class="text-rose-600 hover:underline">Crée ton compte</a>.</p>
+    <p class="mt-6 text-sm text-gray-600 dark:text-slate-300">
+      <span data-i18n="auth.login.no_account">Pas encore de compte&nbsp;?</span>
+      <a href="{{ url_for('register_view') }}" class="text-rose-600 hover:underline" data-i18n="auth.login.register_link">Crée ton compte</a>.
+    </p>
   </section>
 </div>
 {% endblock %}
