@@ -18,22 +18,24 @@
     if(parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
       return -42;
     }
-    const w={rxn:0.25,str:0.25,prs:0.25,mem:0.15,bal:0.1}; let score=0,wsum=0;
+    const w={rxn:0.2,str:0.2,prs:0.2,rfl:0.15,mem:0.15,bal:0.1}; let score=0,wsum=0;
     if(parts.rxn && Number.isFinite(parts.rxn.score)){score+=parts.rxn.score*w.rxn; wsum+=w.rxn;}
     if(parts.str && Number.isFinite(parts.str.score)){score+=parts.str.score*w.str; wsum+=w.str;}
     if(parts.prs && Number.isFinite(parts.prs.score)){score+=parts.prs.score*w.prs; wsum+=w.prs;}
+    if(parts.rfl && Number.isFinite(parts.rfl.score)){score+=parts.rfl.score*w.rfl; wsum+=w.rfl;}
     if(parts.mem && Number.isFinite(parts.mem.score)){score+=parts.mem.score*w.mem; wsum+=w.mem;}
     if(parts.bal && Number.isFinite(parts.bal.score)){score+=parts.bal.score*w.bal; wsum+=w.bal;}
     if(wsum<=0) return NaN;
     return score/wsum;
   }
 
-  let rxn=null, str=null, prs=null, mem=null, bal=null, total=NaN;
+  let rxn=null, str=null, prs=null, rfl=null, mem=null, bal=null, total=NaN;
   if(session && typeof session.gatherScores==='function'){
     const gathered=session.gatherScores();
     rxn=gathered.rxn;
     str=gathered.str;
     prs=gathered.prs;
+    rfl=gathered.rfl;
     mem=gathered.mem;
     bal=gathered.bal;
     total=gathered.total;
@@ -41,9 +43,10 @@
     rxn=fallbackRead('jsd:rxn');
     str=fallbackRead('jsd:str');
     prs=fallbackRead('jsd:prs');
+    rfl=fallbackRead('jsd:rfl');
     mem=fallbackRead('jsd:mem');
     bal=fallbackRead('jsd:bal');
-    total=fallbackCompute({rxn,str,prs,mem,bal});
+    total=fallbackCompute({rxn,str,prs,rfl,mem,bal});
   }
 
   const cheatDetected=!!(bal && bal.cheat && bal.cheat.detected);
@@ -126,6 +129,23 @@
     } else {
       details.append(el("div","",t("results.pursuit_detail_base",{score:formatScore(prs.score)})));
     }
+  }
+  if(rfl){
+    const hits = Number(rfl.hits);
+    const attempts = Number(rfl.attempts);
+    const best = Number(rfl.best_error_px);
+    const avg = Number(rfl.avg_error_px);
+    const hitsLabel = Number.isFinite(hits) ? Math.max(0, Math.trunc(hits)) : 0;
+    const attemptsLabel = Number.isFinite(attempts) ? Math.max(0, Math.trunc(attempts)) : 0;
+    const bestLabel = Number.isFinite(best) ? `${best.toFixed(best >= 100 ? 0 : 1)} px` : '—';
+    const avgLabel = Number.isFinite(avg) ? `${avg.toFixed(avg >= 100 ? 0 : 1)} px` : '—';
+    details.append(el("div","",t("results.reflex_detail",{
+      score: formatScore(rfl.score),
+      hits: hitsLabel,
+      attempts: attemptsLabel,
+      best: bestLabel,
+      avg: avgLabel
+    })));
   }
   if(mem){
     const mistakes = Number(mem.mistakes);
@@ -262,7 +282,7 @@
       if(session && typeof session.resetProgress==='function'){
         session.resetProgress({keepNickname:true});
       } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:mem','jsd:bal','jsd:score_submitted','jsd:last_submission']
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:mem','jsd:bal','jsd:score_submitted','jsd:last_submission']
           .forEach(key=>localStorage.removeItem(key));
       }
     }catch(err){

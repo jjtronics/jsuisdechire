@@ -127,7 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'game_prs_enabled', label:'admin.fields.games.pursuit_enabled', type:'checkbox'},
         {k:'game_bal_enabled', label:'admin.fields.games.balance_enabled', type:'checkbox'},
         {k:'game_mem_enabled', label:'admin.fields.games.memory_enabled', type:'checkbox'},
-        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'5'}
+        {k:'game_rfl_enabled', label:'admin.fields.games.reflex_enabled', type:'checkbox'},
+        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'6'}
       ]
     },
     {
@@ -179,6 +180,21 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'prs_captureRadius', label:'admin.fields.pursuit.capture', helper:'admin.helpers.pursuit.capture', type:'number', step:'1', min:'8', max:'200'},
         {k:'prs_jitterAmp', label:'admin.fields.pursuit.jitter', helper:'admin.helpers.pursuit.jitter', type:'number', step:'0.01', min:'0', max:'0.3'},
         {k:'prs_max_attempts', label:'admin.fields.pursuit.max_attempts', helper:'admin.helpers.pursuit.max_attempts', type:'number', step:'1', min:'1', max:'50'}
+      ]
+    },
+    {
+      id: 'reflex',
+      title: 'admin.groups.reflex.title',
+      description: 'admin.groups.reflex.description',
+      fields: [
+        {k:'rfl_attempts', label:'admin.fields.reflex.attempts', helper:'admin.helpers.reflex.attempts', type:'number', step:'1', min:'1', max:'20'},
+        {k:'rfl_velocity_scale', label:'admin.fields.reflex.velocity_scale', helper:'admin.helpers.reflex.velocity_scale', type:'number', step:'0.1', min:'0.5', max:'20'},
+        {k:'rfl_gravity', label:'admin.fields.reflex.gravity', helper:'admin.helpers.reflex.gravity', type:'number', step:'10', min:'200', max:'4000'},
+        {k:'rfl_cup_speed_min', label:'admin.fields.reflex.cup_speed_min', helper:'admin.helpers.reflex.cup_speed_min', type:'number', step:'5', min:'10', max:'400'},
+        {k:'rfl_cup_speed_max', label:'admin.fields.reflex.cup_speed_max', helper:'admin.helpers.reflex.cup_speed_max', type:'number', step:'5', min:'20', max:'500'},
+        {k:'rfl_success_weight', label:'admin.fields.reflex.success_weight', helper:'admin.helpers.reflex.success_weight', type:'number', step:'0.05', min:'0', max:'1'},
+        {k:'rfl_accuracy_weight', label:'admin.fields.reflex.accuracy_weight', helper:'admin.helpers.reflex.accuracy_weight', type:'number', step:'0.05', min:'0', max:'1'},
+        {k:'rfl_accuracy_tolerance_px', label:'admin.fields.reflex.tolerance', helper:'admin.helpers.reflex.tolerance', type:'number', step:'1', min:'10', max:'300'}
       ]
     },
     {
@@ -575,6 +591,11 @@ document.addEventListener('DOMContentLoaded', () => {
       {key:'prs_score', label:'admin.scores.prs_score', type:'number', decimals:0},
       {key:'prs_error', label:'admin.scores.prs_error', type:'number', decimals:2},
       {key:'time_to_catch_ms', label:'admin.scores.time_to_catch_ms', type:'number', decimals:0},
+      {key:'rfl_score', label:'admin.scores.rfl_score', type:'number', decimals:0},
+      {key:'rfl_hits', label:'admin.scores.rfl_hits', type:'number', decimals:0},
+      {key:'rfl_attempts', label:'admin.scores.rfl_attempts', type:'number', decimals:0},
+      {key:'rfl_best_error', label:'admin.scores.rfl_best_error', type:'number', decimals:1},
+      {key:'rfl_avg_error', label:'admin.scores.rfl_avg_error', type:'number', decimals:1},
       {key:'mem_score', label:'admin.scores.mem_score', type:'number', decimals:0},
       {key:'mem_time_ms', label:'admin.scores.mem_time_ms', type:'number', decimals:0},
       {key:'mem_errors', label:'admin.scores.mem_errors', type:'number', decimals:0},

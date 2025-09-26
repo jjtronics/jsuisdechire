@@ -146,6 +146,14 @@ DEFAULT_SETTINGS = {
     "prs_captureRadius": 36,
     "prs_jitterAmp": 0.05,
     "prs_max_attempts": 10,
+    "rfl_attempts": 5,
+    "rfl_velocity_scale": 4.8,
+    "rfl_gravity": 1800,
+    "rfl_cup_speed_min": 70,
+    "rfl_cup_speed_max": 160,
+    "rfl_success_weight": 0.7,
+    "rfl_accuracy_weight": 0.3,
+    "rfl_accuracy_tolerance_px": 60,
     "bal_mode": "lin",
     "bal_duration_ms": 8000,
     "bal_low_good": 0.02,
@@ -162,12 +170,13 @@ DEFAULT_SETTINGS = {
     "mem_speed_weight": 0.4,
     "mem_time_best_ms": 45000,
     "mem_time_worst_ms": 120000,
-    "session_total_games": 5,
+    "session_total_games": 6,
     "game_rxn_enabled": True,
     "game_str_enabled": True,
     "game_prs_enabled": True,
     "game_bal_enabled": True,
     "game_mem_enabled": True,
+    "game_rfl_enabled": True,
     "nickname_max_length": 32,
     "smtp_host": "",
     "smtp_port": 587,
@@ -210,6 +219,8 @@ def ensure_schema(db=None):
         rxn_score INTEGER, rxn_median REAL, rxn_mean REAL,
         str_score INTEGER, str_accuracy REAL, str_mean REAL,
         prs_score INTEGER, prs_error REAL, time_to_catch_ms REAL,
+        rfl_score INTEGER, rfl_hits INTEGER, rfl_attempts INTEGER,
+        rfl_best_error REAL, rfl_avg_error REAL,
         bal_score INTEGER, bal_std REAL,
         mem_score REAL, mem_time_ms INTEGER, mem_errors INTEGER,
         is_cheater INTEGER DEFAULT 0,
@@ -252,6 +263,16 @@ def ensure_schema(db=None):
         db.execute("ALTER TABLE scores ADD COLUMN mem_time_ms INTEGER")
     if "mem_errors" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN mem_errors INTEGER")
+    if "rfl_score" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN rfl_score INTEGER")
+    if "rfl_hits" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN rfl_hits INTEGER")
+    if "rfl_attempts" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN rfl_attempts INTEGER")
+    if "rfl_best_error" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN rfl_best_error REAL")
+    if "rfl_avg_error" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN rfl_avg_error REAL")
     if "is_cheater" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN is_cheater INTEGER DEFAULT 0")
     if "cheat_reason" not in score_columns:
@@ -684,6 +705,10 @@ def t4():
 def t5():
     return render_template("t5.html", app_name=APP_NAME)
 
+@app.route("/t6")
+def t6():
+    return render_template("t6.html", app_name=APP_NAME)
+
 @app.route("/results")
 def results_page():
     return render_template("results.html", app_name=APP_NAME)
@@ -724,6 +749,11 @@ latest_scores AS (
         prs_score,
         prs_error,
         time_to_catch_ms,
+        rfl_score,
+        rfl_hits,
+        rfl_attempts,
+        rfl_best_error,
+        rfl_avg_error,
         bal_score,
         bal_std,
         mem_score,
@@ -798,6 +828,11 @@ LEADERBOARD_SORTS = {
     },
     "prs_score": {
         "expression": "scores.prs_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "rfl_score": {
+        "expression": "scores.rfl_score",
         "default_order": "desc",
         "secondary": ["scores.created_at DESC", "scores.id DESC"],
     },
@@ -1059,6 +1094,11 @@ def api_admin_scores():
             "prs_score": row["prs_score"],
             "prs_error": row["prs_error"],
             "time_to_catch_ms": row["time_to_catch_ms"],
+            "rfl_score": row["rfl_score"],
+            "rfl_hits": row["rfl_hits"],
+            "rfl_attempts": row["rfl_attempts"],
+            "rfl_best_error": row["rfl_best_error"],
+            "rfl_avg_error": row["rfl_avg_error"],
             "bal_score": row["bal_score"],
             "bal_std": row["bal_std"],
             "mem_score": row["mem_score"],
@@ -1153,6 +1193,7 @@ def submit():
         "prs": _section("prs"),
         "bal": _section("bal"),
         "mem": _section("mem"),
+        "rfl": _section("rfl"),
     }
 
     def _parse_float(value):
@@ -1181,6 +1222,11 @@ def submit():
         "prs_score": sections["prs"].get("score"),
         "prs_error": sections["prs"].get("mean_error_px"),
         "time_to_catch_ms": sections["prs"].get("time_to_catch_ms"),
+        "rfl_score": sections["rfl"].get("score"),
+        "rfl_hits": sections["rfl"].get("hits"),
+        "rfl_attempts": sections["rfl"].get("attempts"),
+        "rfl_best_error": sections["rfl"].get("best_error_px"),
+        "rfl_avg_error": sections["rfl"].get("avg_error_px"),
         "bal_score": sections["bal"].get("score"),
         "bal_std": sections["bal"].get("std_g"),
         "mem_score": sections["mem"].get("score"),
@@ -1230,11 +1276,12 @@ def submit():
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
          fields['prs_score'], fields['prs_error'], fields['time_to_catch_ms'],
+         fields['rfl_score'], fields['rfl_hits'], fields['rfl_attempts'], fields['rfl_best_error'], fields['rfl_avg_error'],
          fields['bal_score'], fields['bal_std'],
          fields['mem_score'], fields['mem_time_ms'], fields['mem_errors'],
          user_id,

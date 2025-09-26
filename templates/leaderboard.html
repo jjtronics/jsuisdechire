@@ -393,6 +393,17 @@
             <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
           </a>
         </th>
+        {% set key = 'rfl_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
+            <span data-i18n="reflex">Réflexe</span>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
+        </th>
         {% set key = 'mem_score' %}
         {% set default_order = sort_defaults.get(key, 'desc') %}
         {% set is_active = active_sort_key == key %}
@@ -455,6 +466,7 @@
         <td data-sort-value="{{ r['rxn_score'] if r['rxn_score'] is not none else '' }}">{{ r['rxn_score']|round(1) if r['rxn_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['str_score'] if r['str_score'] is not none else '' }}">{{ r['str_score']|round(1) if r['str_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['prs_score'] if r['prs_score'] is not none else '' }}">{{ r['prs_score']|round(1) if r['prs_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['rfl_score'] if r['rfl_score'] is not none else '' }}">{{ r['rfl_score']|round(1) if r['rfl_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['mem_score'] if r['mem_score'] is not none else '' }}">{{ r['mem_score']|round(1) if r['mem_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['bal_score'] if r['bal_score'] is not none else '' }}">{{ r['bal_score']|round(1) if r['bal_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['created_at'] }}">

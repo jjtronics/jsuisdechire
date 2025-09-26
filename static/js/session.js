@@ -40,7 +40,7 @@
     if (parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
       return -42;
     }
-    const weights = { rxn:0.25, str:0.25, prs:0.25, mem:0.15, bal:0.1 };
+    const weights = { rxn:0.2, str:0.2, prs:0.2, rfl:0.15, mem:0.15, bal:0.1 };
     let score = 0;
     let weightSum = 0;
 
@@ -55,6 +55,10 @@
     if (parts && parts.prs && Number.isFinite(parts.prs.score)){
       score += parts.prs.score * weights.prs;
       weightSum += weights.prs;
+    }
+    if (parts && parts.rfl && Number.isFinite(parts.rfl.score)){
+      score += parts.rfl.score * weights.rfl;
+      weightSum += weights.rfl;
     }
     if (parts && parts.mem && Number.isFinite(parts.mem.score)){
       score += parts.mem.score * weights.mem;
@@ -75,10 +79,11 @@
     const rxn = readJson('jsd:rxn');
     const str = readJson('jsd:str');
     const prs = readJson('jsd:prs');
+    const rfl = readJson('jsd:rfl');
     const mem = readJson('jsd:mem');
     const bal = readJson('jsd:bal');
-    const total = computeTotal({ rxn, str, prs, mem, bal });
-    return { rxn, str, prs, mem, bal, total };
+    const total = computeTotal({ rxn, str, prs, rfl, mem, bal });
+    return { rxn, str, prs, rfl, mem, bal, total };
   }
 
   function hasNickname(){
@@ -122,7 +127,7 @@
     if (!hasNickname()){
       return { status: 'nonick' };
     }
-    const { rxn, str, prs, mem, bal, total } = gatherScores();
+    const { rxn, str, prs, rfl, mem, bal, total } = gatherScores();
     if (!Number.isFinite(total)){
       return { status: 'noscore' };
     }
@@ -136,7 +141,7 @@
       return { status: 'nonick' };
     }
 
-    const payload = { nickname, total_score: total, rxn, str, prs, mem, bal };
+    const payload = { nickname, total_score: total, rxn, str, prs, rfl, mem, bal };
     const totalForStorage = Number.isFinite(total) ? Math.trunc(total) : null;
 
     try {
@@ -176,7 +181,7 @@
     options = options || {};
     const keepNickname = options.keepNickname !== false;
     invalidateSubmission();
-    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:mem','jsd:bal','jsd:test_sequence_v1']
+    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:mem','jsd:bal','jsd:test_sequence_v1']
       .forEach(key => localStorage.removeItem(key));
     if (!keepNickname){
       localStorage.removeItem('jsd:nick');

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-4">
+  <h2 class="text-xl font-bold" data-i18n="t6.heading">Test 6 · Vise le gobelet</h2>
+  <p
+    class="px-4 py-3 rounded-xl bg-rose-100/80 border border-rose-200/60 text-rose-900 text-base font-semibold leading-relaxed shadow-sm dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-100"
+    data-i18n="t6.notice"
+    data-i18n-param-attempts="{{ app_settings.rfl_attempts|int }}"
+  >
+    Attrape le gobelet en mouvement&nbsp;! Choisis ton angle et ta puissance puis tire la balle de ping-pong. Tu as {{ app_settings.rfl_attempts|int }} essais.
+  </p>
+  <div id="t6" class="space-y-4"></div>
+  <div class="flex justify-between">
+    <a href="/t5" class="px-4 py-2 rounded-xl border" data-i18n="common.back" data-flow-back="1">Retour</a>
+    <a id="next" href="/results" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.next" data-default-i18n="common.next" data-results-i18n="common.view_results">Suivant</a>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const notice = document.querySelector('[data-i18n="t6.notice"]');
+    if (!notice) return;
+    const t = window.i18n ? window.i18n : ((key, params) => key);
+    const fromConfig = window.jsdConfig && window.jsdConfig.settings ? window.jsdConfig.settings.rfl_attempts : undefined;
+    const fallback = Number.isFinite(fromConfig) && fromConfig > 0 ? fromConfig : {{ app_settings.rfl_attempts|int }};
+    notice.setAttribute('data-i18n-param-attempts', fallback);
+    notice.textContent = t('t6.notice', { attempts: fallback });
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.jsdFlow && typeof window.jsdFlow.setupPage === 'function'){
+      window.jsdFlow.setupPage('t6', { nextSelector: '#next', backSelector: '[data-flow-back]', hideBackIfFirst: true });
+    }
+  });
+</script>
+<script defer src="{{ asset_url('js/t6.js') }}"></script>
+{% endblock %}
