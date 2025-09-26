@@ -87,7 +87,7 @@
   const defaultHelpText = translate('t6.help', null, 'Place ton doigt sur la balle, tire vers l’arrière puis relâche pour tirer.');
   const messageEl = el('div', 'text-sm text-slate-600 dark:text-slate-300', defaultHelpText);
 
-  const canvasWrap = el('div', 'relative overflow-hidden rounded-3xl border border-white/50 bg-gradient-to-b from-amber-100/70 to-rose-100/60 shadow-inner dark:from-slate-900/70 dark:to-rose-900/20');
+  const canvasWrap = el('div', 'relative overflow-hidden rounded-3xl border border-white/50 bg-gradient-to-b from-sky-100/60 to-emerald-100/50 shadow-inner dark:from-slate-900/70 dark:to-emerald-900/30');
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   canvasWrap.append(canvas);
@@ -119,7 +119,8 @@
     ballRadius: 8,
     groundOffset: 36,
     originX: 60,
-    originY: 0
+    originY: 0,
+    aimGuideLength: 140
   };
 
   const cup = {
@@ -206,6 +207,7 @@
     layout.cupWidth = layout.width * 0.22;
     layout.cupHeight = layout.height * 0.13;
     layout.ballRadius = layout.width * 0.022;
+    layout.aimGuideLength = layout.width * 0.46;
     resetCup();
     canvas.width = layout.width;
     canvas.height = layout.height;
@@ -488,85 +490,242 @@
 
   function drawCup(){
     ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.strokeStyle = 'rgba(244, 63, 94, 0.8)';
-    ctx.lineWidth = Math.max(2, layout.width * 0.012);
     const x = cup.x;
     const y = cup.y;
     const w = cup.width;
     const h = cup.height;
-    const lip = h * 0.2;
+    const rim = Math.max(2, h * 0.15);
+    const poleX = x + w * 0.5;
+    const flagHeight = h * 1.4;
+    ctx.lineWidth = Math.max(2, layout.width * 0.01);
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.strokeStyle = 'rgba(30,41,59,0.25)';
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + w, y);
-    ctx.lineTo(x + w * 0.8, y + h);
-    ctx.lineTo(x + w * 0.2, y + h);
+    ctx.moveTo(x + w * 0.12, y + h);
+    ctx.lineTo(x + w * 0.88, y + h);
+    ctx.lineTo(x + w * 0.72, y + rim);
+    ctx.lineTo(x + w * 0.28, y + rim);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = 'rgba(253, 186, 116, 0.8)';
-    ctx.fillRect(x + w * 0.18, y + lip, w * 0.64, h * 0.6);
+    ctx.fillStyle = 'rgba(226, 232, 240, 0.85)';
+    ctx.fillRect(x + w * 0.24, y + rim, w * 0.52, h * 0.55);
+    ctx.strokeStyle = 'rgba(244,63,94,0.65)';
+    ctx.lineWidth = Math.max(2, layout.width * 0.012);
+    ctx.beginPath();
+    ctx.ellipse(x + w * 0.5, y + rim, w * 0.45, rim * 0.55, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(250, 250, 250, 0.9)';
+    ctx.lineWidth = Math.max(2, layout.width * 0.006);
+    ctx.beginPath();
+    ctx.moveTo(poleX, y + rim);
+    ctx.lineTo(poleX, y - flagHeight);
+    ctx.stroke();
+    const flagWidth = w * 0.42;
+    ctx.fillStyle = 'rgba(244,63,94,0.85)';
+    ctx.beginPath();
+    ctx.moveTo(poleX, y - flagHeight);
+    ctx.lineTo(poleX + flagWidth, y - flagHeight + flagWidth * 0.55);
+    ctx.lineTo(poleX, y - flagHeight + flagWidth * 1.1);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 
-  function drawAim(){
+  function drawLaunchPad(){
+    ctx.save();
+    const baseRadius = layout.ballRadius * 2.6;
+    const originX = layout.originX;
+    const originY = layout.originY;
+    const shadowGradient = ctx.createRadialGradient(originX, originY + baseRadius * 0.55, baseRadius * 0.2, originX, originY, baseRadius * 1.05);
+    shadowGradient.addColorStop(0, 'rgba(15, 118, 110, 0.35)');
+    shadowGradient.addColorStop(1, 'rgba(15, 118, 110, 0)');
+    ctx.fillStyle = shadowGradient;
+    ctx.beginPath();
+    ctx.arc(originX, originY + baseRadius * 0.4, baseRadius * 1.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.arc(originX, originY, baseRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.lineWidth = Math.max(1.5, layout.width * 0.004);
+    ctx.beginPath();
+    ctx.arc(originX, originY, baseRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawAimGuide(){
+    if (state.shotActive){
+      return;
+    }
+    const originX = layout.originX;
+    const originY = layout.originY;
+    const power = state.aim.active ? state.aim.power : 0;
+    const angle = state.aim.active ? state.aim.angle : Math.PI / 7;
+    const spread = Math.PI / 9;
+    const baseLength = layout.aimGuideLength * clamp(power, 0, 1);
+    const effectiveLength = Math.max(layout.width * 0.18, baseLength);
+    ctx.save();
+    ctx.translate(originX, originY);
+    const leftAngle = angle + spread;
+    const rightAngle = angle - spread;
+    const leftPoint = {
+      x: Math.cos(leftAngle) * effectiveLength,
+      y: -Math.sin(leftAngle) * effectiveLength
+    };
+    const rightPoint = {
+      x: Math.cos(rightAngle) * effectiveLength,
+      y: -Math.sin(rightAngle) * effectiveLength
+    };
+    const tipPoint = {
+      x: Math.cos(angle) * (effectiveLength + layout.ballRadius * 1.4),
+      y: -Math.sin(angle) * (effectiveLength + layout.ballRadius * 1.4)
+    };
+    const gradient = ctx.createLinearGradient(0, 0, tipPoint.x, tipPoint.y);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.0)');
+    gradient.addColorStop(0.25, 'rgba(59, 130, 246, 0.25)');
+    gradient.addColorStop(0.6, 'rgba(56, 189, 248, 0.35)');
+    gradient.addColorStop(1, 'rgba(236, 72, 153, 0.7)');
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(leftPoint.x, leftPoint.y);
+    ctx.lineTo(tipPoint.x, tipPoint.y);
+    ctx.lineTo(rightPoint.x, rightPoint.y);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.5, layout.width * 0.003);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+    ctx.stroke();
+    const arrowLength = Math.max(layout.ballRadius * 3, effectiveLength * 0.25);
+    const arrowTail = {
+      x: Math.cos(angle) * (effectiveLength - arrowLength * 0.4),
+      y: -Math.sin(angle) * (effectiveLength - arrowLength * 0.4)
+    };
+    const arrowTip = {
+      x: Math.cos(angle) * (effectiveLength + arrowLength * 0.6),
+      y: -Math.sin(angle) * (effectiveLength + arrowLength * 0.6)
+    };
+    const headLeft = {
+      x: arrowTip.x + Math.cos(angle + Math.PI * 0.75) * arrowLength * 0.25,
+      y: arrowTip.y - Math.sin(angle + Math.PI * 0.75) * arrowLength * 0.25
+    };
+    const headRight = {
+      x: arrowTip.x + Math.cos(angle - Math.PI * 0.75) * arrowLength * 0.25,
+      y: arrowTip.y - Math.sin(angle - Math.PI * 0.75) * arrowLength * 0.25
+    };
+    ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+    ctx.lineWidth = Math.max(3, layout.ballRadius * 0.8);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(arrowTail.x, arrowTail.y);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.85)';
+    ctx.beginPath();
+    ctx.moveTo(arrowTip.x, arrowTip.y);
+    ctx.lineTo(headLeft.x, headLeft.y);
+    ctx.lineTo(headRight.x, headRight.y);
+    ctx.closePath();
+    ctx.fill();
+    if (!state.aim.active){
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.arc(0, 0, layout.ballRadius * 2.2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.lineWidth = layout.ballRadius * 0.5;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPullHandle(){
     if (!state.aim.active || state.shotActive){
       return;
     }
     ctx.save();
-    ctx.strokeStyle = 'rgba(244, 63, 94, 0.5)';
-    ctx.lineWidth = Math.max(1.5, layout.ballRadius * 0.5);
-    ctx.lineCap = 'round';
+    ctx.fillStyle = 'rgba(15, 118, 110, 0.12)';
     ctx.beginPath();
-    ctx.moveTo(layout.originX, layout.originY);
-    ctx.lineTo(state.aim.x, state.aim.y);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawBall(ball){
-    let x;
-    let y;
-    if (ball){
-      x = ball.x;
-      y = ball.y;
-    } else if (state.aim.active && !state.shotActive){
-      x = state.aim.x;
-      y = state.aim.y;
-    } else {
-      x = layout.originX;
-      y = layout.originY;
-    }
-    ctx.save();
-    ctx.fillStyle = state.aim.active && !state.shotActive ? '#fee2e2' : '#ffffff';
-    ctx.shadowColor = 'rgba(244, 63, 94, 0.3)';
-    ctx.shadowBlur = layout.ballRadius * 0.6;
-    ctx.beginPath();
-    ctx.arc(x, y, layout.ballRadius, 0, Math.PI * 2);
+    ctx.arc(state.aim.x, state.aim.y, layout.ballRadius * 1.1, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  function drawLauncher(){
+  function drawBall(ball){
+    const radius = layout.ballRadius;
+    let x = layout.originX;
+    let y = layout.originY;
+    if (ball){
+      x = ball.x;
+      y = ball.y;
+    }
     ctx.save();
-    ctx.strokeStyle = 'rgba(244, 63, 94, 0.5)';
-    ctx.lineWidth = layout.ballRadius * 0.6;
-    ctx.lineCap = 'round';
+    const shadowGradient = ctx.createRadialGradient(x, y + radius * 0.9, radius * 0.2, x, y + radius * 0.9, radius * 1.6);
+    shadowGradient.addColorStop(0, 'rgba(15, 23, 42, 0.28)');
+    shadowGradient.addColorStop(1, 'rgba(15, 23, 42, 0)');
+    ctx.fillStyle = shadowGradient;
     ctx.beginPath();
-    ctx.moveTo(layout.originX - layout.ballRadius * 1.5, layout.originY + layout.ballRadius);
-    ctx.lineTo(layout.originX + layout.ballRadius * 1.5, layout.originY + layout.ballRadius);
+    ctx.arc(x, y + radius * 0.9, radius * 1.4, 0, Math.PI * 2);
+    ctx.fill();
+    const gradient = ctx.createRadialGradient(x - radius * 0.4, y - radius * 0.8, radius * 0.2, x, y, radius);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(0.55, '#f8fafc');
+    gradient.addColorStop(1, '#e2e8f0');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    if (!ball && state.aim.active && !state.shotActive){
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#60a5fa';
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = 'rgba(226, 232, 240, 0.9)';
+    ctx.lineWidth = radius * 0.22;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.55, Math.PI * 0.15, Math.PI * 0.85);
     ctx.stroke();
     ctx.restore();
   }
 
   function renderBackground(){
-    const gradient = ctx.createLinearGradient(0, 0, 0, layout.height);
-    gradient.addColorStop(0, 'rgba(255,255,255,0.2)');
-    gradient.addColorStop(1, 'rgba(255,255,255,0.05)');
-    ctx.fillStyle = gradient;
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, layout.height);
+    skyGradient.addColorStop(0, 'rgba(191, 219, 254, 1)');
+    skyGradient.addColorStop(0.5, 'rgba(224, 242, 254, 0.95)');
+    skyGradient.addColorStop(1, 'rgba(187, 247, 208, 0.85)');
+    ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, layout.width, layout.height);
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
-    ctx.fillRect(0, layout.originY + layout.ballRadius, layout.width, layout.height - layout.originY);
+    const hillGradient = ctx.createLinearGradient(0, layout.originY * 0.1, 0, layout.height);
+    hillGradient.addColorStop(0, 'rgba(110, 231, 183, 0.65)');
+    hillGradient.addColorStop(1, 'rgba(16, 185, 129, 0.9)');
+    ctx.fillStyle = hillGradient;
+    ctx.beginPath();
+    ctx.moveTo(0, layout.originY - layout.ballRadius * 4);
+    ctx.quadraticCurveTo(layout.width * 0.4, layout.originY - layout.ballRadius * 7, layout.width, layout.originY - layout.ballRadius * 3);
+    ctx.lineTo(layout.width, layout.height);
+    ctx.lineTo(0, layout.height);
+    ctx.closePath();
+    ctx.fill();
+    const teeTop = layout.originY + layout.ballRadius * 0.4;
+    const groundGradient = ctx.createLinearGradient(0, teeTop, 0, layout.height);
+    groundGradient.addColorStop(0, 'rgba(13, 148, 136, 0.95)');
+    groundGradient.addColorStop(1, 'rgba(6, 95, 70, 1)');
+    ctx.fillStyle = groundGradient;
+    ctx.fillRect(0, teeTop, layout.width, layout.height - teeTop);
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#064e3b';
+    const stripeHeight = Math.max(6, layout.height * 0.06);
+    for (let i = 0; i < 10; i += 1){
+      const stripeY = teeTop + i * stripeHeight * 1.4;
+      ctx.fillRect(0, stripeY, layout.width, stripeHeight);
+    }
+    ctx.restore();
   }
 
   function updateCup(dt){
@@ -618,8 +777,9 @@
     ctx.clearRect(0, 0, layout.width, layout.height);
     renderBackground();
     drawCup();
-    drawLauncher();
-    drawAim();
+    drawLaunchPad();
+    drawAimGuide();
+    drawPullHandle();
     drawBall(state.ball);
     state.rafId = requestAnimationFrame(loop);
   }
