@@ -128,7 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'game_bal_enabled', label:'admin.fields.games.balance_enabled', type:'checkbox'},
         {k:'game_mem_enabled', label:'admin.fields.games.memory_enabled', type:'checkbox'},
         {k:'game_rfl_enabled', label:'admin.fields.games.reflex_enabled', type:'checkbox'},
-        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'6'}
+        {k:'game_drv_enabled', label:'admin.fields.games.driving_enabled', type:'checkbox'},
+        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'7'}
       ]
     },
     {
@@ -195,6 +196,23 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'rfl_success_weight', label:'admin.fields.reflex.success_weight', helper:'admin.helpers.reflex.success_weight', type:'number', step:'0.05', min:'0', max:'1'},
         {k:'rfl_accuracy_weight', label:'admin.fields.reflex.accuracy_weight', helper:'admin.helpers.reflex.accuracy_weight', type:'number', step:'0.05', min:'0', max:'1'},
         {k:'rfl_accuracy_tolerance_px', label:'admin.fields.reflex.tolerance', helper:'admin.helpers.reflex.tolerance', type:'number', step:'1', min:'10', max:'300'}
+      ]
+    },
+    {
+      id: 'driving',
+      title: 'admin.groups.driving.title',
+      description: 'admin.groups.driving.description',
+      fields: [
+        {k:'drv_lane_count', label:'admin.fields.driving.lane_count', helper:'admin.helpers.driving.lane_count', type:'number', step:'1', min:'2', max:'5'},
+        {k:'drv_duration_ms', label:'admin.fields.driving.duration', helper:'admin.helpers.driving.duration', type:'number', step:'500', min:'5000', max:'120000'},
+        {k:'drv_initial_speed_px_s', label:'admin.fields.driving.initial_speed', helper:'admin.helpers.driving.initial_speed', type:'number', step:'5', min:'60', max:'500'},
+        {k:'drv_speed_growth_per_s', label:'admin.fields.driving.speed_growth', helper:'admin.helpers.driving.speed_growth', type:'number', step:'0.01', min:'0', max:'1'},
+        {k:'drv_spawn_interval_ms', label:'admin.fields.driving.spawn_interval', helper:'admin.helpers.driving.spawn_interval', type:'number', step:'10', min:'200', max:'4000'},
+        {k:'drv_spawn_jitter_ms', label:'admin.fields.driving.spawn_jitter', helper:'admin.helpers.driving.spawn_jitter', type:'number', step:'10', min:'0', max:'3000'},
+        {k:'drv_collision_penalty', label:'admin.fields.driving.collision_penalty', helper:'admin.helpers.driving.collision_penalty', type:'number', step:'1', min:'0', max:'50'},
+        {k:'drv_max_collisions', label:'admin.fields.driving.max_collisions', helper:'admin.helpers.driving.max_collisions', type:'number', step:'1', min:'1', max:'20'},
+        {k:'drv_time_weight', label:'admin.fields.driving.time_weight', helper:'admin.helpers.driving.time_weight', type:'number', step:'0.05', min:'0', max:'1'},
+        {k:'drv_avoid_weight', label:'admin.fields.driving.avoid_weight', helper:'admin.helpers.driving.avoid_weight', type:'number', step:'0.05', min:'0', max:'1'}
       ]
     },
     {
@@ -596,6 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
       {key:'rfl_attempts', label:'admin.scores.rfl_attempts', type:'number', decimals:0},
       {key:'rfl_best_error', label:'admin.scores.rfl_best_error', type:'number', decimals:1},
       {key:'rfl_avg_error', label:'admin.scores.rfl_avg_error', type:'number', decimals:1},
+      {key:'drv_score', label:'admin.scores.drv_score', type:'number', decimals:0},
+      {key:'drv_collisions', label:'admin.scores.drv_collisions', type:'number', decimals:0},
+      {key:'drv_distance', label:'admin.scores.drv_distance', type:'number', decimals:1},
+      {key:'drv_duration_ms', label:'admin.scores.drv_duration_ms', type:'number', decimals:0},
       {key:'mem_score', label:'admin.scores.mem_score', type:'number', decimals:0},
       {key:'mem_time_ms', label:'admin.scores.mem_time_ms', type:'number', decimals:0},
       {key:'mem_errors', label:'admin.scores.mem_errors', type:'number', decimals:0},

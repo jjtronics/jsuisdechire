@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 space-y-4">
+  <h2 class="text-xl font-bold" data-i18n="t7.heading">Test 7 · Conduite sobre</h2>
+  <p
+    class="px-4 py-3 rounded-xl bg-emerald-100/80 border border-emerald-200/60 text-emerald-900 text-base font-semibold leading-relaxed shadow-sm dark:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-100"
+    data-i18n="t7.notice"
+    data-i18n-param-duration="{{ (app_settings.drv_duration_ms or 45000)|int // 1000 }}"
+    data-i18n-param-collisions="{{ (app_settings.drv_max_collisions or 6)|int }}"
+  >
+    Tiens {{ (app_settings.drv_duration_ms or 45000)|int // 1000 }} secondes sans heurter plus de {{ (app_settings.drv_max_collisions or 6)|int }} obstacles.
+  </p>
+  <div id="t7" class="space-y-4"></div>
+  <div class="flex justify-between">
+    <a href="/t6" class="px-4 py-2 rounded-xl border" data-i18n="common.back" data-flow-back="1">Retour</a>
+    <a id="next" href="/results" class="px-4 py-2 rounded-xl bg-rose-600 text-white opacity-50 pointer-events-none" data-i18n="common.view_results" data-default-i18n="common.view_results" data-results-i18n="common.view_results">Voir les résultats</a>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const notice = document.querySelector('[data-i18n="t7.notice"]');
+    if (!notice) return;
+    const t = window.i18n ? window.i18n : ((key, params) => key);
+    const settings = (window.jsdConfig && window.jsdConfig.settings) || {};
+    const fallbackDuration = {{ (app_settings.drv_duration_ms or 45000)|int }};
+    const fallbackCollisions = {{ (app_settings.drv_max_collisions or 6)|int }};
+    const durationMs = Number(settings.drv_duration_ms);
+    const collisionsSetting = Number(settings.drv_max_collisions);
+    const durationSeconds = Number.isFinite(durationMs) && durationMs > 0 ? Math.round(durationMs / 1000) : Math.round(fallbackDuration / 1000);
+    const collisionsLimit = Number.isFinite(collisionsSetting) && collisionsSetting > 0 ? Math.round(collisionsSetting) : Math.max(1, Math.round(fallbackCollisions));
+    notice.setAttribute('data-i18n-param-duration', durationSeconds);
+    notice.setAttribute('data-i18n-param-collisions', collisionsLimit);
+    notice.textContent = t('t7.notice', { duration: durationSeconds, collisions: collisionsLimit });
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.jsdFlow && typeof window.jsdFlow.setupPage === 'function'){
+      window.jsdFlow.setupPage('t7', { nextSelector: '#next', backSelector: '[data-flow-back]', hideBackIfFirst: true });
+    }
+  });
+</script>
+<script defer src="{{ asset_url('js/t7.js') }}"></script>
+{% endblock %}

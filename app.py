@@ -154,6 +154,16 @@ DEFAULT_SETTINGS = {
     "rfl_success_weight": 0.7,
     "rfl_accuracy_weight": 0.3,
     "rfl_accuracy_tolerance_px": 60,
+    "drv_lane_count": 3,
+    "drv_duration_ms": 45000,
+    "drv_initial_speed_px_s": 220,
+    "drv_speed_growth_per_s": 3.2,
+    "drv_spawn_interval_ms": 900,
+    "drv_spawn_jitter_ms": 260,
+    "drv_collision_penalty": 18,
+    "drv_max_collisions": 6,
+    "drv_time_weight": 0.6,
+    "drv_avoid_weight": 0.4,
     "bal_mode": "lin",
     "bal_duration_ms": 8000,
     "bal_low_good": 0.02,
@@ -170,13 +180,14 @@ DEFAULT_SETTINGS = {
     "mem_speed_weight": 0.4,
     "mem_time_best_ms": 45000,
     "mem_time_worst_ms": 120000,
-    "session_total_games": 6,
+    "session_total_games": 7,
     "game_rxn_enabled": True,
     "game_str_enabled": True,
     "game_prs_enabled": True,
     "game_bal_enabled": True,
     "game_mem_enabled": True,
     "game_rfl_enabled": True,
+    "game_drv_enabled": True,
     "nickname_max_length": 32,
     "smtp_host": "",
     "smtp_port": 587,
@@ -221,6 +232,7 @@ def ensure_schema(db=None):
         prs_score INTEGER, prs_error REAL, time_to_catch_ms REAL,
         rfl_score INTEGER, rfl_hits INTEGER, rfl_attempts INTEGER,
         rfl_best_error REAL, rfl_avg_error REAL,
+        drv_score INTEGER, drv_collisions INTEGER, drv_distance REAL, drv_duration_ms INTEGER,
         bal_score INTEGER, bal_std REAL,
         mem_score REAL, mem_time_ms INTEGER, mem_errors INTEGER,
         is_cheater INTEGER DEFAULT 0,
@@ -273,6 +285,14 @@ def ensure_schema(db=None):
         db.execute("ALTER TABLE scores ADD COLUMN rfl_best_error REAL")
     if "rfl_avg_error" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN rfl_avg_error REAL")
+    if "drv_score" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN drv_score INTEGER")
+    if "drv_collisions" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN drv_collisions INTEGER")
+    if "drv_distance" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN drv_distance REAL")
+    if "drv_duration_ms" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN drv_duration_ms INTEGER")
     if "is_cheater" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN is_cheater INTEGER DEFAULT 0")
     if "cheat_reason" not in score_columns:
@@ -709,6 +729,10 @@ def t5():
 def t6():
     return render_template("t6.html", app_name=APP_NAME)
 
+@app.route("/t7")
+def t7():
+    return render_template("t7.html", app_name=APP_NAME)
+
 @app.route("/results")
 def results_page():
     return render_template("results.html", app_name=APP_NAME)
@@ -754,6 +778,10 @@ latest_scores AS (
         rfl_attempts,
         rfl_best_error,
         rfl_avg_error,
+        drv_score,
+        drv_collisions,
+        drv_distance,
+        drv_duration_ms,
         bal_score,
         bal_std,
         mem_score,
@@ -833,6 +861,11 @@ LEADERBOARD_SORTS = {
     },
     "rfl_score": {
         "expression": "scores.rfl_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "drv_score": {
+        "expression": "scores.drv_score",
         "default_order": "desc",
         "secondary": ["scores.created_at DESC", "scores.id DESC"],
     },
@@ -1099,6 +1132,10 @@ def api_admin_scores():
             "rfl_attempts": row["rfl_attempts"],
             "rfl_best_error": row["rfl_best_error"],
             "rfl_avg_error": row["rfl_avg_error"],
+            "drv_score": row["drv_score"],
+            "drv_collisions": row["drv_collisions"],
+            "drv_distance": row["drv_distance"],
+            "drv_duration_ms": row["drv_duration_ms"],
             "bal_score": row["bal_score"],
             "bal_std": row["bal_std"],
             "mem_score": row["mem_score"],
@@ -1194,6 +1231,7 @@ def submit():
         "bal": _section("bal"),
         "mem": _section("mem"),
         "rfl": _section("rfl"),
+        "drv": _section("drv"),
     }
 
     def _parse_float(value):
@@ -1227,6 +1265,10 @@ def submit():
         "rfl_attempts": sections["rfl"].get("attempts"),
         "rfl_best_error": sections["rfl"].get("best_error_px"),
         "rfl_avg_error": sections["rfl"].get("avg_error_px"),
+        "drv_score": sections["drv"].get("score"),
+        "drv_collisions": sections["drv"].get("collisions"),
+        "drv_distance": sections["drv"].get("distance_m"),
+        "drv_duration_ms": sections["drv"].get("elapsed_ms"),
         "bal_score": sections["bal"].get("score"),
         "bal_std": sections["bal"].get("std_g"),
         "mem_score": sections["mem"].get("score"),
@@ -1276,12 +1318,13 @@ def submit():
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, drv_score, drv_collisions, drv_distance, drv_duration_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
          fields['prs_score'], fields['prs_error'], fields['time_to_catch_ms'],
          fields['rfl_score'], fields['rfl_hits'], fields['rfl_attempts'], fields['rfl_best_error'], fields['rfl_avg_error'],
+         fields['drv_score'], fields['drv_collisions'], fields['drv_distance'], fields['drv_duration_ms'],
          fields['bal_score'], fields['bal_std'],
          fields['mem_score'], fields['mem_time_ms'], fields['mem_errors'],
          user_id,
@@ -1597,6 +1640,8 @@ def profile_view():
         "rxn_score",
         "str_score",
         "prs_score",
+        "rfl_score",
+        "drv_score",
         "mem_score",
         "bal_score",
         "created_at",

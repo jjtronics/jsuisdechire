@@ -18,24 +18,26 @@
     if(parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
       return -42;
     }
-    const w={rxn:0.2,str:0.2,prs:0.2,rfl:0.15,mem:0.15,bal:0.1}; let score=0,wsum=0;
+    const w={rxn:0.18,str:0.18,prs:0.18,rfl:0.12,drv:0.12,mem:0.12,bal:0.1}; let score=0,wsum=0;
     if(parts.rxn && Number.isFinite(parts.rxn.score)){score+=parts.rxn.score*w.rxn; wsum+=w.rxn;}
     if(parts.str && Number.isFinite(parts.str.score)){score+=parts.str.score*w.str; wsum+=w.str;}
     if(parts.prs && Number.isFinite(parts.prs.score)){score+=parts.prs.score*w.prs; wsum+=w.prs;}
     if(parts.rfl && Number.isFinite(parts.rfl.score)){score+=parts.rfl.score*w.rfl; wsum+=w.rfl;}
+    if(parts.drv && Number.isFinite(parts.drv.score)){score+=parts.drv.score*w.drv; wsum+=w.drv;}
     if(parts.mem && Number.isFinite(parts.mem.score)){score+=parts.mem.score*w.mem; wsum+=w.mem;}
     if(parts.bal && Number.isFinite(parts.bal.score)){score+=parts.bal.score*w.bal; wsum+=w.bal;}
     if(wsum<=0) return NaN;
     return score/wsum;
   }
 
-  let rxn=null, str=null, prs=null, rfl=null, mem=null, bal=null, total=NaN;
+  let rxn=null, str=null, prs=null, rfl=null, drv=null, mem=null, bal=null, total=NaN;
   if(session && typeof session.gatherScores==='function'){
     const gathered=session.gatherScores();
     rxn=gathered.rxn;
     str=gathered.str;
     prs=gathered.prs;
     rfl=gathered.rfl;
+    drv=gathered.drv;
     mem=gathered.mem;
     bal=gathered.bal;
     total=gathered.total;
@@ -44,9 +46,10 @@
     str=fallbackRead('jsd:str');
     prs=fallbackRead('jsd:prs');
     rfl=fallbackRead('jsd:rfl');
+    drv=fallbackRead('jsd:drv');
     mem=fallbackRead('jsd:mem');
     bal=fallbackRead('jsd:bal');
-    total=fallbackCompute({rxn,str,prs,rfl,mem,bal});
+    total=fallbackCompute({rxn,str,prs,rfl,drv,mem,bal});
   }
 
   const cheatDetected=!!(bal && bal.cheat && bal.cheat.detected);
@@ -145,6 +148,26 @@
       attempts: attemptsLabel,
       best: bestLabel,
       avg: avgLabel
+    })));
+  }
+  if(drv){
+    const collisions = Number(drv.collisions);
+    const avoided = Number(drv.avoided);
+    const obstacles = Number(drv.obstacles);
+    const distance = Number(drv.distance_m);
+    const elapsed = Number(drv.elapsed_ms);
+    const collisionsLabel = Number.isFinite(collisions) ? Math.max(0, Math.trunc(collisions)) : 0;
+    const avoidedLabel = Number.isFinite(avoided) ? Math.max(0, Math.trunc(avoided)) : null;
+    const obstaclesLabel = Number.isFinite(obstacles) ? Math.max(0, Math.trunc(obstacles)) : null;
+    const distanceLabel = Number.isFinite(distance) ? `${distance.toFixed(distance >= 100 ? 0 : 1)} m` : '—';
+    const timeLabel = Number.isFinite(elapsed) ? `${Math.round(elapsed / 1000)}s` : '—';
+    details.append(el("div","",t("results.driving_detail",{
+      score: formatScore(drv.score),
+      collisions: collisionsLabel,
+      avoided: avoidedLabel == null ? '—' : avoidedLabel,
+      obstacles: obstaclesLabel == null ? '—' : obstaclesLabel,
+      distance: distanceLabel,
+      time: timeLabel
     })));
   }
   if(mem){
@@ -282,7 +305,7 @@
       if(session && typeof session.resetProgress==='function'){
         session.resetProgress({keepNickname:true});
       } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:mem','jsd:bal','jsd:score_submitted','jsd:last_submission']
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:drv','jsd:mem','jsd:bal','jsd:score_submitted','jsd:last_submission']
           .forEach(key=>localStorage.removeItem(key));
       }
     }catch(err){
