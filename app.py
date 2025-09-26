@@ -746,28 +746,27 @@ HOME_CLEAN_SCORE_THRESHOLD = 60
 def get_home_score_summary(db: sqlite3.Connection) -> dict:
     threshold = HOME_CLEAN_SCORE_THRESHOLD
     row = db.execute(
-        LATEST_SCORES_CTE
-        + """
+        """
         SELECT
-            SUM(CASE WHEN latest_scores.is_cheater = 1 THEN 1 ELSE 0 END) AS cheater_count,
+            SUM(CASE WHEN scores.is_cheater = 1 THEN 1 ELSE 0 END) AS cheater_count,
             SUM(
                 CASE
-                    WHEN latest_scores.is_cheater != 1
-                    AND latest_scores.total_score IS NOT NULL
-                    AND latest_scores.total_score >= ?
+                    WHEN scores.is_cheater != 1
+                    AND scores.total_score IS NOT NULL
+                    AND scores.total_score >= ?
                     THEN 1
                     ELSE 0
                 END
             ) AS clean_count,
             SUM(
                 CASE
-                    WHEN latest_scores.is_cheater != 1
-                    AND (latest_scores.total_score IS NULL OR latest_scores.total_score < ?)
+                    WHEN scores.is_cheater != 1
+                    AND (scores.total_score IS NULL OR scores.total_score < ?)
                     THEN 1
                     ELSE 0
                 END
             ) AS wasted_count
-        FROM latest_scores
+        FROM scores
         """,
         (threshold, threshold),
     ).fetchone()
