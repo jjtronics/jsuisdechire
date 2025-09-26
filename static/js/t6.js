@@ -84,69 +84,31 @@
   const scoreChip = el('span', 'px-3 py-1 rounded-full bg-rose-100/80 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200 text-xs font-bold');
   statsBar.append(progressEl, hitsEl, scoreChip);
 
-  const messageEl = el('div', 'text-sm text-slate-600 dark:text-slate-300', translate('t6.help', null, 'Suis la trajectoire, ajuste tes sliders puis tire ta balle.'));
+  const defaultHelpText = translate('t6.help', null, 'Place ton doigt sur la balle, tire vers l’arrière puis relâche pour tirer.');
+  const messageEl = el('div', 'text-sm text-slate-600 dark:text-slate-300', defaultHelpText);
 
   const canvasWrap = el('div', 'relative overflow-hidden rounded-3xl border border-white/50 bg-gradient-to-b from-amber-100/70 to-rose-100/60 shadow-inner dark:from-slate-900/70 dark:to-rose-900/20');
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   canvasWrap.append(canvas);
 
-  const controls = el('div', 'grid gap-4 sm:grid-cols-2');
+  const aimInfo = el('div', 'flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-700 dark:text-slate-200');
+  const powerInfo = el('span');
+  const powerLabel = el('span', '');
+  powerLabel.textContent = `${translate('t6.power_label', null, 'Puissance')} : `;
+  const powerValue = el('span', 'font-black text-base text-rose-600 dark:text-rose-300', '0%');
+  powerInfo.append(powerLabel, powerValue);
+  const angleInfo = el('span');
+  const angleLabel = el('span', '');
+  angleLabel.textContent = `${translate('t6.angle_label', null, 'Angle')} : `;
+  const angleValue = el('span', 'font-black text-base text-rose-600 dark:text-rose-300', '0°');
+  angleInfo.append(angleLabel, angleValue);
+  aimInfo.append(powerInfo, angleInfo);
 
-  function slider(options){
-    const wrapper = el('label', 'flex flex-col gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200');
-    const title = el('span', '', translate(options.label, null, options.fallbackLabel));
-    const track = el('div', 'flex items-center gap-3');
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.min = String(options.min);
-    input.max = String(options.max);
-    input.step = String(options.step || 1);
-    input.value = String(options.value);
-    input.className = 'flex-1 accent-rose-600';
-    const value = el('span', 'font-black text-base text-rose-600 dark:text-rose-300');
-    track.append(input, value);
-    wrapper.append(title, track);
-    return { wrapper, input, value, title };
-  }
-
-  const angleControl = slider({
-    label: 't6.angle_label',
-    fallbackLabel: 'Angle',
-    min: 25,
-    max: 75,
-    value: 45
-  });
-  const powerControl = slider({
-    label: 't6.power_label',
-    fallbackLabel: 'Puissance',
-    min: 35,
-    max: 100,
-    value: 70
-  });
-  controls.append(angleControl.wrapper, powerControl.wrapper);
-
-  const buttonsRow = el('div', 'flex flex-wrap items-center gap-3');
-  const fireBtn = el('button', 'px-4 py-2 rounded-xl bg-rose-600 text-white font-semibold shadow hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition', translate('t6.fire_button', null, 'Tirer'));
-  fireBtn.type = 'button';
   const retryBtn = el('button', 'px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40 hidden', translate('t6.button_retry', null, 'Rejouer'));
   retryBtn.type = 'button';
-  buttonsRow.append(fireBtn, retryBtn);
 
-  root.append(statsBar, messageEl, canvasWrap, controls, buttonsRow);
-
-  const state = {
-    attempt: 0,
-    hits: 0,
-    bestError: Infinity,
-    errorSum: 0,
-    errorCount: 0,
-    finished: false,
-    shotActive: false,
-    rafId: null,
-    lastTime: performance.now(),
-    ball: null
-  };
+  root.append(statsBar, messageEl, canvasWrap, aimInfo, retryBtn);
 
   const layout = {
     width: 360,
@@ -167,6 +129,54 @@
     height: layout.cupHeight,
     vx: 90
   };
+
+  const state = {
+    attempt: 0,
+    hits: 0,
+    bestError: Infinity,
+    errorSum: 0,
+    errorCount: 0,
+    finished: false,
+    shotActive: false,
+    rafId: null,
+    lastTime: performance.now(),
+    ball: null,
+    aim: {
+      active: false,
+      pointerId: null,
+      x: 0,
+      y: 0,
+      power: 0,
+      angle: 0,
+      distance: 0
+    }
+  };
+
+  function updateAimDisplay(powerRatio, angleRad){
+    const powerPercent = clamp(Math.round(powerRatio * 100), 0, 100);
+    powerValue.textContent = `${powerPercent}%`;
+    if (Number.isFinite(angleRad)){
+      const angleDeg = clamp(Math.round(angleRad * 180 / Math.PI), 0, 90);
+      angleValue.textContent = `${angleDeg}°`;
+    } else {
+      angleValue.textContent = '0°';
+    }
+  }
+
+  function resetAim(updateDisplay = true){
+    state.aim.active = false;
+    state.aim.pointerId = null;
+    state.aim.distance = 0;
+    state.aim.power = 0;
+    state.aim.angle = 0;
+    state.aim.x = layout.originX;
+    state.aim.y = layout.originY;
+    if (updateDisplay){
+      updateAimDisplay(0, 0);
+    }
+  }
+
+  resetAim(true);
 
   function randomBetween(min, max){
     return min + Math.random() * (max - min);
@@ -199,17 +209,13 @@
     resetCup();
     canvas.width = layout.width;
     canvas.height = layout.height;
+    if (!state.shotActive && !state.aim.active){
+      resetAim();
+    } else {
+      state.aim.x = layout.originX;
+      state.aim.y = layout.originY;
+    }
   }
-
-  function setSliderValues(){
-    angleControl.value.textContent = `${Math.round(Number(angleControl.input.value))}°`;
-    powerControl.value.textContent = `${Math.round(Number(powerControl.input.value))}%`;
-  }
-
-  setSliderValues();
-
-  angleControl.input.addEventListener('input', setSliderValues);
-  powerControl.input.addEventListener('input', setSliderValues);
 
   function updateProgress(){
     progressEl.textContent = translate('t6.progress', { attempt: state.attempt, total: config.attempts }, `${state.attempt}/${config.attempts}`);
@@ -275,10 +281,10 @@
       }
       state.finished = true;
       messageEl.textContent = translate('t6.final_message', { score: computeScore() }, `Score ${computeScore()}/100`);
-      fireBtn.disabled = true;
       retryBtn.classList.remove('hidden');
       state.shotActive = false;
       state.ball = null;
+      resetAim();
       try { localStorage.setItem('jsd:done:t6', '1'); } catch (err){}
       const next = document.getElementById('next');
       if (next){
@@ -297,8 +303,8 @@
     state.finished = false;
     state.shotActive = false;
     state.ball = null;
-    messageEl.textContent = translate('t6.help', null, 'Suis la trajectoire, ajuste tes sliders puis tire ta balle.');
-    fireBtn.disabled = false;
+    resetAim();
+    messageEl.textContent = defaultHelpText;
     retryBtn.classList.add('hidden');
     try {
       localStorage.removeItem('jsd:rfl');
@@ -315,6 +321,7 @@
   function endAttempt(hit, error){
     state.shotActive = false;
     state.ball = null;
+    resetAim();
     if (!Number.isFinite(error) || error < 0){
       error = Infinity;
     }
@@ -332,34 +339,32 @@
       messageEl.textContent = translate('t6.result_success', { remaining }, `Touché ! ${remaining} essais restants.`);
     } else {
       const distance = Number.isFinite(error) ? Math.round(error) : Math.round(config.tolerance * 2);
-      messageEl.textContent = translate('t6.result_miss', { distance }, `Raté de ${distance}px. Ajuste tes sliders !`);
+      messageEl.textContent = translate('t6.result_miss', { distance }, `Raté de ${distance}px. Ajuste ton tir !`);
     }
     updateProgress();
     if (state.attempt >= config.attempts){
       state.finished = true;
-      fireBtn.disabled = true;
       retryBtn.classList.remove('hidden');
       const finalScore = computeScore();
       messageEl.textContent = translate('t6.final_message', { score: finalScore }, `Terminé · ${finalScore}/100`);
       storeResult();
-    } else {
-      fireBtn.disabled = false;
     }
   }
 
-  function fire(){
+  function launchShot(angleRad, powerRatio){
     if (state.finished || state.shotActive){
-      return;
+      return false;
     }
+    const clampedPower = clamp(Number.isFinite(powerRatio) ? powerRatio : 0, 0, 1);
+    if (clampedPower <= 0){
+      return false;
+    }
+    const safeAngle = clamp(Number.isFinite(angleRad) ? angleRad : 0, Math.PI * 0.15, Math.PI / 2);
     state.attempt += 1;
     state.shotActive = true;
-    fireBtn.disabled = true;
-    const angleDeg = Number(angleControl.input.value);
-    const power = Number(powerControl.input.value) / 100;
-    const angleRad = angleDeg * Math.PI / 180;
-    const speed = power * config.velocityScale * 60;
-    const vx = Math.cos(angleRad) * speed;
-    const vy = -Math.sin(angleRad) * speed;
+    const speed = clampedPower * config.velocityScale * 60;
+    const vx = Math.cos(safeAngle) * speed;
+    const vy = -Math.sin(safeAngle) * speed;
     state.ball = {
       x: layout.originX,
       y: layout.originY,
@@ -370,9 +375,116 @@
     };
     messageEl.textContent = translate('t6.shot_launched', null, 'Balle en vol…');
     updateProgress();
+    return true;
   }
 
-  fireBtn.addEventListener('click', fire);
+  function getCanvasPoint(evt){
+    const bounds = canvas.getBoundingClientRect();
+    if (!bounds || !bounds.width || !bounds.height){
+      return { x: layout.originX, y: layout.originY };
+    }
+    const scaleX = canvas.width / bounds.width;
+    const scaleY = canvas.height / bounds.height;
+    return {
+      x: (evt.clientX - bounds.left) * scaleX,
+      y: (evt.clientY - bounds.top) * scaleY
+    };
+  }
+
+  function updateAimFromPoint(point){
+    const originX = layout.originX;
+    const originY = layout.originY;
+    const rawDx = point.x - originX;
+    const rawDy = point.y - originY;
+    const dx = Math.min(0, rawDx);
+    const dy = Math.max(0, rawDy);
+    const distance = Math.sqrt((dx * dx) + (dy * dy));
+    const maxDistance = Math.max(layout.width * 0.45, layout.width * 0.2);
+    const clampedDistance = clamp(distance, 0, maxDistance);
+    let pullNx = 0;
+    let pullNy = 0;
+    if (distance > 0){
+      pullNx = dx / distance;
+      pullNy = dy / distance;
+    }
+    state.aim.x = originX + pullNx * clampedDistance;
+    state.aim.y = originY + pullNy * clampedDistance;
+    state.aim.distance = clampedDistance;
+    const power = maxDistance > 0 ? clampedDistance / maxDistance : 0;
+    const shotHorizontal = Math.max(0, -pullNx);
+    const shotVertical = Math.max(0, pullNy);
+    const angleRad = (shotHorizontal <= 0 && shotVertical <= 0)
+      ? 0
+      : Math.atan2(shotVertical, Math.max(shotHorizontal, 1e-6));
+    state.aim.power = power;
+    state.aim.angle = angleRad;
+    updateAimDisplay(power, angleRad);
+  }
+
+  function endAim(shouldLaunch){
+    if (!state.aim.active){
+      return;
+    }
+    const pointerId = state.aim.pointerId;
+    if (pointerId !== null && typeof canvas.hasPointerCapture === 'function' && canvas.hasPointerCapture(pointerId) && typeof canvas.releasePointerCapture === 'function'){
+      canvas.releasePointerCapture(pointerId);
+    }
+    state.aim.active = false;
+    state.aim.pointerId = null;
+    if (shouldLaunch && state.aim.power > 0.05){
+      const launched = launchShot(state.aim.angle, state.aim.power);
+      if (!launched){
+        resetAim();
+        if (!state.finished && !state.shotActive){
+          messageEl.textContent = defaultHelpText;
+        }
+      }
+    } else {
+      resetAim();
+      if (!state.finished && !state.shotActive){
+        messageEl.textContent = defaultHelpText;
+      }
+    }
+  }
+
+  canvas.addEventListener('pointerdown', (evt) => {
+    if (state.finished || state.shotActive){
+      return;
+    }
+    const point = getCanvasPoint(evt);
+    const dist = Math.hypot(point.x - layout.originX, point.y - layout.originY);
+    if (dist <= layout.ballRadius * 2.4){
+      evt.preventDefault();
+      state.aim.active = true;
+      state.aim.pointerId = evt.pointerId;
+      if (typeof canvas.setPointerCapture === 'function'){
+        canvas.setPointerCapture(evt.pointerId);
+      }
+      updateAimFromPoint(point);
+      messageEl.textContent = translate('t6.aim_active', null, 'Relâche pour tirer !');
+    }
+  });
+
+  canvas.addEventListener('pointermove', (evt) => {
+    if (!state.aim.active || evt.pointerId !== state.aim.pointerId){
+      return;
+    }
+    evt.preventDefault();
+    const point = getCanvasPoint(evt);
+    updateAimFromPoint(point);
+  });
+
+  const cancelAimEvents = ['pointerup', 'pointercancel', 'pointerout', 'pointerleave'];
+  cancelAimEvents.forEach((eventName) => {
+    canvas.addEventListener(eventName, (evt) => {
+      if (!state.aim.active || evt.pointerId !== state.aim.pointerId){
+        return;
+      }
+      evt.preventDefault();
+      const shouldLaunch = eventName === 'pointerup';
+      endAim(shouldLaunch);
+    });
+  });
 
   function drawCup(){
     ctx.save();
@@ -397,16 +509,40 @@
     ctx.restore();
   }
 
-  function drawBall(ball){
-    if (!ball){
+  function drawAim(){
+    if (!state.aim.active || state.shotActive){
       return;
     }
     ctx.save();
-    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = 'rgba(244, 63, 94, 0.5)';
+    ctx.lineWidth = Math.max(1.5, layout.ballRadius * 0.5);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(layout.originX, layout.originY);
+    ctx.lineTo(state.aim.x, state.aim.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBall(ball){
+    let x;
+    let y;
+    if (ball){
+      x = ball.x;
+      y = ball.y;
+    } else if (state.aim.active && !state.shotActive){
+      x = state.aim.x;
+      y = state.aim.y;
+    } else {
+      x = layout.originX;
+      y = layout.originY;
+    }
+    ctx.save();
+    ctx.fillStyle = state.aim.active && !state.shotActive ? '#fee2e2' : '#ffffff';
     ctx.shadowColor = 'rgba(244, 63, 94, 0.3)';
     ctx.shadowBlur = layout.ballRadius * 0.6;
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, layout.ballRadius, 0, Math.PI * 2);
+    ctx.arc(x, y, layout.ballRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -483,6 +619,7 @@
     renderBackground();
     drawCup();
     drawLauncher();
+    drawAim();
     drawBall(state.ball);
     state.rafId = requestAnimationFrame(loop);
   }
