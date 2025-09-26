@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
+{% set counters = home_stats or {} %}
+{% set clean_count = counters.get('clean', 0) %}
+{% set wasted_count = counters.get('wasted', 0) %}
+{% set cheater_count = counters.get('cheater', 0) %}
 <div class="mb-4 flex w-full flex-row flex-wrap items-center gap-2 sm:flex-row sm:justify-start">
   {% if not current_user_payload %}
   <a
@@ -17,6 +21,20 @@
     S'inscrire
   </a>
   {% endif %}
+  <div class="flex flex-row flex-wrap items-center gap-1 rounded-xl border border-white/60 bg-white/70 px-2 py-1 text-[11px] font-semibold text-gray-700 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/50 dark:text-slate-200">
+    <span class="flex items-center gap-1 rounded-lg bg-emerald-100/80 px-2 py-0.5 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
+      <span class="tabular-nums">{{ clean_count }}</span>
+      <span data-i18n="home.counter.clean">Clean</span>
+    </span>
+    <span class="flex items-center gap-1 rounded-lg bg-amber-100/80 px-2 py-0.5 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
+      <span class="tabular-nums">{{ wasted_count }}</span>
+      <span data-i18n="home.counter.wasted">Déchiré</span>
+    </span>
+    <span class="flex items-center gap-1 rounded-lg bg-rose-100/80 px-2 py-0.5 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200">
+      <span class="tabular-nums">{{ cheater_count }}</span>
+      <span data-i18n="home.counter.cheater">Tricheur</span>
+    </span>
+  </div>
   <button id="themeToggle" type="button" class="ml-auto inline-flex items-center justify-center rounded-lg border border-transparent px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 dark:text-rose-200 dark:hover:bg-slate-800" data-i18n-attr="aria-label:nav.theme_toggle">
     <span class="block dark:hidden" aria-hidden="true">☀️</span>
     <span class="hidden dark:block" aria-hidden="true">🌙</span>
