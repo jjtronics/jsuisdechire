@@ -8,6 +8,7 @@
     { id: 't3', route: '/t3', settingKey: 'game_prs_enabled', doneKey: 'jsd:done:t3' },
     { id: 't4', route: '/t4', settingKey: 'game_bal_enabled', doneKey: 'jsd:done:t4' },
     { id: 't5', route: '/t5', settingKey: 'game_mem_enabled', doneKey: 'jsd:done:t5' },
+    { id: 't6', route: '/t6', settingKey: 'game_rfl_enabled', doneKey: 'jsd:done:t6' },
   ];
 
   function safeParseInt(value){

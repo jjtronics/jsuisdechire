@@ -7,14 +7,16 @@
     '/t3': 't3',
     '/t4': 't4',
     '/t5': 't5',
+    '/t6': 't6',
   };
-  const FALLBACK_SEQUENCE = ['t1', 't2', 't3', 't4', 't5'];
+  const FALLBACK_SEQUENCE = ['t1', 't2', 't3', 't4', 't5', 't6'];
   const FALLBACK_ROUTES = {
     t1: '/t1',
     t2: '/t2',
     t3: '/t3',
     t4: '/t4',
     t5: '/t5',
+    t6: '/t6',
   };
 
   const path = location.pathname;
@@ -25,6 +27,7 @@
     t3: localStorage.getItem('jsd:done:t3') === '1',
     t4: localStorage.getItem('jsd:done:t4') === '1',
     t5: localStorage.getItem('jsd:done:t5') === '1',
+    t6: localStorage.getItem('jsd:done:t6') === '1',
   };
   const skippedT4 = localStorage.getItem('jsd:skip:t4') === '1';
 
