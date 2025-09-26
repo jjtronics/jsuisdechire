@@ -660,7 +660,9 @@ def _load_current_user():
 
 @app.route("/")
 def home():
-    return render_template("home.html", app_name=APP_NAME)
+    db = get_db()
+    home_stats = get_home_score_summary(db)
+    return render_template("home.html", app_name=APP_NAME, home_stats=home_stats)
 
 @app.route("/t1")
 def t1():
@@ -736,6 +738,48 @@ latest_scores AS (
     WHERE row_rank = 1
 )
 """
+
+
+HOME_CLEAN_SCORE_THRESHOLD = 60
+
+
+def get_home_score_summary(db: sqlite3.Connection) -> dict:
+    threshold = HOME_CLEAN_SCORE_THRESHOLD
+    row = db.execute(
+        LATEST_SCORES_CTE
+        + """
+        SELECT
+            SUM(CASE WHEN latest_scores.is_cheater = 1 THEN 1 ELSE 0 END) AS cheater_count,
+            SUM(
+                CASE
+                    WHEN latest_scores.is_cheater != 1
+                    AND latest_scores.total_score IS NOT NULL
+                    AND latest_scores.total_score >= ?
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS clean_count,
+            SUM(
+                CASE
+                    WHEN latest_scores.is_cheater != 1
+                    AND (latest_scores.total_score IS NULL OR latest_scores.total_score < ?)
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS wasted_count
+        FROM latest_scores
+        """,
+        (threshold, threshold),
+    ).fetchone()
+
+    if not row:
+        return {"clean": 0, "wasted": 0, "cheater": 0}
+
+    return {
+        "clean": int(row["clean_count"] or 0),
+        "wasted": int(row["wasted_count"] or 0),
+        "cheater": int(row["cheater_count"] or 0),
+    }
 
 LEADERBOARD_SORTS = {
     "total_score": {
