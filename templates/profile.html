@@ -278,6 +278,7 @@
                 <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Poursuite</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</span></span>
               </div>
               <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Conduite</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['drv_score']|round(1) if row['drv_score'] is not none else '—' }}</span></span>
                 <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Mémoire</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</span></span>
                 <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Équilibre</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</span></span>
               </div>
@@ -335,6 +336,17 @@
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
               </a>
             </th>
+            {% set key = 'drv_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+              <a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button">
+                <span>Conduite</span>
+                <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+              </a>
+            </th>
             {% set key = 'mem_score' %}
             {% set default_order = sort_defaults.get(key, 'desc') %}
             {% set is_active = active_sort_key == key %}
@@ -378,6 +390,7 @@
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['rxn_score'] if row['rxn_score'] is not none else '' }}">{{ row['rxn_score']|round(1) if row['rxn_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['str_score'] if row['str_score'] is not none else '' }}">{{ row['str_score']|round(1) if row['str_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['prs_score'] if row['prs_score'] is not none else '' }}">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['drv_score'] if row['drv_score'] is not none else '' }}">{{ row['drv_score']|round(1) if row['drv_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['mem_score'] if row['mem_score'] is not none else '' }}">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['bal_score'] if row['bal_score'] is not none else '' }}">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['created_at'] }}">
