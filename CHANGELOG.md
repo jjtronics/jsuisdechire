@@ -25,6 +25,7 @@
 - Renforcement production : Gunicorn, clé de session dédiée, CSRF, en-têtes de sécurité et filtrage des réglages publics.
 - Refonte mobile du classement en cartes détaillables, clarification du texte d’accueil et précache du service worker.
 - Ajout de descriptions courtes pour clarifier chaque mini-jeu dans l’administration.
+- Réorganisation des réglages admin dans l’ordre des tests 1 à 7.
 
 ### Documentation
 

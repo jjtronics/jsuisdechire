@@ -185,6 +185,36 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     },
     {
+      id: 'balance',
+      title: 'admin.groups.balance.title',
+      description: 'admin.groups.balance.description',
+      fields: [
+        {k:'bal_mode', label:'admin.fields.balance.mode', helper:'admin.helpers.balance.mode', type:'select', options:[['mag','admin.fields.balance.mode.magnitude'], ['lin','admin.fields.balance.mode.linear']]},
+        {k:'bal_duration_ms', label:'admin.fields.balance.duration', helper:'admin.helpers.balance.duration', type:'number', step:'100', min:'3000', max:'30000'},
+        {k:'bal_low_good', label:'admin.fields.balance.low_good', helper:'admin.helpers.balance.low_good', type:'number', step:'0.01', min:'0.01', max:'2'},
+        {k:'bal_high_bad', label:'admin.fields.balance.high_bad', helper:'admin.helpers.balance.high_bad', type:'number', step:'0.01', min:'0.02', max:'3'},
+        {k:'bal_lin_rel_tol', label:'admin.fields.balance.rel_tol', helper:'admin.helpers.balance.rel_tol', type:'number', step:'0.01', min:'0'},
+        {k:'bal_cheat_detection_enabled', label:'admin.fields.balance.cheat_enabled', helper:'admin.helpers.balance.cheat_enabled', type:'checkbox'},
+        {k:'bal_cheat_std_threshold', label:'admin.fields.balance.cheat_std_threshold', helper:'admin.helpers.balance.cheat_std_threshold', type:'number', step:'0.001', min:'0'},
+        {k:'bal_cheat_min_events', label:'admin.fields.balance.cheat_min_events', helper:'admin.helpers.balance.cheat_min_events', type:'number', step:'1', min:'0'},
+        {k:'bal_cheat_avatar_path', label:'admin.fields.balance.cheat_avatar_path', helper:'admin.helpers.balance.cheat_avatar_path', type:'text'}
+      ]
+    },
+    {
+      id: 'memory',
+      title: 'admin.groups.memory.title',
+      description: 'admin.groups.memory.description',
+      fields: [
+        {k:'mem_pairs', label:'admin.fields.memory.pairs', helper:'admin.helpers.memory.pairs', type:'number', step:'1', min:'2', max:'12'},
+        {k:'mem_initial_reveal_ms', label:'admin.fields.memory.reveal', helper:'admin.helpers.memory.reveal', type:'number', step:'50', min:'300', max:'6000'},
+        {k:'mem_mismatch_hide_ms', label:'admin.fields.memory.hide', helper:'admin.helpers.memory.hide', type:'number', step:'50', min:'150', max:'4000'},
+        {k:'mem_accuracy_weight', label:'admin.fields.memory.acc_weight', helper:'admin.helpers.memory.acc_weight', type:'number', step:'0.05', min:'0', max:'1'},
+        {k:'mem_speed_weight', label:'admin.fields.memory.speed_weight', helper:'admin.helpers.memory.speed_weight', type:'number', step:'0.05', min:'0', max:'1'},
+        {k:'mem_time_best_ms', label:'admin.fields.memory.time_best', helper:'admin.helpers.memory.time_best', type:'number', step:'100', min:'5000', max:'180000'},
+        {k:'mem_time_worst_ms', label:'admin.fields.memory.time_worst', helper:'admin.helpers.memory.time_worst', type:'number', step:'100', min:'6000', max:'300000'}
+      ]
+    },
+    {
       id: 'reflex',
       title: 'admin.groups.reflex.title',
       description: 'admin.groups.reflex.description',
@@ -214,36 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'drv_max_collisions', label:'admin.fields.driving.max_collisions', helper:'admin.helpers.driving.max_collisions', type:'number', step:'1', min:'1', max:'20'},
         {k:'drv_time_weight', label:'admin.fields.driving.time_weight', helper:'admin.helpers.driving.time_weight', type:'number', step:'0.05', min:'0', max:'1'},
         {k:'drv_avoid_weight', label:'admin.fields.driving.avoid_weight', helper:'admin.helpers.driving.avoid_weight', type:'number', step:'0.05', min:'0', max:'1'}
-      ]
-    },
-    {
-      id: 'memory',
-      title: 'admin.groups.memory.title',
-      description: 'admin.groups.memory.description',
-      fields: [
-        {k:'mem_pairs', label:'admin.fields.memory.pairs', helper:'admin.helpers.memory.pairs', type:'number', step:'1', min:'2', max:'12'},
-        {k:'mem_initial_reveal_ms', label:'admin.fields.memory.reveal', helper:'admin.helpers.memory.reveal', type:'number', step:'50', min:'300', max:'6000'},
-        {k:'mem_mismatch_hide_ms', label:'admin.fields.memory.hide', helper:'admin.helpers.memory.hide', type:'number', step:'50', min:'150', max:'4000'},
-        {k:'mem_accuracy_weight', label:'admin.fields.memory.acc_weight', helper:'admin.helpers.memory.acc_weight', type:'number', step:'0.05', min:'0', max:'1'},
-        {k:'mem_speed_weight', label:'admin.fields.memory.speed_weight', helper:'admin.helpers.memory.speed_weight', type:'number', step:'0.05', min:'0', max:'1'},
-        {k:'mem_time_best_ms', label:'admin.fields.memory.time_best', helper:'admin.helpers.memory.time_best', type:'number', step:'100', min:'5000', max:'180000'},
-        {k:'mem_time_worst_ms', label:'admin.fields.memory.time_worst', helper:'admin.helpers.memory.time_worst', type:'number', step:'100', min:'6000', max:'300000'}
-      ]
-    },
-    {
-      id: 'balance',
-      title: 'admin.groups.balance.title',
-      description: 'admin.groups.balance.description',
-      fields: [
-        {k:'bal_mode', label:'admin.fields.balance.mode', helper:'admin.helpers.balance.mode', type:'select', options:[['mag','admin.fields.balance.mode.magnitude'], ['lin','admin.fields.balance.mode.linear']]},
-        {k:'bal_duration_ms', label:'admin.fields.balance.duration', helper:'admin.helpers.balance.duration', type:'number', step:'100', min:'3000', max:'30000'},
-        {k:'bal_low_good', label:'admin.fields.balance.low_good', helper:'admin.helpers.balance.low_good', type:'number', step:'0.01', min:'0.01', max:'2'},
-        {k:'bal_high_bad', label:'admin.fields.balance.high_bad', helper:'admin.helpers.balance.high_bad', type:'number', step:'0.01', min:'0.02', max:'3'},
-        {k:'bal_lin_rel_tol', label:'admin.fields.balance.rel_tol', helper:'admin.helpers.balance.rel_tol', type:'number', step:'0.01', min:'0'},
-        {k:'bal_cheat_detection_enabled', label:'admin.fields.balance.cheat_enabled', helper:'admin.helpers.balance.cheat_enabled', type:'checkbox'},
-        {k:'bal_cheat_std_threshold', label:'admin.fields.balance.cheat_std_threshold', helper:'admin.helpers.balance.cheat_std_threshold', type:'number', step:'0.001', min:'0'},
-        {k:'bal_cheat_min_events', label:'admin.fields.balance.cheat_min_events', helper:'admin.helpers.balance.cheat_min_events', type:'number', step:'1', min:'0'},
-        {k:'bal_cheat_avatar_path', label:'admin.fields.balance.cheat_avatar_path', helper:'admin.helpers.balance.cheat_avatar_path', type:'text'}
       ]
     }
   ];
