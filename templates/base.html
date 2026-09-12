@@ -72,9 +72,86 @@
   </style>
   <meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
 
+  {% if google_analytics_id %}
+  <script>
+    (() => {
+      const measurementId = {{ google_analytics_id | tojson }};
+      const consentKey = 'jsd:analytics-consent';
+
+      const loadAnalytics = () => {
+        if (window.gtag) return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = (...args) => window.dataLayer.push(args);
+        window.gtag('js', new Date());
+        window.gtag('config', measurementId, {
+          send_page_view: true,
+          allow_google_signals: false,
+          allow_ad_personalization_signals: false
+        });
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+        document.head.appendChild(script);
+      };
+
+      const showBanner = () => {
+        const banner = document.getElementById('analyticsConsentBanner');
+        if (banner) banner.classList.remove('hidden');
+      };
+
+      const hideBanner = () => {
+        const banner = document.getElementById('analyticsConsentBanner');
+        if (banner) banner.classList.add('hidden');
+      };
+
+      window.jsdAnalytics = {
+        accept() {
+          try { localStorage.setItem(consentKey, 'accepted'); } catch (err) {}
+          hideBanner();
+          loadAnalytics();
+        },
+        refuse() {
+          try { localStorage.setItem(consentKey, 'refused'); } catch (err) {}
+          hideBanner();
+        },
+        reset() {
+          try { localStorage.removeItem(consentKey); } catch (err) {}
+          showBanner();
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const banner = document.getElementById('analyticsConsentBanner');
+        if (banner) {
+          banner.querySelector('[data-analytics-action="accept"]')?.addEventListener('click', () => window.jsdAnalytics.accept());
+          banner.querySelector('[data-analytics-action="refuse"]')?.addEventListener('click', () => window.jsdAnalytics.refuse());
+        }
+        let consent = null;
+        try { consent = localStorage.getItem(consentKey); } catch (err) {}
+        if (consent === 'accepted') loadAnalytics();
+        if (!consent) showBanner();
+      });
+    })();
+  </script>
+  {% endif %}
+
   </head>
   <body class="h-full bg-gradient-to-b from-pink-50 to-rose-100 text-gray-900 dark:from-slate-900 dark:to-slate-800 dark:text-slate-100">
     <div class="min-h-screen flex flex-col">
+      {% if google_analytics_id %}
+      <aside id="analyticsConsentBanner" class="fixed inset-x-4 bottom-4 z-40 hidden mx-auto max-w-2xl rounded-2xl border border-rose-200/80 bg-white/95 p-4 shadow-2xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95" role="dialog" aria-labelledby="analyticsConsentTitle" aria-describedby="analyticsConsentDescription">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0">
+            <h2 id="analyticsConsentTitle" class="text-sm font-black text-slate-900 dark:text-slate-100" data-i18n="analytics.title">Améliorer le site avec des statistiques anonymes</h2>
+            <p id="analyticsConsentDescription" class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300" data-i18n="analytics.description">Nous utilisons Google Analytics pour mesurer les visites et améliorer l’expérience. Aucun suivi n’est chargé sans ton accord.</p>
+          </div>
+          <div class="flex shrink-0 gap-2">
+            <button type="button" data-analytics-action="refuse" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" data-i18n="analytics.refuse">Refuser</button>
+            <button type="button" data-analytics-action="accept" class="rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-rose-700" data-i18n="analytics.accept">Accepter</button>
+          </div>
+        </div>
+      </aside>
+      {% endif %}
       <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-rose-700 focus:shadow-lg dark:focus:bg-slate-900 dark:focus:text-rose-200" data-i18n="nav.skip_to_content">Aller au contenu</a>
       <nav aria-label="Navigation principale" data-i18n-attr="aria-label:nav.primary_label" class="sticky top-0 backdrop-blur bg-white/70 dark:bg-slate-900/60 border-b border-white/20 z-10">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
@@ -186,6 +263,16 @@
               >
                 JJ HUB
               </a>
+              {% if google_analytics_id %}
+              <button
+                type="button"
+                id="analyticsPreferences"
+                class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/60 px-4 py-1.5 font-semibold uppercase tracking-wide text-slate-600 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-700"
+                data-i18n="footer.analytics_preferences"
+              >
+                Préférences analytics
+              </button>
+              {% endif %}
             </span>
           </p>
         </div>
@@ -262,6 +349,11 @@
               closeMenu();
             });
           });
+        }
+
+        const analyticsPreferences = document.getElementById('analyticsPreferences');
+        if (analyticsPreferences && window.jsdAnalytics) {
+          analyticsPreferences.addEventListener('click', () => window.jsdAnalytics.reset());
         }
       });
 

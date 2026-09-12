@@ -1,6 +1,6 @@
 
 from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, make_response, abort, send_from_directory
-import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr, math, hmac
+import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr, math, hmac, re
 from functools import lru_cache, wraps
 from pathlib import Path
 from typing import Optional
@@ -47,6 +47,13 @@ UPLOAD_SUBDIR = "uploads"
 STATIC_ROOT = Path(app.static_folder or Path(__file__).parent / "static")
 AVATAR_UPLOAD_FOLDER = STATIC_ROOT / UPLOAD_SUBDIR
 AVATAR_UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+GOOGLE_ANALYTICS_ID_PATTERN = re.compile(r"G-[A-Za-z0-9]+")
+
+
+def get_google_analytics_id() -> str:
+    """Return a safe GA4 measurement ID, or disable analytics when unset/invalid."""
+    candidate = os.getenv("GOOGLE_ANALYTICS_ID", "").strip()
+    return candidate if GOOGLE_ANALYTICS_ID_PATTERN.fullmatch(candidate) else ""
 
 google_oauth = None
 if OAuth is not None:
@@ -155,9 +162,9 @@ def add_security_headers(response):
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
+        "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; "
-        "font-src 'self' https: data:; connect-src 'self' https://accounts.google.com; form-action 'self';",
+        "font-src 'self' https: data:; connect-src 'self' https://accounts.google.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com; form-action 'self';",
     )
     return response
 
@@ -184,6 +191,7 @@ def inject_auth_context():
         "current_user": user,
         "current_user_payload": payload,
         "google_login_enabled": is_google_login_available(),
+        "google_analytics_id": get_google_analytics_id() if not request.path.startswith("/admin") else "",
     }
 
 
