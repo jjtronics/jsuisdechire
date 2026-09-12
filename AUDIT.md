@@ -125,6 +125,12 @@ L’accueil affiche le nombre configuré, mais énumère toujours les sept épre
 **Impact :** l’utilisateur peut voir « 4 mini-tests » suivi d’une liste de 7 tests, selon la configuration active.
 **Résolution :** l’accueil indique désormais simplement « Plusieurs tests rapides ».
 
+### P1-07 — [Résolu] Page des paramètres admin peu lisible
+
+**Impact :** l’interface regroupait de nombreux champs dans une suite de formulaires peu hiérarchisée. Les sections étaient difficiles à parcourir et l’état des modifications n’était pas explicite.
+
+**Résolution :** refonte visuelle de la page admin avec en-tête de contrôle, navigation latérale avec ancres, cartes de champs plus lisibles, aide contextuelle conservée, indicateur de modifications non enregistrées et barre d’actions persistante. Les clés de réglages, les endpoints et le comportement de sauvegarde restent inchangés.
+
 ## Qualité technique et finition
 
 ### P2-01 — [Résolu] Tailwind était chargé depuis le CDN en production

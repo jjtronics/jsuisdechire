@@ -1,12 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="space-y-6">
-  <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-3">
-    <h1 class="text-2xl font-black" data-i18n="admin.heading">Admin · Calibration</h1>
-    <p class="text-sm text-gray-600 dark:text-slate-300" data-i18n-html="admin.intro_html">Cette page est protégée par un couple login/mot de passe. Par défaut : <strong>admin / jsuisdechire</strong>. Utilise le formulaire ci-dessous pour les modifier.</p>
+  <section class="relative isolate overflow-hidden rounded-[2rem] border border-white/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-fuchsia-950 p-6 text-white shadow-xl shadow-indigo-950/15 sm:p-8">
+    <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-fuchsia-500/25 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl"></div>
+    <div class="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <div class="max-w-2xl space-y-3">
+        <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-200">
+          <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1" data-i18n="admin.hero.eyebrow">Espace admin</span>
+          <span class="text-white/40">·</span>
+          <span data-i18n="admin.hero.badge">Configuration en direct</span>
+        </div>
+        <h1 class="text-3xl font-black tracking-tight sm:text-4xl" data-i18n="admin.heading">Admin · Calibration</h1>
+        <p class="max-w-xl text-sm leading-6 text-slate-200" data-i18n-html="admin.intro_html">Cette page regroupe les réglages de l’application. Modifie-les puis enregistre en bas de page.</p>
+      </div>
+      <div class="shrink-0 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+        <p class="text-2xl font-black">7</p>
+        <p class="text-xs font-semibold text-slate-300" data-i18n="admin.hero.tests">mini-jeux calibrables</p>
+      </div>
+    </div>
   </section>
 
-  <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-5">
+  <section class="rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="space-y-1">
         <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.credentials.title">Identifiants d'accès</h2>
@@ -14,36 +29,47 @@
       </div>
       <form action="{{ url_for('admin_logout') }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-        <button class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" type="submit" data-i18n="nav.logout">Se déconnecter</button>
+        <button class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" type="submit" data-i18n="nav.logout">Se déconnecter</button>
       </form>
     </div>
-    <form id="credentialsForm" class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <form id="credentialsForm" class="grid gap-4 border-t border-slate-200/70 pt-5 dark:border-slate-800 md:grid-cols-2 lg:grid-cols-4">
       <label class="block space-y-2">
         <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.login.login_label">Login</span>
-        <input id="adminLogin" type="text" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="username" required>
+        <input id="adminLogin" type="text" class="w-full rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-500/15 dark:border-slate-700 dark:bg-slate-950/40" autocomplete="username" required>
       </label>
       <label class="block space-y-2">
         <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.credentials.new_password_label">Nouveau mot de passe</span>
-        <input id="adminNewPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" data-i18n-attr="placeholder:admin.credentials.new_password_placeholder" placeholder="Laisse vide pour ne pas changer">
+        <input id="adminNewPassword" type="password" class="w-full rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-500/15 dark:border-slate-700 dark:bg-slate-950/40" autocomplete="new-password" data-i18n-attr="placeholder:admin.credentials.new_password_placeholder" placeholder="Laisse vide pour ne pas changer">
       </label>
       <label class="block space-y-2">
         <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.credentials.confirm_label">Confirmation</span>
-        <input id="adminConfirmPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="new-password" data-i18n-attr="placeholder:admin.credentials.confirm_placeholder" placeholder="Répète le mot de passe">
+        <input id="adminConfirmPassword" type="password" class="w-full rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-500/15 dark:border-slate-700 dark:bg-slate-950/40" autocomplete="new-password" data-i18n-attr="placeholder:admin.credentials.confirm_placeholder" placeholder="Répète le mot de passe">
       </label>
       <label class="block space-y-2">
         <span class="text-sm font-semibold text-slate-800 dark:text-slate-200" data-i18n="admin.credentials.current_password_label">Mot de passe actuel</span>
-        <input id="adminCurrentPassword" type="password" class="w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm" autocomplete="current-password" required>
+        <input id="adminCurrentPassword" type="password" class="w-full rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-500/15 dark:border-slate-700 dark:bg-slate-950/40" autocomplete="current-password" required>
       </label>
       <div class="md:col-span-2 lg:col-span-4 flex flex-wrap items-center gap-3">
-        <button id="credentialsSubmit" type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="admin.credentials.submit">Mettre à jour</button>
-        <p id="credentialsMsg" class="text-sm text-gray-500"></p>
+        <button id="credentialsSubmit" type="submit" class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40" data-i18n="admin.credentials.submit">Mettre à jour</button>
+        <p id="credentialsMsg" class="text-sm text-gray-500 dark:text-slate-400"></p>
       </div>
     </form>
   </section>
 
-  <div id="formWrap" class="space-y-6"></div>
+  <div class="grid items-start gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
+    <aside id="adminNav" class="min-w-0 lg:sticky lg:top-24">
+      <div class="rounded-[1.5rem] border border-white/50 bg-white/80 p-4 shadow-lg shadow-slate-900/5 backdrop-blur dark:bg-slate-900/60 dark:shadow-black/10">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400" data-i18n="admin.nav.title">Sections</p>
+          <span class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">10</span>
+        </div>
+        <nav id="adminNavLinks" class="flex min-w-0 gap-1.5 overflow-x-auto pb-1 lg:block lg:space-y-1" aria-label="Sections des paramètres"></nav>
+      </div>
+    </aside>
+    <div id="formWrap" class="min-w-0 space-y-6"></div>
+  </div>
 
-  <section id="userManagement" class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-4">
+  <section id="userManagement" class="rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="space-y-1">
         <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.users.title">Gestion des utilisateurs</h2>
@@ -51,7 +77,7 @@
       </div>
       <p id="userMsg" class="text-sm text-gray-500"></p>
     </div>
-    <div class="overflow-x-auto">
+    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200/70 dark:border-slate-800">
       <table id="userTable" class="min-w-full text-sm text-left text-slate-700 dark:text-slate-200">
         <thead>
           <tr class="bg-slate-100/60 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -69,20 +95,25 @@
     </div>
   </section>
 
-  <section class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-4">
-    <div class="space-y-1">
-      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.groups.actions.title">Actions globales</h2>
-      <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.groups.actions.description">Sauvegarde les paramètres ou purge les scores enregistrés.</p>
-    </div>
-    <div class="flex flex-wrap items-center gap-3">
-      <button id="saveBtn" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700" data-i18n="admin.save_button">Enregistrer</button>
-      <button id="clearBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" data-i18n="admin.clear_button">Vider les scores</button>
-      <button id="editScoresBtn" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" data-i18n="admin.scores.open_label" data-i18n-attr="data-open-label:admin.scores.open_label,data-close-label:admin.scores.close_label,data-confirm-label:admin.scores.confirm_delete">Éditer les scores</button>
-      <p id="msg" class="text-sm text-gray-500"></p>
+  <section class="sticky bottom-4 z-20 rounded-[1.75rem] border border-slate-800/80 bg-slate-950/95 p-5 text-white shadow-2xl shadow-slate-950/20 backdrop-blur-md sm:p-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div class="space-y-1">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-lg font-black" data-i18n="admin.groups.actions.title">Actions globales</h2>
+          <span id="settingsState" class="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-bold text-emerald-200" data-i18n="admin.settings.clean">Configuration à jour</span>
+        </div>
+        <p class="text-sm text-slate-300" data-i18n="admin.groups.actions.description">Sauvegarde les paramètres ou purge les scores enregistrés.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button id="saveBtn" type="button" class="inline-flex items-center justify-center rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300/60" data-i18n="admin.save_button">Enregistrer</button>
+        <button id="clearBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-red-300/50 px-4 py-2.5 text-sm font-semibold text-red-200 transition hover:border-red-200 hover:bg-red-400/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60" data-i18n="admin.clear_button">Vider les scores</button>
+        <button id="editScoresBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-white/40 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40" data-i18n="admin.scores.open_label" data-i18n-attr="data-open-label:admin.scores.open_label,data-close-label:admin.scores.close_label,data-confirm-label:admin.scores.confirm_delete">Éditer les scores</button>
+        <p id="msg" class="w-full text-xs text-slate-300 lg:w-auto"></p>
+      </div>
     </div>
   </section>
 
-  <section id="scoreEditor" class="rounded-2xl p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30 shadow-sm space-y-4 hidden">
+  <section id="scoreEditor" class="hidden rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.scores.title">Gestion des scores</h2>
@@ -93,7 +124,7 @@
         <p id="scoreMsg" class="text-sm text-gray-500"></p>
       </div>
     </div>
-    <div class="overflow-x-auto">
+    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200/70 dark:border-slate-800">
       <table id="scoreTable" class="min-w-full text-sm text-left text-slate-700 dark:text-slate-200">
         <thead></thead>
         <tbody></tbody>
@@ -249,11 +280,50 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const wrap = document.getElementById('formWrap');
+  const navLinks = document.getElementById('adminNavLinks');
   const msg = document.getElementById('msg');
+  const settingsState = document.getElementById('settingsState');
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!==undefined) e.innerHTML=h; return e;};
+  const GROUP_BADGES = { general: 'G', games: 'S', email: '✉', reaction: '01', stroop: '02', pursuit: '03', balance: '04', memory: '05', reflex: '06', driving: '07' };
+
+  function setSettingsState(state){
+    if (!settingsState) return;
+    const dirty = state === 'dirty';
+    settingsState.dataset.i18n = dirty ? 'admin.settings.dirty' : 'admin.settings.clean';
+    settingsState.textContent = t(settingsState.dataset.i18n);
+    settingsState.className = dirty
+      ? 'rounded-full border border-amber-300/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-bold text-amber-200'
+      : 'rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-bold text-emerald-200';
+  }
+
+  function markSettingsDirty(){
+    if (settingsState && settingsState.dataset.state !== 'dirty'){
+      settingsState.dataset.state = 'dirty';
+      setSettingsState('dirty');
+    }
+  }
+
+  function renderNav(){
+    if (!navLinks) return;
+    navLinks.innerHTML = '';
+    GROUPS.forEach(group => {
+      const link = document.createElement('a');
+      link.href = `#admin-group-${group.id}`;
+      link.dataset.groupNav = group.id;
+      link.className = 'inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:flex lg:w-full';
+      const badge = document.createElement('span');
+      badge.className = 'inline-flex h-6 min-w-6 items-center justify-center rounded-lg bg-slate-100 px-1.5 text-[10px] font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400';
+      badge.textContent = GROUP_BADGES[group.id] || '•';
+      const label = document.createElement('span');
+      label.dataset.i18n = group.title;
+      label.textContent = t(group.title);
+      link.append(badge, label);
+      navLinks.append(link);
+    });
+  }
 
   function fieldRow(f, val){
-    const card = el('div','rounded-2xl border border-white/40 bg-white/80 dark:bg-slate-900/50 p-4 space-y-3 shadow-sm');
+    const card = el('div','group rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4 space-y-3 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-950/25 dark:hover:border-rose-900/70');
     const labelId = `field-${f.k}`;
 
     if (f.type === 'checkbox'){
@@ -262,25 +332,30 @@ document.addEventListener('DOMContentLoaded', () => {
       control.id = labelId;
       control.dataset.key = f.k;
       control.checked = val === undefined ? true : !!val;
-      const wrapper = el('label','flex items-center gap-3 text-sm font-semibold text-slate-800 dark:text-slate-200');
+      const wrapper = el('label','flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800 dark:text-slate-200');
       wrapper.setAttribute('for', labelId);
-      wrapper.append(control, el('span','', t(f.label)));
+      const labelText = el('span','', t(f.label));
+      labelText.dataset.i18n = f.label;
+      wrapper.append(control, labelText);
       card.append(wrapper);
       if (f.helper){
-        card.append(el('p','text-xs text-slate-500 dark:text-slate-400', t(f.helper)));
+        const helper = el('p','text-xs leading-5 text-slate-500 dark:text-slate-400', t(f.helper));
+        helper.dataset.i18n = f.helper;
+        card.append(helper);
       }
       return card;
     }
 
     const label = el('label','block text-sm font-semibold text-slate-800 dark:text-slate-200', t(f.label));
+    label.dataset.i18n = f.label;
     label.setAttribute('for', labelId);
 
     let control;
     if(f.type==='select'){
-      control = el('select','w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm');
-      (f.options||[]).forEach(([v,l])=>{ const o=el('option','',t(l)); o.value=v; control.append(o); });
+      control = el('select','w-full rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-500/15 dark:border-slate-700 dark:bg-slate-950/40');
+      (f.options||[]).forEach(([v,l])=>{ const o=el('option','',t(l)); o.value=v; o.dataset.i18n = l; control.append(o); });
     } else {
-      control = el('input','w-full rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-950/40 px-3 py-2 text-sm');
+      control = el('input','w-full rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-500/15 dark:border-slate-700 dark:bg-slate-950/40');
       control.type=f.type;
       if(f.step) control.step=f.step;
       if(f.min) control.min=f.min;
@@ -294,18 +369,29 @@ document.addEventListener('DOMContentLoaded', () => {
     card.append(label, control);
 
     if (f.helper){
-      card.append(el('p','text-xs text-slate-500 dark:text-slate-400', t(f.helper)));
+      const helper = el('p','text-xs leading-5 text-slate-500 dark:text-slate-400', t(f.helper));
+      helper.dataset.i18n = f.helper;
+      card.append(helper);
     }
 
     return card;
   }
 
   function groupSection(group, settings){
-    const section = el('section','rounded-2xl border border-white/40 bg-white/90 dark:bg-slate-900/60 p-6 space-y-5 shadow-sm');
-    const header = el('div','space-y-1');
+    const section = el('section','scroll-mt-24 rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7');
+    section.id = `admin-group-${group.id}`;
+    section.dataset.groupId = group.id;
+    const header = el('div','mb-5 flex items-start gap-3 border-b border-slate-200/70 pb-5 dark:border-slate-800');
+    const badge = el('span','inline-flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-rose-500 px-2 text-xs font-black text-white shadow-sm', GROUP_BADGES[group.id] || '•');
+    const copy = el('div','min-w-0 space-y-1');
+    const heading = el('h2','text-xl font-black tracking-tight text-slate-900 dark:text-slate-100', t(group.title));
+    heading.dataset.i18n = group.title;
+    const description = el('p','text-sm leading-6 text-slate-600 dark:text-slate-300', t(group.description));
+    description.dataset.i18n = group.description;
+    copy.append(heading, description);
     header.append(
-      el('h2','text-xl font-semibold text-slate-800 dark:text-slate-100', t(group.title)),
-      el('p','text-sm text-slate-600 dark:text-slate-300', t(group.description))
+      badge,
+      copy
     );
     section.append(header);
 
@@ -319,11 +405,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function load(){
-    const r = await fetch('/api/settings'); const s = await r.json();
-    wrap.innerHTML='';
-    GROUPS.forEach(group=>wrap.append(groupSection(group, s)));
+    try {
+      const r = await fetch('/api/settings');
+      if (!r.ok) throw new Error('settings_load_failed');
+      const s = await r.json();
+      wrap.innerHTML='';
+      GROUPS.forEach(group=>wrap.append(groupSection(group, s)));
+      renderNav();
+      if (settingsState) settingsState.dataset.state = 'clean';
+      setSettingsState('clean');
+    } catch (err) {
+      console.error('settings', err);
+      msg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
+    }
   }
   async function save(){
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) saveBtn.disabled = true;
     const data={};
     wrap.querySelectorAll('input,select').forEach(elm=>{
       const key = elm.dataset.key;
@@ -340,9 +438,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       data[key] = v;
     });
-    const r = await fetch('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    const j = await r.json();
-    msg.textContent = j.ok ? t('admin.saved') : t('common.error');
+    try {
+      const r = await fetch('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const j = await r.json();
+      msg.textContent = j.ok ? t('admin.saved') : t('common.error');
+      if (j.ok){
+        if (settingsState) settingsState.dataset.state = 'clean';
+        setSettingsState('clean');
+      }
+    } catch (err) {
+      console.error('settings_save', err);
+      msg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
   }
   async function clearScores(){
     if (!confirm(t('admin.confirm_clear'))) return;
@@ -352,6 +461,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('saveBtn').addEventListener('click', save);
   document.getElementById('clearBtn').addEventListener('click', clearScores);
+  wrap.addEventListener('input', markSettingsDirty);
+  wrap.addEventListener('change', markSettingsDirty);
+  setSettingsState('clean');
   load();
 
   const userTable = document.getElementById('userTable');
