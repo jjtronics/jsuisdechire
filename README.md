@@ -4,19 +4,24 @@
   <strong><a href="#-francais">🇫🇷 Français</a> · <a href="#-english">🇬🇧 English</a> · <a href="#-italiano">🇮🇹 Italiano</a></strong>
 </p>
 
+> Audit technique et UX du 12 septembre 2026 : [AUDIT.md](AUDIT.md)
+
 ---
 
 ## 🇫🇷 Français
 
 ### 🍸 Aperçu
-**jsuisdechire** est une web app Flask pleine de paillettes pour vérifier ton état après l'apéro. Tu enchaînes quatre mini-jeux (réflexes, couleurs, poursuite et équilibre), tu obtiens un score façon "soirée entre potes", et tu peux grimper sur le leaderboard si tu assures. Fun garanti, mais rappel : ce n'est PAS un dispositif médical.
+**jsuisdechire** est une web app Flask pleine de paillettes pour vérifier ton état après l'apéro. Tu enchaînes jusqu'à sept mini-jeux (réaction, couleurs, poursuite, équilibre, mémoire, réflexe gobelet et conduite), tu obtiens un score façon "soirée entre potes", et tu peux grimper sur le leaderboard si tu assures. Fun garanti, mais rappel : ce n'est PAS un dispositif médical.
 
 ### ✨ Fonctionnalités
-- **4 tests rapides** :
+- **7 tests rapides** :
   - 🟢 *Réaction (t1)* – Tape dès que ça passe au vert, ton temps médian devient ton score.
   - 🌈 *Couleurs (t2)* – Version Stroop : clique la vraie couleur, pas le mot, vitesse + précision.
   - 🎯 *Poursuite (t3)* – Attrape une cible qui virevolte; précision ou temps de capture.
   - ⚖️ *Équilibre (t4)* – Utilise les capteurs du téléphone pour mesurer ta stabilité.
+  - 🥤 *Réflexe gobelet (t6)* – Ajuste l’angle et la puissance pour faire entrer la balle dans le gobelet.
+  - 🚗 *Conduite sobre (t7)* – Change de voie et évite les obstacles sans multiplier les collisions.
+  - 🧠 *Mémoire (t5)* – Retrouve les séquences en limitant les erreurs et le temps de réponse.
 - **Résultats stylés** avec résumé, détails par test et bouton de partage.
 - **Classement public** (`/leaderboard`) avec sauvegarde automatique après chaque run.
 - **Panneau admin** (`/admin`) pour configurer les paramètres ou purger la base.
@@ -26,16 +31,18 @@
 ### 🛠️ Stack & architecture
 - **Backend** : Flask + SQLite (`data.sqlite`).
 - **Frontend** : Templates Jinja + Tailwind CDN + JavaScript vanilla.
-- **Service worker** : `static/sw.js` pour cache léger.
+- **Service worker** : route `/sw.js`, rendu depuis `templates/sw.js`.
 - **Gestion des paramètres** : `/api/settings` (lecture), `/api/admin/*` (écriture, scores, purge).
 - **Stockage local** : `localStorage` pour l'état de session et les scores avant soumission.
 
 ```
 📁 jsuisdechire/
 ├── app.py              # Routes Flask + API + admin + scoring
-├── templates/          # Pages (home, t1..t4, leaderboard, admin, etc.)
+├── templates/          # Pages (home, t1..t7, leaderboard, admin, JJ HUB, etc.)
 ├── static/js/          # Logique front (tests, session, i18n, résultats)
+├── static/branding/    # Logos horizontaux et pictogrammes de la marque
 ├── static/icons/       # PWA icons & manifest
+├── deploy.sh           # Déploiement SSH reproductible
 └── data.sqlite         # Créé automatiquement au lancement
 ```
 
@@ -54,6 +61,22 @@ python app.py  # démarre sur 0.0.0.0:9001
 - Variables utiles :
   - `SECRET_KEY` (clé de session Flask) – par défaut `dev-secret`.
   - `ASSET_VERSION` pour invalider le cache des assets statiques.
+
+### 🚚 Déploiement
+
+Le déploiement de production est automatisé par [`deploy.sh`](deploy.sh). Le script utilise par défaut `toxyk@192.168.1.30`, `/opt/jsuisdechire/app` et le service systemd `jsuisdechire`.
+
+```bash
+./deploy.sh
+```
+
+Les paramètres peuvent être placés dans un fichier local `.env.deploy` non versionné, ou surchargés ponctuellement :
+
+```bash
+REMOTE_HOST=192.168.1.30 RUN_HTTP_CHECKS=0 ./deploy.sh
+```
+
+Le script exclut la base SQLite, les secrets, l’environnement virtuel et les uploads locaux de l’archive ; il sauvegarde l’installation distante avant copie, redémarre le service et contrôle les routes principales ainsi que les nouveaux assets de marque.
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (login initial **admin/jsuisdechire**).
@@ -78,14 +101,17 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 ## 🇬🇧 English
 
 ### 🍸 Overview
-**jsuisdechire** is a glittery Flask web app to check your post-party vibes. Blaze through four mini-games (reaction, colors, pursuit, balance), earn a "party mode" score, and climb the leaderboard if you nail it. It's goofy fun, but remember: this is **not** a medical tool.
+**jsuisdechire** is a glittery Flask web app to check your post-party vibes. Blaze through up to seven mini-games (reaction, colors, pursuit, balance, memory, cup reflex and driving), earn a "party mode" score, and climb the leaderboard if you nail it. It's goofy fun, but remember: this is **not** a medical tool.
 
 ### ✨ Features
-- **4 bite-sized tests**:
+- **7 bite-sized tests**:
   - 🟢 *Reaction (t1)* – Tap when the tile goes green; your median time drives the score.
   - 🌈 *Color chaos (t2)* – Stroop-like challenge mixing accuracy and speed.
   - 🎯 *Target chase (t3)* – Catch the jittery target; precision or time gets recorded.
   - ⚖️ *Balance check (t4)* – Uses device motion sensors to judge your wobble.
+  - 🥤 *Cup reflex (t6)* – Adjust angle and power to land the ball in the cup.
+  - 🚗 *Sober driving (t7)* – Switch lanes and avoid obstacles without piling up collisions.
+  - 🧠 *Memory (t5)* – Reproduce sequences while keeping mistakes and response time low.
 - **Stylish results screen** with summary, per-test breakdown, and share button.
 - **Public leaderboard** (`/leaderboard`) with automatic saving after each run.
 - **Admin console** (`/admin`) to tweak settings or wipe the database.
@@ -95,16 +121,18 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 ### 🛠️ Stack & architecture
 - **Backend**: Flask + SQLite (`data.sqlite`).
 - **Frontend**: Jinja templates, Tailwind CDN, and vanilla JavaScript.
-- **Service worker**: `static/sw.js` for lightweight caching.
+- **Service worker**: `/sw.js`, rendered from `templates/sw.js`.
 - **Settings management**: `/api/settings` (read) & `/api/admin/*` (write, scores, purge).
 - **Local storage**: keeps session progress and scores before submission.
 
 ```
 📁 jsuisdechire/
 ├── app.py              # Flask routes, API, admin, scoring pipeline
-├── templates/          # Pages (home, t1..t4, leaderboard, admin, ...)
+├── templates/          # Pages (home, t1..t7, leaderboard, admin, JJ HUB, ...)
 ├── static/js/          # Front logic (tests, session, i18n, results)
+├── static/branding/    # Horizontal logos and brand marks
 ├── static/icons/       # PWA icons & manifest
+├── deploy.sh           # Reproducible SSH deployment
 └── data.sqlite         # Autogenerated database
 ```
 
@@ -146,14 +174,17 @@ MIT License (see [LICENSE](LICENSE)).
 ## 🇮🇹 Italiano
 
 ### 🍸 Panoramica
-**jsuisdechire** è una web app Flask piena di brillantini per verificare come stai dopo l'aperitivo. Affronti quattro mini-giochi (riflessi, colori, inseguimento, equilibrio), ottieni un punteggio in modalità "serata tra amici" e puoi scalare la classifica se fai faville. È tutto molto divertente, ma ricorda: **non** è un dispositivo medico.
+**jsuisdechire** è una web app Flask piena di brillantini per verificare come stai dopo l'aperitivo. Affronti fino a sette mini-giochi (reazione, colori, inseguimento, equilibrio, memoria, riflesso bicchiere e guida), ottieni un punteggio in modalità "serata tra amici" e puoi scalare la classifica se fai faville. È tutto molto divertente, ma ricorda: **non** è un dispositivo medico.
 
 ### ✨ Funzionalità
-- **4 test lampo**:
+- **7 test lampo**:
   - 🟢 *Reazione (t1)* – Tocca quando il riquadro diventa verde; la tua mediana fa il punteggio.
   - 🌈 *Colori (t2)* – Sfida in stile Stroop: scegli il colore reale, velocità e precisione contano.
   - 🎯 *Inseguimento (t3)* – Acchiappa il bersaglio ballerino; registriamo precisione o tempo di cattura.
   - ⚖️ *Equilibrio (t4)* – Sfrutta i sensori del telefono per misurare la tua stabilità.
+  - 🥤 *Riflesso bicchiere (t6)* – Regola angolo e potenza per centrare il bicchiere.
+  - 🚗 *Guida sobria (t7)* – Cambia corsia ed evita gli ostacoli senza accumulare collisioni.
+  - 🧠 *Memoria (t5)* – Ripeti le sequenze limitando errori e tempo di risposta.
 - **Schermata risultati stilosa** con riepilogo, dettagli per test e pulsante di condivisione.
 - **Classifica pubblica** (`/leaderboard`) che si aggiorna automaticamente dopo ogni run.
 - **Pannello admin** (`/admin`) per ritoccare i parametri o pulire il database.
@@ -163,16 +194,18 @@ MIT License (see [LICENSE](LICENSE)).
 ### 🛠️ Stack & architettura
 - **Backend**: Flask + SQLite (`data.sqlite`).
 - **Frontend**: Template Jinja, Tailwind da CDN e JavaScript vanilla.
-- **Service worker**: `static/sw.js` per una cache leggera.
+- **Service worker**: route `/sw.js`, renderizzata da `templates/sw.js`.
 - **Gestione impostazioni**: `/api/settings` (lettura) e `/api/admin/*` (scrittura, punteggi, pulizia).
 - **Storage locale**: `localStorage` conserva stato della sessione e punteggi prima dell'invio.
 
 ```
 📁 jsuisdechire/
 ├── app.py              # Route Flask, API, admin e pipeline di punteggio
-├── templates/          # Pagine (home, t1..t4, leaderboard, admin, ...)
+├── templates/          # Pagine (home, t1..t7, leaderboard, admin, JJ HUB, ...)
 ├── static/js/          # Logica front (test, sessione, i18n, risultati)
+├── static/branding/    # Loghi orizzontali e pittogrammi del brand
 ├── static/icons/       # Icone PWA + manifest
+├── deploy.sh           # Deploy SSH riproducibile
 └── data.sqlite         # Database generato automaticamente
 ```
 

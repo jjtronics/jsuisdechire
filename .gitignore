@@ -1,0 +1,9 @@
+.env
+.env.deploy
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite
+static/uploads/
+.DS_Store
+.playwright-cli/

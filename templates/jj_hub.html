@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="py-6 sm:py-10">
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-6 rounded-3xl border border-rose-100/60 bg-gradient-to-br from-rose-600 via-fuchsia-600 to-indigo-600 p-7 text-white shadow-xl sm:p-10 dark:border-slate-700">
+      <p class="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-rose-100" aria-hidden="true">JJTRONICS · HUB</p>
+      <h1 class="text-3xl font-black tracking-tight sm:text-5xl" data-i18n="jjhub.title">JJ HUB</h1>
+      <p class="mt-4 max-w-3xl text-base leading-relaxed text-rose-50 sm:text-lg" data-i18n="jjhub.intro">
+        Les autres projets de l’écosystème JJTRONICS : des outils, des expériences et des univers conçus pour être explorés.
+      </p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2" aria-label="Projets JJTRONICS">
+      <article class="flex h-full flex-col rounded-2xl border border-rose-100/70 bg-white/85 p-5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div class="flex items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 p-2 dark:bg-slate-800">
+            <img src="https://www.jjtronics.com/wordpress/wp-content/uploads/2026/09/GitHub-Mark.png" alt="Logo GitHub" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            <a href="https://github.com/jjtronics" target="_blank" rel="noopener noreferrer" class="transition hover:text-rose-600 dark:hover:text-rose-300" data-i18n="jjhub.github.title">GitHub public ↗</a>
+          </h2>
+        </div>
+        <p class="mt-4 flex-1 text-sm leading-relaxed text-gray-600 dark:text-slate-300" data-i18n="jjhub.github.description">Le laboratoire public de JJTRONICS : code source, outils et prototypes, de la domotique connectée aux applications web et aux projets Raspberry Pi.</p>
+        <a href="https://github.com/jjtronics" target="_blank" rel="noopener noreferrer" class="mt-5 inline-flex items-center font-bold text-rose-600 transition hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200" data-i18n="jjhub.github.link">Explorer les projets GitHub →</a>
+      </article>
+
+      <article class="flex h-full flex-col rounded-2xl border border-rose-100/70 bg-white/85 p-5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div class="flex items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-amber-50 p-2 dark:bg-slate-800">
+            <img src="https://www.jjtronics.com/wordpress/wp-content/themes/lysa-fr/images/logo-jjtronics-mark.png" alt="Logo JJTRONICS" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            <a href="https://www.jjtronics.com/wordpress/" target="_blank" rel="noopener noreferrer" class="transition hover:text-rose-600 dark:hover:text-rose-300" data-i18n="jjhub.jjtronics.title">JJTRONICS ↗</a>
+          </h2>
+        </div>
+        <p class="mt-4 flex-1 text-sm leading-relaxed text-gray-600 dark:text-slate-300" data-i18n="jjhub.jjtronics.description">Le carnet de bord de JJTRONICS : technologie, logiciel libre, domotique et projets Raspberry Pi, avec des tutoriels, retours d’expérience et astuces testées sur le terrain.</p>
+        <a href="https://www.jjtronics.com/wordpress/" target="_blank" rel="noopener noreferrer" class="mt-5 inline-flex items-center font-bold text-rose-600 transition hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200" data-i18n="jjhub.jjtronics.link">Découvrir JJTRONICS →</a>
+      </article>
+
+      <article class="flex h-full flex-col rounded-2xl border border-rose-100/70 bg-white/85 p-5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div class="flex items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sky-50 p-2 dark:bg-slate-800">
+            <img src="https://www.jjtronics.com/wordpress/wp-content/uploads/2026/09/sondastream-logo-icon.png" alt="Logo SondaStream" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            <a href="https://sonda.stream/" target="_blank" rel="noopener noreferrer" class="transition hover:text-rose-600 dark:hover:text-rose-300" data-i18n="jjhub.sonda.title">SondaStream ↗</a>
+          </h2>
+        </div>
+        <p class="mt-4 flex-1 text-sm leading-relaxed text-gray-600 dark:text-slate-300" data-i18n="jjhub.sonda.description">Une sonde de supervision broadcast pensée pour les équipes d’exploitation : surveillez vos flux audio et vidéo, corrélez qualité, transport et SCTE-35, rejouez les incidents et déclenchez vos automatismes depuis une seule console.</p>
+        <a href="https://sonda.stream/" target="_blank" rel="noopener noreferrer" class="mt-5 inline-flex items-center font-bold text-rose-600 transition hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200" data-i18n="jjhub.sonda.link">Voir la plateforme SondaStream →</a>
+      </article>
+
+      <article class="flex h-full flex-col rounded-2xl border border-rose-100/70 bg-white/85 p-5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div class="flex items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-700 p-2 dark:bg-slate-800">
+            <img src="https://www.jjtronics.com/wordpress/wp-content/uploads/2026/09/TestiCOOL_LOGO.png" alt="Logo TestiCool" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            <a href="https://testicool.org/" target="_blank" rel="noopener noreferrer" class="transition hover:text-rose-600 dark:hover:text-rose-300" data-i18n="jjhub.testicool.title">TestiCool ↗</a>
+          </h2>
+        </div>
+        <p class="mt-4 flex-1 text-sm leading-relaxed text-gray-600 dark:text-slate-300" data-i18n="jjhub.testicool.description">Des tests de matériel racontés sans langue de bois : écrans, outils, domotique, réseau, USB et accessoires passés au banc d’essai avec un vrai regard de maker et d’utilisateur.</p>
+        <a href="https://testicool.org/" target="_blank" rel="noopener noreferrer" class="mt-5 inline-flex items-center font-bold text-rose-600 transition hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200" data-i18n="jjhub.testicool.link">Voir les tests et essais →</a>
+      </article>
+
+      <article class="flex h-full flex-col rounded-2xl border border-rose-100/70 bg-white/85 p-5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div class="flex items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-emerald-50 p-2 dark:bg-slate-800">
+            <img src="https://guinadi.it/wp-content/themes/guinadi-cards-clean/assets/guinadi-logo.svg" alt="Logo Guinadi" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            <a href="https://guinadi.it/" target="_blank" rel="noopener noreferrer" class="transition hover:text-rose-600 dark:hover:text-rose-300" data-i18n="jjhub.guinadi.title">Guinadi ↗</a>
+          </h2>
+        </div>
+        <p class="mt-4 flex-1 text-sm leading-relaxed text-gray-600 dark:text-slate-300" data-i18n="jjhub.guinadi.description">Un carnet de route sensible et pratique pour découvrir Guinadi, petit village vivant de la Valle del Verde : ruelles de pierre, eau fraîche, châtaigneraies, saveurs de Lunigiana, balades et conseils pour préparer sa visite.</p>
+        <a href="https://guinadi.it/" target="_blank" rel="noopener noreferrer" class="mt-5 inline-flex items-center font-bold text-rose-600 transition hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200" data-i18n="jjhub.guinadi.link">Partir à la découverte →</a>
+      </article>
+
+      <article class="flex h-full flex-col rounded-2xl border border-rose-100/70 bg-white/85 p-5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div class="flex items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5 shadow-sm dark:bg-slate-800">
+            <img src="{{ asset_url('branding/logo-mark-192.png') }}" alt="Logo JsuisDechire" width="192" height="192" loading="lazy" class="h-full w-full object-contain" />
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            <a href="https://jsuisdechire.com/" target="_blank" rel="noopener noreferrer" class="transition hover:text-rose-600 dark:hover:text-rose-300" data-i18n="jjhub.jsd.title">JsuisDechire ↗</a>
+          </h2>
+        </div>
+        <p class="mt-4 flex-1 text-sm leading-relaxed text-gray-600 dark:text-slate-300" data-i18n="jjhub.jsd.description">Un check fun et sérieux pour savoir si tu dois poser le verre : passe les épreuves, découvre ton niveau de déchirement et compare ton score dans le classement.</p>
+        <a href="https://jsuisdechire.com/" target="_blank" rel="noopener noreferrer" class="mt-5 inline-flex items-center font-bold text-rose-600 transition hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200" data-i18n="jjhub.jsd.link">Faire le test →</a>
+      </article>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+# Journal des changements
+
+## 12 septembre 2026 — JJ HUB, branding et déploiement
+
+### Fonctionnalités
+
+- Ajout d’une page JJ HUB accessible depuis le footer.
+- Ajout des six cartes de projets dans l’ordre de référence JJTRONICS : GitHub, JJTRONICS, SondaStream, TestiCool, Guinadi et JsuisDechire.
+- Déploiement des sept mini-jeux, dont le réflexe gobelet (t6) et la conduite (t7).
+
+### Identité visuelle
+
+- Logo horizontal complet en couleur, avec fond transparent, dans l’en-tête.
+- Taille du logo d’en-tête doublée pour une meilleure visibilité.
+- Petit pictogramme placé devant la phrase « Reste en vibe » dans le footer.
+- Pictogramme officiel utilisé dans la carte JsuisDechire du JJ HUB.
+- Favicon et icônes PWA remplacés par des assets de marque aux dimensions attendues.
+
+### Déploiement
+
+- Ajout de [`deploy.sh`](deploy.sh), configurable via `.env.deploy`.
+- Archive sans base SQLite, secrets, environnement virtuel ni uploads locaux.
+- Backup distant automatique avant chaque déploiement.
+- Vérification systemd, des fichiers t6/t7, des logos et des routes HTTP après mise en ligne.
+
+### Documentation
+
+- Audit technique et UX détaillé dans [`AUDIT.md`](AUDIT.md).
+- README mis à jour pour les sept tests, le JJ HUB, le branding et le nouveau workflow de déploiement.

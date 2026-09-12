@@ -742,6 +742,11 @@ def results_page():
 def credits_view():
     return render_template("credits.html", app_name=APP_NAME)
 
+
+@app.route("/jj-hub")
+def jj_hub_view():
+    return render_template("jj_hub.html", app_name=APP_NAME)
+
 LATEST_SCORES_CTE = """
 WITH normalized_scores AS (
     SELECT
