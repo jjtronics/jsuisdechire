@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 from email.message import EmailMessage
+from email.utils import parseaddr
 
 try:
     from authlib.integrations.flask_client import OAuth
@@ -113,7 +114,7 @@ assert get_asset_version(), "Asset version must not be empty"
 def inject_app_settings():
     settings = get_settings()
     if request.path.startswith("/admin") and is_admin_authenticated():
-        return {"app_settings": settings}
+        return {"app_settings": get_admin_client_settings(settings)}
     return {"app_settings": get_public_settings(settings)}
 
 
@@ -265,6 +266,134 @@ DEFAULT_SETTINGS = {
 }
 
 ALLOWED_SETTING_KEYS = frozenset(DEFAULT_SETTINGS.keys())
+
+SETTING_RANGES = {
+    "rxn_trials": (1, 50, int),
+    "rxn_wait_min_ms": (0, 60000, int),
+    "rxn_wait_range_ms": (0, 120000, int),
+    "rxn_false_penalty_min_ms": (0, 120000, int),
+    "rxn_false_penalty_range_ms": (0, 120000, int),
+    "rxn_median_best_ms": (1, 120000, int),
+    "rxn_median_worst_ms": (1, 120000, int),
+    "str_rounds": (1, 100, int),
+    "str_acc_weight": (0, 1, float),
+    "str_speed_weight": (0, 1, float),
+    "str_speed_best_ms": (1, 120000, int),
+    "str_speed_worst_ms": (1, 120000, int),
+    "prs_timeSpeed": (0.1, 5, float),
+    "prs_duration_ms": (2000, 30000, int),
+    "prs_captureRadius": (8, 200, float),
+    "prs_jitterAmp": (0, 0.3, float),
+    "prs_max_attempts": (1, 50, int),
+    "bal_duration_ms": (3000, 30000, int),
+    "bal_low_good": (0.001, 2, float),
+    "bal_high_bad": (0.002, 3, float),
+    "bal_lin_rel_tol": (0, 10, float),
+    "bal_cheat_std_threshold": (0, 2, float),
+    "bal_cheat_min_events": (0, 100000, int),
+    "mem_pairs": (2, 12, int),
+    "mem_initial_reveal_ms": (300, 6000, int),
+    "mem_mismatch_hide_ms": (150, 4000, int),
+    "mem_accuracy_weight": (0, 1, float),
+    "mem_speed_weight": (0, 1, float),
+    "mem_time_best_ms": (5000, 180000, int),
+    "mem_time_worst_ms": (6000, 300000, int),
+    "rfl_attempts": (1, 20, int),
+    "rfl_velocity_scale": (0.5, 20, float),
+    "rfl_gravity": (200, 4000, float),
+    "rfl_cup_speed_min": (10, 400, float),
+    "rfl_cup_speed_max": (20, 500, float),
+    "rfl_success_weight": (0, 1, float),
+    "rfl_accuracy_weight": (0, 1, float),
+    "rfl_accuracy_tolerance_px": (10, 300, float),
+    "drv_lane_count": (2, 5, int),
+    "drv_duration_ms": (5000, 120000, int),
+    "drv_initial_speed_px_s": (60, 500, float),
+    "drv_speed_growth_per_s": (0, 20, float),
+    "drv_spawn_interval_ms": (200, 4000, int),
+    "drv_spawn_jitter_ms": (0, 3000, int),
+    "drv_collision_penalty": (0, 50, float),
+    "drv_max_collisions": (1, 20, int),
+    "drv_time_weight": (0, 1, float),
+    "drv_avoid_weight": (0, 1, float),
+    "session_total_games": (1, 7, int),
+    "nickname_max_length": (1, 128, int),
+    "smtp_port": (1, 65535, int),
+}
+BOOLEAN_SETTING_KEYS = frozenset({
+    "game_rxn_enabled",
+    "game_str_enabled",
+    "game_prs_enabled",
+    "game_bal_enabled",
+    "game_mem_enabled",
+    "game_rfl_enabled",
+    "game_drv_enabled",
+    "bal_cheat_detection_enabled",
+})
+
+
+def validate_settings(settings: dict) -> list[str]:
+    errors = []
+    for key, (minimum, maximum, expected_type) in SETTING_RANGES.items():
+        if key not in settings:
+            continue
+        value = settings[key]
+        if isinstance(value, bool):
+            errors.append(key)
+            continue
+        if not isinstance(value, (int, float)):
+            errors.append(key)
+            continue
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            errors.append(key)
+            continue
+        if not math.isfinite(number) or not minimum <= number <= maximum:
+            errors.append(key)
+            continue
+        if expected_type is int and number != int(number):
+            errors.append(key)
+
+    for key in BOOLEAN_SETTING_KEYS:
+        if key in settings and not isinstance(settings[key], bool):
+            errors.append(key)
+
+    weight_groups = (
+        ("str_acc_weight", "str_speed_weight"),
+        ("mem_accuracy_weight", "mem_speed_weight"),
+        ("rfl_success_weight", "rfl_accuracy_weight"),
+        ("drv_time_weight", "drv_avoid_weight"),
+    )
+    for first, second in weight_groups:
+        if first in settings and second in settings:
+            try:
+                if not math.isclose(float(settings[first]) + float(settings[second]), 1.0, abs_tol=0.001):
+                    errors.extend((first, second))
+            except (TypeError, ValueError):
+                errors.extend((first, second))
+
+    ordered_pairs = (
+        ("rxn_median_best_ms", "rxn_median_worst_ms"),
+        ("str_speed_best_ms", "str_speed_worst_ms"),
+        ("mem_time_best_ms", "mem_time_worst_ms"),
+        ("bal_low_good", "bal_high_bad"),
+        ("rfl_cup_speed_min", "rfl_cup_speed_max"),
+    )
+    for lower, upper in ordered_pairs:
+        if lower in settings and upper in settings:
+            try:
+                if float(settings[lower]) >= float(settings[upper]):
+                    errors.extend((lower, upper))
+            except (TypeError, ValueError):
+                errors.extend((lower, upper))
+
+    if settings.get("bal_mode") not in {None, "mag", "lin"}:
+        errors.append("bal_mode")
+    if settings.get("smtp_security") not in {None, "none", "starttls", "ssl"}:
+        errors.append("smtp_security")
+
+    return list(dict.fromkeys(errors))
 
 DEFAULT_ADMIN_LOGIN = "admin"
 DEFAULT_ADMIN_PASSWORD_HASH = generate_password_hash("jsuisdechire")
@@ -447,6 +576,13 @@ def get_settings():
 def get_public_settings(settings: Optional[dict] = None) -> dict:
     source = settings if settings is not None else get_settings()
     return {key: value for key, value in source.items() if key not in SENSITIVE_SETTING_KEYS}
+
+
+def get_admin_client_settings(settings: Optional[dict] = None) -> dict:
+    """Expose admin settings to the browser without exposing the SMTP secret."""
+    source = dict(settings if settings is not None else get_settings())
+    source["smtp_password"] = ""
+    return source
 
 
 def safe_next_url(value: Optional[str]) -> Optional[str]:
@@ -658,8 +794,8 @@ def _resolve_smtp_security(value: Optional[str]) -> str:
     return value
 
 
-def send_email_via_smtp(*, subject: str, body: str, recipient: str) -> bool:
-    settings = get_settings()
+def send_email_via_smtp(*, subject: str, body: str, recipient: str, settings: Optional[dict] = None) -> bool:
+    settings = settings or get_settings()
     host = (settings.get("smtp_host") or "").strip()
     sender = (settings.get("smtp_sender") or "").strip()
     username = (settings.get("smtp_username") or "").strip()
@@ -717,7 +853,6 @@ def test_smtp_connection(settings: Optional[dict] = None) -> tuple[bool, str]:
     host = (settings.get("smtp_host") or "").strip()
     username = (settings.get("smtp_username") or "").strip()
     password = settings.get("smtp_password") or ""
-    sender = (settings.get("smtp_sender") or "").strip()
     try:
         port = int(settings.get("smtp_port"))
     except (TypeError, ValueError):
@@ -726,8 +861,6 @@ def test_smtp_connection(settings: Optional[dict] = None) -> tuple[bool, str]:
 
     if not host or not port:
         return False, "incomplete"
-    if not sender and not username:
-        return False, "sender_missing"
 
     context = ssl.create_default_context()
     try:
@@ -1189,7 +1322,7 @@ def leaderboard():
 def api_settings():
     settings = get_settings()
     if is_admin_authenticated():
-        return jsonify(settings)
+        return jsonify(get_admin_client_settings(settings))
     return jsonify(get_public_settings(settings))
 
 @app.post("/api/admin/settings")
@@ -1197,6 +1330,13 @@ def api_settings():
 def api_admin_settings():
     data = request.get_json(silent=True) or {}
     filtered = {k: data[k] for k in data if k in ALLOWED_SETTING_KEYS}
+    if "smtp_password" in filtered and not str(filtered["smtp_password"] or ""):
+        filtered.pop("smtp_password")
+    candidate = get_settings()
+    candidate.update(filtered)
+    validation_errors = validate_settings(candidate)
+    if validation_errors:
+        return jsonify({"ok": False, "error": "invalid_settings", "fields": validation_errors[:20]}), 400
     set_settings(filtered)
     return jsonify({"ok": True, "saved": filtered})
 
@@ -1207,13 +1347,45 @@ def api_admin_smtp_test():
     data = request.get_json(silent=True) or {}
     settings = get_settings()
     for key in SENSITIVE_SETTING_KEYS:
-        if key in data:
+        if key in data and (key != "smtp_password" or str(data[key] or "")):
             settings[key] = data[key]
 
     ok, status = test_smtp_connection(settings)
     if ok:
         return jsonify({"ok": True})
     return jsonify({"ok": False, "error": status}), 400
+
+
+@app.post("/api/admin/smtp-test-email")
+@require_admin
+def api_admin_smtp_test_email():
+    data = request.get_json(silent=True) or {}
+    recipient = (data.get("recipient") or "").strip()
+    _, parsed_address = parseaddr(recipient)
+    if not parsed_address or parsed_address != recipient or "@" not in parsed_address or len(parsed_address) > 254:
+        return jsonify({"ok": False, "error": "invalid_recipient"}), 400
+
+    settings = get_settings()
+    for key in SENSITIVE_SETTING_KEYS:
+        if key in data and (key != "smtp_password" or str(data[key] or "")):
+            settings[key] = data[key]
+
+    validation_errors = validate_settings(settings)
+    if validation_errors:
+        return jsonify({"ok": False, "error": "invalid_settings", "fields": validation_errors[:20]}), 400
+
+    if not settings.get("smtp_sender") and not settings.get("smtp_username"):
+        return jsonify({"ok": False, "error": "sender_missing"}), 400
+
+    sent = send_email_via_smtp(
+        subject="Email de test — jsuisdechire",
+        body="Ceci est un email de test envoyé depuis la configuration SMTP de jsuisdechire.com.",
+        recipient=recipient,
+        settings=settings,
+    )
+    if not sent:
+        return jsonify({"ok": False, "error": "send_failed"}), 502
+    return jsonify({"ok": True})
 
 
 @app.get("/api/admin/credentials")

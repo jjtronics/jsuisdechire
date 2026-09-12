@@ -90,7 +90,8 @@ Le script exclut la base SQLite, les secrets, l’environnement virtuel et les u
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques).
-- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test ou tester la connexion SMTP sans envoyer d’email.
+- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
+- Le mot de passe SMTP n’est jamais injecté dans le HTML de l’admin ; un champ vide conserve le secret existant.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.
 
 ### 🎨 Personnalisation rapide
@@ -163,7 +164,8 @@ python app.py  # defaults to 0.0.0.0:9001
 
 ### 👩‍💻 Admin & scoring
 - Admin login: `/admin`; use a unique login and password.
-- Change credentials, clear scores, or fine-tune each mini-game from the dashboard.
+- Change credentials, clear scores, fine-tune each mini-game, validate settings, or test SMTP delivery to an explicit address from the dashboard.
+- The SMTP password is never injected into the admin HTML; leaving the field blank keeps the existing secret.
 - `/api/submit` stores total + per-test scores, timestamp, and nickname.
 
 ### 🎨 Customization tips
@@ -235,7 +237,8 @@ python app.py  # espone 0.0.0.0:9001
 
 ### 👩‍💻 Admin & punteggi
 - Login admin: `/admin`; usa credenziali uniche.
-- Dal pannello puoi cambiare credenziali, cancellare i punteggi o calibrare ogni mini-gioco.
+- Dal pannello puoi cambiare credenziali, cancellare i punteggi, calibrare ogni mini-gioco, validare i parametri o testare l’invio SMTP verso un indirizzo esplicito.
+- La password SMTP non viene mai inserita nell’HTML dell’admin; lasciare vuoto il campo conserva il segreto esistente.
 - `/api/submit` salva punteggio totale, dettaglio per test, timestamp e nickname.
 
 ### 🎨 Personalizzazione rapida

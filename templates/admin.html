@@ -106,6 +106,7 @@
       </div>
       <div class="flex flex-wrap items-center gap-2.5">
         <button id="saveBtn" type="button" class="inline-flex items-center justify-center rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300/60" data-i18n="admin.save_button">Enregistrer</button>
+        <button id="resetSettingsBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-white/40 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40" data-i18n="admin.reset_button">Revenir aux valeurs sauvegardées</button>
         <button id="clearBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-red-300/50 px-4 py-2.5 text-sm font-semibold text-red-200 transition hover:border-red-200 hover:bg-red-400/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60" data-i18n="admin.clear_button">Vider les scores</button>
         <button id="editScoresBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-white/40 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40" data-i18n="admin.scores.open_label" data-i18n-attr="data-open-label:admin.scores.open_label,data-close-label:admin.scores.close_label,data-confirm-label:admin.scores.confirm_delete">Éditer les scores</button>
         <p id="msg" class="w-full text-xs text-slate-300 lg:w-auto"></p>
@@ -172,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'smtp_host', label:'admin.fields.email.host', type:'text'},
         {k:'smtp_port', label:'admin.fields.email.port', type:'number', step:'1', min:'1'},
         {k:'smtp_username', label:'admin.fields.email.username', type:'text'},
-        {k:'smtp_password', label:'admin.fields.email.password', type:'password'},
+        {k:'smtp_password', label:'admin.fields.email.password', helper:'admin.helpers.email.password', type:'password'},
         {k:'smtp_sender', label:'admin.fields.email.sender', type:'email'},
         {k:'smtp_security', label:'admin.fields.email.security', type:'select', options:[['none','admin.fields.email.security.none'], ['starttls','admin.fields.email.security.starttls'], ['ssl','admin.fields.email.security.ssl']]}
       ],
@@ -223,8 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
       fields: [
         {k:'bal_mode', label:'admin.fields.balance.mode', helper:'admin.helpers.balance.mode', type:'select', options:[['mag','admin.fields.balance.mode.magnitude'], ['lin','admin.fields.balance.mode.linear']]},
         {k:'bal_duration_ms', label:'admin.fields.balance.duration', helper:'admin.helpers.balance.duration', type:'number', step:'100', min:'3000', max:'30000'},
-        {k:'bal_low_good', label:'admin.fields.balance.low_good', helper:'admin.helpers.balance.low_good', type:'number', step:'0.01', min:'0.01', max:'2'},
-        {k:'bal_high_bad', label:'admin.fields.balance.high_bad', helper:'admin.helpers.balance.high_bad', type:'number', step:'0.01', min:'0.02', max:'3'},
+        {k:'bal_low_good', label:'admin.fields.balance.low_good', helper:'admin.helpers.balance.low_good', type:'number', step:'0.001', min:'0', max:'2'},
+        {k:'bal_high_bad', label:'admin.fields.balance.high_bad', helper:'admin.helpers.balance.high_bad', type:'number', step:'0.001', min:'0', max:'3'},
         {k:'bal_lin_rel_tol', label:'admin.fields.balance.rel_tol', helper:'admin.helpers.balance.rel_tol', type:'number', step:'0.01', min:'0'},
         {k:'bal_cheat_detection_enabled', label:'admin.fields.balance.cheat_enabled', helper:'admin.helpers.balance.cheat_enabled', type:'checkbox'},
         {k:'bal_cheat_std_threshold', label:'admin.fields.balance.cheat_std_threshold', helper:'admin.helpers.balance.cheat_std_threshold', type:'number', step:'0.001', min:'0'},
@@ -269,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'drv_lane_count', label:'admin.fields.driving.lane_count', helper:'admin.helpers.driving.lane_count', type:'number', step:'1', min:'2', max:'5'},
         {k:'drv_duration_ms', label:'admin.fields.driving.duration', helper:'admin.helpers.driving.duration', type:'number', step:'500', min:'5000', max:'120000'},
         {k:'drv_initial_speed_px_s', label:'admin.fields.driving.initial_speed', helper:'admin.helpers.driving.initial_speed', type:'number', step:'5', min:'60', max:'500'},
-        {k:'drv_speed_growth_per_s', label:'admin.fields.driving.speed_growth', helper:'admin.helpers.driving.speed_growth', type:'number', step:'0.01', min:'0', max:'1'},
+        {k:'drv_speed_growth_per_s', label:'admin.fields.driving.speed_growth', helper:'admin.helpers.driving.speed_growth', type:'number', step:'0.01', min:'0', max:'20'},
         {k:'drv_spawn_interval_ms', label:'admin.fields.driving.spawn_interval', helper:'admin.helpers.driving.spawn_interval', type:'number', step:'10', min:'200', max:'4000'},
         {k:'drv_spawn_jitter_ms', label:'admin.fields.driving.spawn_jitter', helper:'admin.helpers.driving.spawn_jitter', type:'number', step:'10', min:'0', max:'3000'},
         {k:'drv_collision_penalty', label:'admin.fields.driving.collision_penalty', helper:'admin.helpers.driving.collision_penalty', type:'number', step:'1', min:'0', max:'50'},
@@ -284,12 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.getElementById('adminNavLinks');
   const msg = document.getElementById('msg');
   const settingsState = document.getElementById('settingsState');
+  let settingsDirty = false;
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!==undefined) e.innerHTML=h; return e;};
   const GROUP_BADGES = { general: 'G', games: 'S', email: '✉', reaction: '01', stroop: '02', pursuit: '03', balance: '04', memory: '05', reflex: '06', driving: '07' };
 
   function setSettingsState(state){
     if (!settingsState) return;
     const dirty = state === 'dirty';
+    settingsDirty = dirty;
     settingsState.dataset.i18n = dirty ? 'admin.settings.dirty' : 'admin.settings.clean';
     settingsState.textContent = t(settingsState.dataset.i18n);
     settingsState.className = dirty
@@ -364,7 +367,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     control.id = labelId;
-    control.value = String(val ?? '');
+    if (f.k === 'smtp_password'){
+      control.placeholder = t('admin.fields.email.password_placeholder');
+      control.dataset.i18nAttr = 'placeholder:admin.fields.email.password_placeholder';
+    } else {
+      control.value = String(val ?? '');
+    }
     control.dataset.key = f.k;
 
     card.append(label, control);
@@ -422,6 +430,32 @@ document.addEventListener('DOMContentLoaded', () => {
       controls.append(button, status);
       action.append(copy, controls);
       section.append(action);
+
+      const emailAction = el('div','mt-3 flex flex-col gap-3 rounded-2xl border border-fuchsia-200/70 bg-fuchsia-50/60 p-4 dark:border-fuchsia-900/60 dark:bg-fuchsia-950/20 sm:flex-row sm:items-center sm:justify-between');
+      const emailCopy = el('div','space-y-1');
+      const emailTitle = el('p','text-sm font-bold text-slate-800 dark:text-slate-100', t('admin.smtp.email_title'));
+      emailTitle.dataset.i18n = 'admin.smtp.email_title';
+      const emailDescription = el('p','text-xs leading-5 text-slate-600 dark:text-slate-300', t('admin.smtp.email_description'));
+      emailDescription.dataset.i18n = 'admin.smtp.email_description';
+      emailCopy.append(emailTitle, emailDescription);
+      const emailControls = el('div','flex shrink-0 flex-wrap items-center gap-2');
+      const recipient = el('input','w-full rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-500/15 dark:border-slate-700 dark:bg-slate-950/40 sm:w-56');
+      recipient.type = 'email';
+      recipient.id = 'smtpTestRecipient';
+      recipient.autocomplete = 'email';
+      recipient.placeholder = t('admin.smtp.email_placeholder');
+      recipient.setAttribute('data-i18n-attr', 'placeholder:admin.smtp.email_placeholder');
+      const emailButton = el('button','inline-flex items-center justify-center rounded-xl border border-fuchsia-300 bg-fuchsia-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500/40 disabled:cursor-wait disabled:opacity-60', t('admin.smtp.email_button'));
+      emailButton.type = 'button';
+      emailButton.id = 'smtpEmailTestBtn';
+      emailButton.dataset.i18n = 'admin.smtp.email_button';
+      const emailStatus = el('p','w-full text-xs font-semibold text-slate-600 dark:text-slate-300 sm:w-auto');
+      emailStatus.id = 'smtpEmailTestMsg';
+      emailStatus.setAttribute('role', 'status');
+      emailStatus.setAttribute('aria-live', 'polite');
+      emailControls.append(recipient, emailButton, emailStatus);
+      emailAction.append(emailCopy, emailControls);
+      section.append(emailAction);
     }
 
     return section;
@@ -442,35 +476,92 @@ document.addEventListener('DOMContentLoaded', () => {
       msg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
     }
   }
-  async function save(){
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) saveBtn.disabled = true;
-    const data={};
+
+  async function resetSettings(){
+    if (settingsDirty && !confirm(t('admin.reset_confirm'))) return;
+    await load();
+    msg.textContent = t('admin.reloaded');
+  }
+
+  function collectSettings(){
+    const data = {};
     wrap.querySelectorAll('input,select').forEach(elm=>{
       const key = elm.dataset.key;
       if (!key) return;
-      let v;
-      if (elm.type==='checkbox'){
-        v = elm.checked;
-      } else if (elm.type==='number'){
-        const raw=(elm.value||'').toString().trim().replace(',', '.');
-        const num=parseFloat(raw);
-        v=isNaN(num)?null:num;
+      if (elm.type === 'checkbox'){
+        data[key] = elm.checked;
+      } else if (elm.type === 'number'){
+        const raw = (elm.value || '').toString().trim().replace(',', '.');
+        data[key] = raw === '' ? null : Number(raw);
       } else {
-        v = elm.value;
+        data[key] = elm.value;
       }
-      data[key] = v;
     });
+    return data;
+  }
+
+  function validateSettings(data){
+    const invalidFields = [];
+    wrap.querySelectorAll('input[type="number"]').forEach(field=>{
+      const value = data[field.dataset.key];
+      if (value === null || !Number.isFinite(value) || !field.checkValidity()){
+        invalidFields.push(field);
+      }
+    });
+    if (invalidFields.length){
+      invalidFields[0].focus();
+      return {ok: false, message: t('admin.validation.range')};
+    }
+
+    const weightGroups = [
+      ['str_acc_weight', 'str_speed_weight'],
+      ['mem_accuracy_weight', 'mem_speed_weight'],
+      ['rfl_success_weight', 'rfl_accuracy_weight'],
+      ['drv_time_weight', 'drv_avoid_weight'],
+    ];
+    for (const [first, second] of weightGroups){
+      if (Math.abs((data[first] || 0) + (data[second] || 0) - 1) > 0.001){
+        return {ok: false, keys: [first, second], message: t('admin.validation.weights')};
+      }
+    }
+
+    const orderedPairs = [
+      ['rxn_median_best_ms', 'rxn_median_worst_ms'],
+      ['str_speed_best_ms', 'str_speed_worst_ms'],
+      ['mem_time_best_ms', 'mem_time_worst_ms'],
+      ['bal_low_good', 'bal_high_bad'],
+      ['rfl_cup_speed_min', 'rfl_cup_speed_max'],
+    ];
+    for (const [lower, upper] of orderedPairs){
+      if (data[lower] >= data[upper]){
+        return {ok: false, keys: [lower, upper], message: t('admin.validation.order')};
+      }
+    }
+    return {ok: true};
+  }
+
+  async function save(){
+    const saveBtn = document.getElementById('saveBtn');
+    const data = collectSettings();
+    const validation = validateSettings(data);
+    if (!validation.ok){
+      msg.className = 'w-full text-xs font-semibold text-rose-300 lg:w-auto';
+      msg.textContent = validation.message;
+      return;
+    }
+    if (saveBtn) saveBtn.disabled = true;
     try {
       const r = await fetch('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       const j = await r.json();
-      msg.textContent = j.ok ? t('admin.saved') : t('common.error');
+      msg.className = j.ok ? 'w-full text-xs text-emerald-300 lg:w-auto' : 'w-full text-xs font-semibold text-rose-300 lg:w-auto';
+      msg.textContent = j.ok ? t('admin.saved') : (j.error === 'invalid_settings' ? t('admin.validation.server') : t('common.error'));
       if (j.ok){
         if (settingsState) settingsState.dataset.state = 'clean';
         setSettingsState('clean');
       }
     } catch (err) {
       console.error('settings_save', err);
+      msg.className = 'w-full text-xs font-semibold text-rose-300 lg:w-auto';
       msg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
     } finally {
       if (saveBtn) saveBtn.disabled = false;
@@ -484,10 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function smtpFormData(){
     const data = {};
+    const settings = collectSettings();
     ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_sender', 'smtp_security'].forEach(key => {
-      const field = wrap.querySelector(`[data-key="${key}"]`);
-      if (!field) return;
-      data[key] = field.type === 'number' ? field.value : field.value;
+      if (Object.prototype.hasOwnProperty.call(settings, key)) data[key] = settings[key];
     });
     return data;
   }
@@ -522,14 +612,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function sendSmtpTestEmail(){
+    const button = document.getElementById('smtpEmailTestBtn');
+    const recipient = document.getElementById('smtpTestRecipient');
+    const status = document.getElementById('smtpEmailTestMsg');
+    if (!button || !recipient || !status) return;
+    const address = recipient.value.trim();
+    if (!recipient.checkValidity() || !address){
+      status.className = 'w-full text-xs font-semibold text-rose-600 dark:text-rose-300 sm:w-auto';
+      status.textContent = t('admin.smtp.recipient_error');
+      recipient.focus();
+      return;
+    }
+    button.disabled = true;
+    status.className = 'w-full text-xs font-semibold text-slate-500 dark:text-slate-400 sm:w-auto';
+    status.textContent = t('admin.smtp.email_testing');
+    try {
+      const response = await fetch('/api/admin/smtp-test-email', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({...smtpFormData(), recipient: address})
+      });
+      const result = await response.json();
+      if (result.ok){
+        status.className = 'w-full text-xs font-semibold text-emerald-600 dark:text-emerald-300 sm:w-auto';
+        status.textContent = t('admin.smtp.email_success');
+      } else {
+        status.className = 'w-full text-xs font-semibold text-rose-600 dark:text-rose-300 sm:w-auto';
+        status.textContent = t('admin.smtp.email_error');
+      }
+    } catch (err) {
+      console.error('smtp_test_email', err);
+      status.className = 'w-full text-xs font-semibold text-rose-600 dark:text-rose-300 sm:w-auto';
+      status.textContent = t('admin.smtp.email_error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   document.getElementById('saveBtn').addEventListener('click', save);
+  document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
   document.getElementById('clearBtn').addEventListener('click', clearScores);
   wrap.addEventListener('click', event => {
     if (event.target.closest('#smtpTestBtn')) testSmtp();
+    if (event.target.closest('#smtpEmailTestBtn')) sendSmtpTestEmail();
   });
-  wrap.addEventListener('input', markSettingsDirty);
-  wrap.addEventListener('change', markSettingsDirty);
+  wrap.addEventListener('input', event => {
+    if (event.target.matches('[data-key]')) markSettingsDirty();
+  });
+  wrap.addEventListener('change', event => {
+    if (event.target.matches('[data-key]')) markSettingsDirty();
+  });
   setSettingsState('clean');
+  window.addEventListener('beforeunload', event => {
+    if (!settingsDirty) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
   load();
 
   const userTable = document.getElementById('userTable');

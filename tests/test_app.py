@@ -110,6 +110,53 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "incomplete")
 
+    def test_admin_does_not_render_smtp_password_and_blank_keeps_existing_secret(self):
+        secret = "smtp-secret-for-test"
+        with app_module.app.app_context():
+            app_module.set_settings({
+                "smtp_host": "smtp.example.test",
+                "smtp_password": secret,
+            })
+
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.ADMIN_SESSION_KEY] = True
+        admin_html = self.client.get("/admin").get_data(as_text=True)
+        self.assertNotIn(secret, admin_html)
+        self.assertIn("admin.fields.email.password_placeholder", admin_html)
+        self.assertEqual(self.client.get("/api/settings").get_json()["smtp_password"], "")
+
+        response = self.client.post(
+            "/api/admin/settings",
+            json={"smtp_password": ""},
+            headers={"X-CSRFToken": self.csrf_token},
+        )
+        self.assertEqual(response.status_code, 200)
+        with app_module.app.app_context():
+            settings = app_module.get_settings()
+        self.assertEqual(settings["smtp_password"], secret)
+
+    def test_admin_settings_reject_incoherent_weights(self):
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.ADMIN_SESSION_KEY] = True
+        response = self.client.post(
+            "/api/admin/settings",
+            json={"str_acc_weight": 0.8, "str_speed_weight": 0.8},
+            headers={"X-CSRFToken": self.csrf_token},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "invalid_settings")
+
+    def test_smtp_test_email_rejects_invalid_recipient_without_sending(self):
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.ADMIN_SESSION_KEY] = True
+        response = self.client.post(
+            "/api/admin/smtp-test-email",
+            json={"recipient": "not-an-email"},
+            headers={"X-CSRFToken": self.csrf_token},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "invalid_recipient")
+
 
 if __name__ == "__main__":
     unittest.main()

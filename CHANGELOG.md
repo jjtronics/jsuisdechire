@@ -29,6 +29,11 @@
 - Réorganisation des réglages admin dans l’ordre des tests 1 à 7.
 - Refonte de la page des paramètres admin : en-tête dédié, navigation par sections, champs plus lisibles, état des modifications et barre d’actions persistante.
 - Ajout d’un diagnostic SMTP admin : vérification de la connexion, du chiffrement et de l’authentification sans envoi d’email.
+- Sécurisation des paramètres SMTP : le mot de passe n’est plus injecté dans la page admin et reste inchangé si le champ est vide.
+- Validation cohérente des seuils, durées et pondérations avant sauvegarde, avec avertissement en cas de modifications non enregistrées et retour aux valeurs sauvegardées.
+- Ajout d’un envoi d’email de test vers une adresse explicitement saisie.
+- Suppression des anciennes variantes JavaScript t3/t4 non référencées ; les versions actives restent `t3.v156.js` et `t4.v157.js`.
+- Le bouton SMTP distingue désormais le diagnostic de connexion d’un envoi d’email de test vers un destinataire explicitement saisi.
 - Tailwind compilé localement, validation et limitation des soumissions renforcées, tests automatisés ajoutés.
 - Classement et détails de résultats harmonisés dans l’ordre des tests 1 à 7, avec améliorations d’accessibilité et de cache PWA.
 - Correction de l’enregistrement des scores : le nombre de paramètres SQL correspond désormais aux 31 colonnes utilisées.
