@@ -90,7 +90,7 @@ Le script exclut la base SQLite, les secrets, l’environnement virtuel et les u
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques).
-- Tu peux modifier login/mot de passe, purger les scores ou ajuster les paramètres de chaque test.
+- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test ou tester la connexion SMTP sans envoyer d’email.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.
 
 ### 🎨 Personnalisation rapide

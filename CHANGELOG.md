@@ -27,6 +27,7 @@
 - Ajout de descriptions courtes pour clarifier chaque mini-jeu dans l’administration.
 - Réorganisation des réglages admin dans l’ordre des tests 1 à 7.
 - Refonte de la page des paramètres admin : en-tête dédié, navigation par sections, champs plus lisibles, état des modifications et barre d’actions persistante.
+- Ajout d’un diagnostic SMTP admin : vérification de la connexion, du chiffrement et de l’authentification sans envoi d’email.
 - Tailwind compilé localement, validation et limitation des soumissions renforcées, tests automatisés ajoutés.
 - Classement et détails de résultats harmonisés dans l’ordre des tests 1 à 7, avec améliorations d’accessibilité et de cache PWA.
 - Correction de l’enregistrement des scores : le nombre de paramètres SQL correspond désormais aux 31 colonnes utilisées.

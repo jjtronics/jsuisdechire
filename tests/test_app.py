@@ -99,6 +99,17 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertEqual(responses[6].status_code, 429)
         self.assertEqual(responses[6].headers["Retry-After"], "60")
 
+    def test_smtp_test_is_admin_only_and_does_not_send_when_incomplete(self):
+        headers = {"X-CSRFToken": self.csrf_token}
+        unauthenticated = self.client.post("/api/admin/smtp-test", json={}, headers=headers)
+        self.assertEqual(unauthenticated.status_code, 401)
+
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.ADMIN_SESSION_KEY] = True
+        response = self.client.post("/api/admin/smtp-test", json={}, headers=headers)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "incomplete")
+
 
 if __name__ == "__main__":
     unittest.main()

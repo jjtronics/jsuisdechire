@@ -711,6 +711,55 @@ def send_email_via_smtp(*, subject: str, body: str, recipient: str) -> bool:
     return True
 
 
+def test_smtp_connection(settings: Optional[dict] = None) -> tuple[bool, str]:
+    """Check SMTP reachability and authentication without sending a message."""
+    settings = settings or get_settings()
+    host = (settings.get("smtp_host") or "").strip()
+    username = (settings.get("smtp_username") or "").strip()
+    password = settings.get("smtp_password") or ""
+    sender = (settings.get("smtp_sender") or "").strip()
+    try:
+        port = int(settings.get("smtp_port"))
+    except (TypeError, ValueError):
+        port = 0
+    security = _resolve_smtp_security(settings.get("smtp_security"))
+
+    if not host or not port:
+        return False, "incomplete"
+    if not sender and not username:
+        return False, "sender_missing"
+
+    context = ssl.create_default_context()
+    try:
+        if security == "ssl":
+            with smtplib.SMTP_SSL(host, port, timeout=20, context=context) as server:
+                server.ehlo()
+                if username:
+                    server.login(username, password)
+        else:
+            with smtplib.SMTP(host, port, timeout=20) as server:
+                server.ehlo()
+                if security == "starttls":
+                    server.starttls(context=context)
+                    server.ehlo()
+                if username:
+                    server.login(username, password)
+    except smtplib.SMTPAuthenticationError:
+        app.logger.warning("SMTP test authentication failed")
+        return False, "authentication"
+    except ssl.SSLError:
+        app.logger.warning("SMTP test TLS negotiation failed")
+        return False, "tls"
+    except (OSError, smtplib.SMTPException, TimeoutError):
+        app.logger.warning("SMTP test connection failed")
+        return False, "connection"
+    except Exception:  # pragma: no cover - defensive boundary for external SMTP services
+        app.logger.exception("Unexpected SMTP test failure")
+        return False, "unknown"
+
+    return True, "ok"
+
+
 def send_password_reset_email(user: sqlite3.Row, reset_url: str) -> bool:
     mapping = dict(user)
     nickname = mapping.get("user_nickname") or mapping.get("nickname")
@@ -1150,6 +1199,21 @@ def api_admin_settings():
     filtered = {k: data[k] for k in data if k in ALLOWED_SETTING_KEYS}
     set_settings(filtered)
     return jsonify({"ok": True, "saved": filtered})
+
+
+@app.post("/api/admin/smtp-test")
+@require_admin
+def api_admin_smtp_test():
+    data = request.get_json(silent=True) or {}
+    settings = get_settings()
+    for key in SENSITIVE_SETTING_KEYS:
+        if key in data:
+            settings[key] = data[key]
+
+    ok, status = test_smtp_connection(settings)
+    if ok:
+        return jsonify({"ok": True})
+    return jsonify({"ok": False, "error": status}), 400
 
 
 @app.get("/api/admin/credentials")
