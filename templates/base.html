@@ -73,34 +73,31 @@
   <meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
 
   {% if google_analytics_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
   <script>
     (() => {
       const measurementId = {{ google_analytics_id | tojson }};
       const consentKey = 'jsd:analytics-consent';
+      let analyticsConfigured = false;
 
       const loadAnalytics = () => {
-        if (window.gtag) return;
+        if (analyticsConfigured) return;
+        analyticsConfigured = true;
         window.dataLayer = window.dataLayer || [];
         window.gtag = function() { window.dataLayer.push(arguments); };
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
-        script.addEventListener('load', () => {
-          window.gtag('consent', 'update', {
-            analytics_storage: 'granted',
-            ad_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied'
-          });
-          window.gtag('js', new Date());
-          window.gtag('config', measurementId, {
-            send_page_view: false,
-            allow_google_signals: false,
-            allow_ad_personalization_signals: false
-          });
-          window.gtag('event', 'page_view', { send_to: measurementId });
-        }, { once: true });
-        document.head.appendChild(script);
+        window.gtag('consent', 'update', {
+          analytics_storage: 'granted',
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied'
+        });
+        window.gtag('js', new Date());
+        window.gtag('config', measurementId, {
+          send_page_view: false,
+          allow_google_signals: false,
+          allow_ad_personalization_signals: false
+        });
+        window.gtag('event', 'page_view', { send_to: measurementId });
       };
 
       const showBanner = () => {
