@@ -29,6 +29,7 @@
       <p class="text-center text-xs text-gray-500 dark:text-slate-400">Affiché en rond ~96px dans le classement.</p>
     </div>
     <form method="post" enctype="multipart/form-data" class="mt-6 grid gap-4" id="avatarForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
       <div>
         <label for="avatar" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Téléverser une image</label>
         <input
@@ -43,6 +44,7 @@
       <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2">Mettre à jour mon avatar</button>
     </form>
     <form method="post" class="mt-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
       <input type="hidden" name="action" value="remove" />
       <button type="submit" class="text-xs text-rose-500 hover:underline disabled:opacity-40" {% if not has_avatar %}disabled{%endif %}>Retirer mon avatar</button>
     </form>
@@ -51,6 +53,7 @@
         <h2 class="text-xl font-bold">Mon adresse e-mail</h2>
         <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">Modifie ton adresse de contact. Elle sert aussi pour la connexion.</p>
         <form method="post" class="mt-4 grid gap-4">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
           <input type="hidden" name="action" value="update_email" />
           <div>
             <label for="profileEmail" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Nouvelle adresse e-mail</label>
@@ -95,6 +98,7 @@
           {% endif %}
         </p>
         <form method="post" class="mt-4 grid gap-4">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
           <input type="hidden" name="action" value="update_password" />
           <div>
             <label for="profileCurrentPassword" class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Mot de passe actuel</label>

@@ -59,7 +59,7 @@ python app.py  # démarre sur 0.0.0.0:9001
 - L'application écoute sur `http://localhost:9001`.
 - La base SQLite (`data.sqlite`) est créée automatiquement.
 - Variables utiles :
-  - `SECRET_KEY` (clé de session Flask) – par défaut `dev-secret`.
+  - `SECRET_KEY` (clé de session Flask) – obligatoire en production ; une clé temporaire est générée uniquement en développement.
   - `ASSET_VERSION` pour invalider le cache des assets statiques.
 
 ### 🚚 Déploiement
@@ -76,10 +76,10 @@ Les paramètres peuvent être placés dans un fichier local `.env.deploy` non ve
 REMOTE_HOST=192.168.1.30 RUN_HTTP_CHECKS=0 ./deploy.sh
 ```
 
-Le script exclut la base SQLite, les secrets, l’environnement virtuel et les uploads locaux de l’archive ; il sauvegarde l’installation distante avant copie, redémarre le service et contrôle les routes principales ainsi que les nouveaux assets de marque.
+Le script exclut la base SQLite, les secrets, l’environnement virtuel et les uploads locaux de l’archive ; il sauvegarde l’installation distante avant copie, installe la configuration Gunicorn/systemd, crée une clé de session de production si nécessaire, redémarre le service et contrôle les routes principales ainsi que les nouveaux assets de marque.
 
 ### 👩‍💻 Admin & scores
-- Accès admin : `/admin` (login initial **admin/jsuisdechire**).
+- Accès admin : `/admin` (utiliser un login et un mot de passe uniques).
 - Tu peux modifier login/mot de passe, purger les scores ou ajuster les paramètres de chaque test.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.
 
@@ -152,7 +152,7 @@ python app.py  # defaults to 0.0.0.0:9001
   - `ASSET_VERSION` – bump to bust static caches.
 
 ### 👩‍💻 Admin & scoring
-- Admin login: `/admin` with **admin/jsuisdechire** by default.
+- Admin login: `/admin`; use a unique login and password.
 - Change credentials, clear scores, or fine-tune each mini-game from the dashboard.
 - `/api/submit` stores total + per-test scores, timestamp, and nickname.
 
@@ -188,7 +188,7 @@ MIT License (see [LICENSE](LICENSE)).
 - **Schermata risultati stilosa** con riepilogo, dettagli per test e pulsante di condivisione.
 - **Classifica pubblica** (`/leaderboard`) che si aggiorna automaticamente dopo ogni run.
 - **Pannello admin** (`/admin`) per ritoccare i parametri o pulire il database.
-- **Modalità quasi offline** grazie al service worker e agli asset versionati.
+- **Modalità offline parziale** grazie al service worker e agli asset versionati.
 - **I18n dinamica** (`static/js/i18n.js`) + switch tema chiaro/scuro.
 
 ### 🛠️ Stack & architettura
@@ -224,7 +224,7 @@ python app.py  # espone 0.0.0.0:9001
   - `ASSET_VERSION` – incrementa per forzare il refresh degli asset statici.
 
 ### 👩‍💻 Admin & punteggi
-- Login admin: `/admin` con credenziali iniziali **admin/jsuisdechire**.
+- Login admin: `/admin`; usa credenziali uniche.
 - Dal pannello puoi cambiare credenziali, cancellare i punteggi o calibrare ogni mini-gioco.
 - `/api/submit` salva punteggio totale, dettaglio per test, timestamp e nickname.
 

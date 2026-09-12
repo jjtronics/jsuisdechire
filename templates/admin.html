@@ -13,6 +13,7 @@
         <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.credentials.description">Renseigne ton mot de passe actuel pour modifier le login et/ou définir un nouveau mot de passe.</p>
       </div>
       <form action="{{ url_for('admin_logout') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
         <button class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/40" type="submit" data-i18n="nav.logout">Se déconnecter</button>
       </form>
     </div>
@@ -122,13 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'admin.groups.games.title',
       description: 'admin.groups.games.description',
       fields: [
-        {k:'game_rxn_enabled', label:'admin.fields.games.reaction_enabled', type:'checkbox'},
-        {k:'game_str_enabled', label:'admin.fields.games.stroop_enabled', type:'checkbox'},
-        {k:'game_prs_enabled', label:'admin.fields.games.pursuit_enabled', type:'checkbox'},
-        {k:'game_bal_enabled', label:'admin.fields.games.balance_enabled', type:'checkbox'},
-        {k:'game_mem_enabled', label:'admin.fields.games.memory_enabled', type:'checkbox'},
-        {k:'game_rfl_enabled', label:'admin.fields.games.reflex_enabled', type:'checkbox'},
-        {k:'game_drv_enabled', label:'admin.fields.games.driving_enabled', type:'checkbox'},
+        {k:'game_rxn_enabled', label:'admin.fields.games.reaction_enabled', helper:'admin.helpers.games.reaction_enabled', type:'checkbox'},
+        {k:'game_str_enabled', label:'admin.fields.games.stroop_enabled', helper:'admin.helpers.games.stroop_enabled', type:'checkbox'},
+        {k:'game_prs_enabled', label:'admin.fields.games.pursuit_enabled', helper:'admin.helpers.games.pursuit_enabled', type:'checkbox'},
+        {k:'game_bal_enabled', label:'admin.fields.games.balance_enabled', helper:'admin.helpers.games.balance_enabled', type:'checkbox'},
+        {k:'game_mem_enabled', label:'admin.fields.games.memory_enabled', helper:'admin.helpers.games.memory_enabled', type:'checkbox'},
+        {k:'game_rfl_enabled', label:'admin.fields.games.reflex_enabled', helper:'admin.helpers.games.reflex_enabled', type:'checkbox'},
+        {k:'game_drv_enabled', label:'admin.fields.games.driving_enabled', helper:'admin.helpers.games.driving_enabled', type:'checkbox'},
         {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'7'}
       ]
     },

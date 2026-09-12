@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Déploiement de jsuisdechire vers le serveur Flask de production.
+# Déploiement de jsuisdechire vers le serveur de production.
 # Usage : ./deploy.sh
 # Surcharges possibles : REMOTE_HOST=... RUN_HTTP_CHECKS=0 ./deploy.sh
 
@@ -72,6 +72,7 @@ require_file static/js/t6.js
 require_file static/js/t7.js
 require_file static/icons/icon-192.png
 require_file static/icons/icon-512.png
+require_file systemd/jsuisdechire.service
 
 if command -v python3 >/dev/null 2>&1; then
   echo "Vérification syntaxique de app.py..."
@@ -154,7 +155,7 @@ run_root tar \
 mkdir -p "$STAGING_DIR"
 tar -xzf "/tmp/${REMOTE_ARCHIVE}" -C "$STAGING_DIR"
 
-for required_file in app.py templates/base.html templates/t6.html templates/t7.html static/js/t6.js static/js/t7.js static/icons/icon-192.png static/icons/icon-512.png; do
+for required_file in app.py templates/base.html templates/t6.html templates/t7.html static/js/t6.js static/js/t7.js static/icons/icon-192.png static/icons/icon-512.png systemd/jsuisdechire.service; do
   if [[ ! -f "${STAGING_DIR}/${required_file}" ]]; then
     echo "Fichier absent de l'archive : ${required_file}" >&2
     exit 1
@@ -168,12 +169,25 @@ run_root cp -a "${STAGING_DIR}/templates/." "${REMOTE_APP_DIR}/templates/"
 run_root cp -a "${STAGING_DIR}/static/." "${REMOTE_APP_DIR}/static/"
 run_root chown -R "${REMOTE_APP_USER}:${REMOTE_APP_GROUP}" "${REMOTE_APP_DIR}/templates" "${REMOTE_APP_DIR}/static"
 
+echo "Installation de la configuration systemd de production..."
+run_root install -o root -g root -m 0644 "${STAGING_DIR}/systemd/jsuisdechire.service" "/etc/systemd/system/${REMOTE_SERVICE}.service"
+if ! run_root grep -Eq '^SECRET_KEY=.{32,}$' /etc/jsuisdechire.env 2>/dev/null; then
+  echo "Génération d'une clé de session de production..."
+  SECRET_KEY_VALUE="$(openssl rand -hex 32)"
+  printf 'SECRET_KEY=%s\n' "$SECRET_KEY_VALUE" > "${STAGING_DIR}/production.env"
+  run_root install -o root -g "$REMOTE_APP_GROUP" -m 0640 "${STAGING_DIR}/production.env" /etc/jsuisdechire.env
+  unset SECRET_KEY_VALUE
+fi
+run_root systemctl daemon-reload
+run_root systemctl enable "$REMOTE_SERVICE"
+
 echo "Vérification des fichiers t6/t7 et des logos..."
 run_root test -f "${REMOTE_APP_DIR}/templates/t6.html"
 run_root test -f "${REMOTE_APP_DIR}/templates/t7.html"
 run_root test -f "${REMOTE_APP_DIR}/static/js/t6.js"
 run_root test -f "${REMOTE_APP_DIR}/static/js/t7.js"
 run_root test -f "${REMOTE_APP_DIR}/static/branding/logo-horizontal.png"
+run_root test -f "${REMOTE_APP_DIR}/static/branding/logo-horizontal.webp"
 run_root test -f "${REMOTE_APP_DIR}/static/icons/icon-192.png"
 run_root test -f "${REMOTE_APP_DIR}/static/icons/icon-512.png"
 
@@ -192,7 +206,7 @@ REMOTE_SCRIPT
 if [[ "$RUN_HTTP_CHECKS" == "1" ]]; then
   require_command curl
   echo "Contrôles HTTP publics..."
-  for route in / /t6 /t7 /jj-hub /static/branding/logo-horizontal.png /static/icons/icon-192.png /static/icons/icon-512.png; do
+  for route in / /t6 /t7 /jj-hub /static/branding/logo-horizontal.png /static/branding/logo-horizontal.webp /static/icons/icon-192.png /static/icons/icon-512.png; do
     code="$(curl -L -sS --max-time "$HTTP_TIMEOUT" -o /dev/null -w '%{http_code}' "${PUBLIC_URL}${route}")"
     echo "${code} ${route}"
     if [[ "$code" != "200" ]]; then

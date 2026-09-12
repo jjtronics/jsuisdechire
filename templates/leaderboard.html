@@ -330,7 +330,8 @@
     </div>
   </div>
   {% endif %}
-  <div class="w-full overflow-x-auto">
+  <p class="mb-3 text-sm text-slate-600 dark:text-slate-300 md:hidden">Touchez un joueur pour afficher le détail de ses scores.</p>
+  <div class="hidden w-full overflow-x-auto md:block">
   {% set active_sort_key = sort_key|default('total_score', true) %}
   {% set active_sort_order = sort_order|default('desc', true) %}
   {% set sort_defaults = sort_defaults|default({}, true) %}
@@ -494,6 +495,40 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
+  <div class="space-y-3 md:hidden" aria-label="Classement mobile">
+    {% for r in rows %}
+    {% set is_cheater = r['is_cheater'] %}
+    {% set cheat_info = r['cheat_details'] if r['cheat_details'] else {} %}
+    {% set cheat_std = cheat_info.get('std_g') if cheat_info else None %}
+    {% set cheat_threshold = cheat_info.get('threshold') if cheat_info else None %}
+    {% set cheat_title = None %}
+    {% if is_cheater %}
+      {% set cheat_title = 'σ ≈ ' ~ ('%.3f' % cheat_std if cheat_std is not none else '—') ~ ' g · threshold ' ~ ('%.3f' % cheat_threshold if cheat_threshold is not none else '—') ~ ' g' %}
+    {% endif %}
+    <details class="overflow-hidden rounded-2xl border border-rose-100/70 bg-white/80 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 {% if is_cheater %}cheater-row{% endif %}" data-nickname="{{ r['nickname'] or '' }}">
+      <summary class="flex cursor-pointer list-none items-center gap-3 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">
+        <span class="w-7 shrink-0 text-sm font-bold text-slate-500 dark:text-slate-400">{{ rank_start + loop.index }}</span>
+        {{ render_avatar(r['avatar_path'] if r['verified_user_id'] else None, r['nickname'], 'sm', is_cheater, r['cheat_avatar_path'] or app_settings.get('bal_cheat_avatar_path'), r['verified_user_id'] is not none) }}
+        <span class="min-w-0 flex-1 truncate font-semibold text-slate-800 dark:text-slate-100">{{ r['nickname'] or '—' }}</span>
+        {% if is_cheater %}<span class="cheater-badge" title="{{ cheat_title }}" data-i18n="leaderboard.cheater_badge">Tricheur</span>{% endif %}
+        <span class="shrink-0 text-lg font-black text-rose-600 dark:text-rose-300">{{ r['total_score']|round(1) if r['total_score'] is not none else '—' }} <small class="text-[0.6rem] uppercase tracking-widest">pts</small></span>
+        <span aria-hidden="true" class="text-slate-400">⌄</span>
+      </summary>
+      <div class="grid grid-cols-2 gap-2 border-t border-rose-100/70 bg-rose-50/40 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950/30">
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400">Réaction</span><strong>{{ r['rxn_score']|round(1) if r['rxn_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400">Stroop</span><strong>{{ r['str_score']|round(1) if r['str_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400">Poursuite</span><strong>{{ r['prs_score']|round(1) if r['prs_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400">Réflexe</span><strong>{{ r['rfl_score']|round(1) if r['rfl_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400">Conduite</span><strong>{{ r['drv_score']|round(1) if r['drv_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400">Mémoire</span><strong>{{ r['mem_score']|round(1) if r['mem_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400">Équilibre</span><strong>{{ r['bal_score']|round(1) if r['bal_score'] is not none else '—' }}</strong></div>
+        <div class="col-span-2 border-t border-rose-100/70 pt-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">{{ r['created_at'] | int | datetime }}</div>
+      </div>
+    </details>
+    {% else %}
+    <div class="rounded-2xl border border-rose-100/70 bg-white/80 px-4 py-5 text-center text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900/60" data-i18n="leaderboard.empty">Aucun score pour l'instant.</div>
+    {% endfor %}
   </div>
   {% set has_prev_page = has_prev|default(False, true) %}
   {% set has_next_page = has_next|default(False, true) %}

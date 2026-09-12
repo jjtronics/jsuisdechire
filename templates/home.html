@@ -44,14 +44,8 @@
   <section class="rounded-2xl shadow p-6 bg-white/90 dark:bg-slate-900/60 border border-white/30">
     <h1 class="text-3xl font-black mb-2" data-i18n="home.title">Un check fun & sérieux pour savoir si tu dois poser le verre</h1>
     <p class="text-sm text-gray-600 dark:text-slate-300" data-i18n="home.subtitle">Anonyme, gratuit. Optimisé pour ton téléphone — si t'es bourré devant ton PC, on peut rien pour toi. Résultats indicatifs uniquement.</p>
-    {% set total_games = (app_settings.get('session_total_games') or 6)|int %}
     <ul class="mt-4 text-sm list-disc pl-5 space-y-1 text-gray-600 dark:text-slate-300">
-      <li
-        data-i18n="home.list1"
-        data-i18n-param-count="{{ total_games }}"
-      >
-        {{ total_games }} mini-tests rapides (réaction, couleurs, poursuite, équilibre, mémoire, réflexe gobelet, conduite)
-      </li>
+      <li data-i18n="home.list1">Plusieurs tests rapides : réaction, couleurs, poursuite, équilibre, mémoire, réflexe gobelet et conduite.</li>
       <li data-i18n="home.list2">Aucune donnée envoyée sans ton accord</li>
       <li data-i18n="home.list3">À la fin : ton score est enregistré automatiquement</li>
     </ul>

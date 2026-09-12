@@ -3,7 +3,37 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>JsuisDechire · Le site ultime pour vérifier si ton pote est bourré</title>
+    {% set page_titles = {
+      '/': "JsuisDechire · Le site ultime pour vérifier si ton pote est bourré",
+      '/leaderboard': 'Classement · JsuisDechire',
+      '/jj-hub': 'JJ HUB · JsuisDechire',
+      '/credits': 'Crédits · JsuisDechire',
+      '/login': 'Connexion · JsuisDechire',
+      '/register': 'Inscription · JsuisDechire',
+      '/forgot-password': 'Mot de passe oublié · JsuisDechire',
+      '/admin/login': 'Connexion admin · JsuisDechire',
+      '/t1': 'Test réaction · JsuisDechire',
+      '/t2': 'Test couleurs · JsuisDechire',
+      '/t3': 'Test poursuite · JsuisDechire',
+      '/t4': 'Test équilibre · JsuisDechire',
+      '/t5': 'Test mémoire · JsuisDechire',
+      '/t6': 'Test réflexe gobelet · JsuisDechire',
+      '/t7': 'Test conduite · JsuisDechire',
+      '/results': 'Résultats · JsuisDechire'
+    } %}
+    {% set page_title = page_titles.get(request.path, page_titles['/']) %}
+    <title>{{ page_title }}</title>
+    <meta name="description" content="Un check fun et sérieux avec plusieurs mini-tests pour savoir si tu dois poser le verre. Résultats indicatifs, gratuits et anonymes." />
+    <link rel="canonical" href="{{ request.base_url }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ page_title }}" />
+    <meta property="og:description" content="Plusieurs mini-tests funs pour savoir si tu dois poser le verre." />
+    <meta property="og:url" content="{{ request.base_url }}" />
+    <meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ asset_url('branding/logo-horizontal.webp') }}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ page_title }}" />
+    <meta name="twitter:description" content="Plusieurs mini-tests funs pour savoir si tu dois poser le verre." />
+    <meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}{{ asset_url('branding/logo-horizontal.webp') }}" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','system-ui']}}}}</script>
     <link rel="manifest" href="{{ asset_url('manifest.webmanifest') }}">
@@ -16,29 +46,40 @@
     <script>
       window.jsdConfig = window.jsdConfig || {};
       window.jsdConfig.settings = {{ app_settings | tojson | safe }};
+      window.jsdCsrfToken = {{ csrf_token | tojson }};
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = (input, init = {}) => {
+        const method = String(init.method || (input && input.method) || 'GET').toUpperCase();
+        if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return nativeFetch(input, init);
+        const headers = new Headers(init.headers || {});
+        headers.set('X-CSRFToken', window.jsdCsrfToken);
+        return nativeFetch(input, { ...init, headers });
+      };
     </script>
     <style>
   * { -webkit-tap-highlight-color: transparent; }
-  body { -webkit-user-select: none; user-select:none; }
   </style>
   <meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
 
   </head>
   <body class="h-full bg-gradient-to-b from-pink-50 to-rose-100 text-gray-900 dark:from-slate-900 dark:to-slate-800 dark:text-slate-100">
-    <div class="min-h-screen">
+    <div class="min-h-screen flex flex-col">
       <nav class="sticky top-0 backdrop-blur bg-white/70 dark:bg-slate-900/60 border-b border-white/20 z-10">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <a href="/" class="flex shrink-0 items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-rose-50 dark:focus-visible:ring-offset-slate-900" aria-label="J'suis Déchiré .com">
-            <img
-              src="{{ asset_url('branding/logo-horizontal.png') }}"
-              alt="J'suis Déchiré .com"
-              width="1672"
-              height="620"
-              class="h-[4.5rem] w-auto rounded-lg object-contain sm:h-[5.5rem]"
-            />
+            <picture>
+              <source srcset="{{ asset_url('branding/logo-horizontal.webp') }}" type="image/webp" />
+              <img
+                src="{{ asset_url('branding/logo-horizontal.png') }}"
+                alt="J'suis Déchiré .com"
+                width="1672"
+                height="620"
+                class="h-[4.5rem] w-auto rounded-lg object-contain sm:h-[5.5rem]"
+              />
+            </picture>
           </a>
           <div class="flex items-center gap-2 flex-wrap justify-end">
-            <select id="langSelect" class="text-sm rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700 px-2 py-1"></select>
+            <select id="langSelect" aria-label="Langue" title="Langue" class="text-sm rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700 px-2 py-1"></select>
             <a href="/leaderboard" class="text-sm px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700" data-i18n="nav.leaderboard">Top</a>
             {% if current_user_payload %}
             <div class="relative">
@@ -79,6 +120,7 @@
                   Mon profil
                 </a>
                 <form method="post" action="{{ url_for('logout_view') }}" role="none">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                   <button
                     type="submit"
                     class="block w-full px-4 py-2 text-left text-rose-600 hover:bg-rose-50 dark:text-rose-200 dark:hover:bg-slate-700"
@@ -94,7 +136,7 @@
           </div>
         </div>
       </nav>
-      <main class="max-w-5xl mx-auto px-4 py-6">
+      <main class="max-w-5xl mx-auto w-full flex-1 px-4 py-6">
         {% block content %}{% endblock %}
       </main>
       <footer class="mt-12 border-t border-rose-100/60 dark:border-slate-700 bg-gradient-to-r from-rose-600/10 via-rose-500/5 to-rose-600/10">

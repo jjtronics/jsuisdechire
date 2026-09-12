@@ -18,6 +18,7 @@
     </div>
     {% endif %}
     <form method="post" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
       <div>
         <label for="nickname" class="block text-sm font-semibold text-gray-700 dark:text-slate-200" data-i18n="auth.google_complete.nickname_label">Surnom</label>
         <input

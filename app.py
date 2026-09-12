@@ -1,9 +1,10 @@
 
-from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, make_response
-import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr, math
+from flask import Flask, render_template, request, jsonify, g, url_for, session, redirect, make_response, abort, send_from_directory
+import sqlite3, os, time, datetime, json, hashlib, secrets, smtplib, ssl, imghdr, math, hmac
 from functools import lru_cache, wraps
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlsplit
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 from email.message import EmailMessage
@@ -17,7 +18,26 @@ APP_NAME = "jsuisdechire"
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.sqlite")
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
+configured_secret_key = os.getenv("SECRET_KEY")
+if not configured_secret_key and os.getenv("FLASK_ENV") == "production":
+    raise RuntimeError("SECRET_KEY doit être définie en production.")
+app.secret_key = configured_secret_key or secrets.token_hex(32)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.getenv("FLASK_ENV") == "production",
+)
+
+CSRF_SESSION_KEY = "csrf_token"
+STATE_CHANGING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+SENSITIVE_SETTING_KEYS = frozenset({
+    "smtp_host",
+    "smtp_port",
+    "smtp_username",
+    "smtp_password",
+    "smtp_sender",
+    "smtp_security",
+})
 
 MAX_AVATAR_BYTES = 5 * 1024 * 1024
 MAX_AVATAR_SIZE_LABEL = f"{MAX_AVATAR_BYTES // (1024 * 1024)} Mo"
@@ -91,7 +111,54 @@ assert get_asset_version(), "Asset version must not be empty"
 
 @app.context_processor
 def inject_app_settings():
-    return {"app_settings": get_settings()}
+    settings = get_settings()
+    if request.path.startswith("/admin") and is_admin_authenticated():
+        return {"app_settings": settings}
+    return {"app_settings": get_public_settings(settings)}
+
+
+def get_csrf_token() -> str:
+    token = session.get(CSRF_SESSION_KEY)
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session[CSRF_SESSION_KEY] = token
+    return token
+
+
+@app.context_processor
+def inject_csrf_token():
+    return {"csrf_token": get_csrf_token()}
+
+
+@app.before_request
+def protect_state_changing_requests():
+    if request.method not in STATE_CHANGING_METHODS:
+        return None
+
+    expected = session.get(CSRF_SESSION_KEY)
+    supplied = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")
+    if expected and supplied and hmac.compare_digest(str(expected), str(supplied)):
+        return None
+
+    abort(400, description="Jeton CSRF invalide.")
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(), microphone=(), geolocation=(), accelerometer=(self), gyroscope=(self), magnetometer=(self)",
+    )
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
+        "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline' 'unsafe-eval'; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; "
+        "font-src 'self' https: data:; connect-src 'self' https://accounts.google.com; form-action 'self';",
+    )
+    return response
 
 
 @app.context_processor
@@ -325,6 +392,21 @@ def get_settings():
     merged.update(store)
     g.settings_cache = merged
     return merged
+
+
+def get_public_settings(settings: Optional[dict] = None) -> dict:
+    source = settings if settings is not None else get_settings()
+    return {key: value for key, value in source.items() if key not in SENSITIVE_SETTING_KEYS}
+
+
+def safe_next_url(value: Optional[str]) -> Optional[str]:
+    candidate = (value or "").strip()
+    if not candidate or candidate.startswith("//"):
+        return None
+    parsed = urlsplit(candidate)
+    if parsed.scheme or parsed.netloc or not candidate.startswith("/"):
+        return None
+    return candidate
 
 def set_settings(newvals: dict):
     db = get_db()
@@ -1006,7 +1088,10 @@ def leaderboard():
 
 @app.get("/api/settings")
 def api_settings():
-    return jsonify(get_settings())
+    settings = get_settings()
+    if is_admin_authenticated():
+        return jsonify(settings)
+    return jsonify(get_public_settings(settings))
 
 @app.post("/api/admin/settings")
 @require_admin
@@ -1201,7 +1286,6 @@ def api_nickname_check():
 @app.post("/api/submit")
 def submit():
     data = request.get_json(silent=True) or {}
-    total = int(data.get("total_score", 0))
     settings = get_settings()
     nickname = (data.get("nickname") or "").strip()
     max_len_raw = settings.get("nickname_max_length")
@@ -1254,6 +1338,27 @@ def submit():
         except (TypeError, ValueError):
             return None
         return parsed
+
+    score_weights = {
+        "rxn": 0.18,
+        "str": 0.18,
+        "prs": 0.18,
+        "rfl": 0.12,
+        "drv": 0.12,
+        "mem": 0.12,
+        "bal": 0.10,
+    }
+    weighted_score = 0.0
+    weight_sum = 0.0
+    for name, weight in score_weights.items():
+        score_value = _parse_float(sections[name].get("score"))
+        if score_value is None:
+            continue
+        weighted_score += max(0.0, min(100.0, score_value)) * weight
+        weight_sum += weight
+    if weight_sum <= 0:
+        return jsonify({"ok": False, "error": "missing_scores"}), 400
+    total = int(weighted_score / weight_sum)
 
     fields = {
         "rxn_score": sections["rxn"].get("score"),
@@ -1400,7 +1505,7 @@ def login_view():
 
     error = _resolve_error_message(request.args.get("error"))
     identifier_value = ""
-    next_url = request.args.get("next") or request.form.get("next")
+    next_url = safe_next_url(request.args.get("next") or request.form.get("next"))
     success_message = None
 
     if request.args.get("reset") == "1":
@@ -1819,7 +1924,7 @@ def logout_view():
 def auth_google_start():
     if not is_google_login_available():
         return redirect(url_for("register_view", error="google_disabled"))
-    next_url = request.args.get("next")
+    next_url = safe_next_url(request.args.get("next"))
     if next_url:
         session["google_next"] = next_url
     redirect_uri = url_for("auth_google_callback", _external=True)
@@ -1862,7 +1967,7 @@ def auth_google_callback():
     if existing:
         login_user(existing)
         session.pop(GOOGLE_PENDING_SESSION_KEY, None)
-        next_url = session.pop("google_next", None)
+        next_url = safe_next_url(session.pop("google_next", None))
         return redirect(next_url or url_for("home"))
 
     email_user = find_user_by_email(email)
@@ -1870,7 +1975,7 @@ def auth_google_callback():
         if email_user["google_id"] == google_id:
             login_user(email_user)
             session.pop(GOOGLE_PENDING_SESSION_KEY, None)
-            next_url = session.pop("google_next", None)
+            next_url = safe_next_url(session.pop("google_next", None))
             return redirect(next_url or url_for("home"))
         return redirect(url_for("login_view", error="email_in_use"))
 
@@ -1923,7 +2028,7 @@ def google_complete():
             else:
                 login_user(user)
                 session.pop(GOOGLE_PENDING_SESSION_KEY, None)
-                next_url = session.pop("google_next", None)
+                next_url = safe_next_url(session.pop("google_next", None))
                 return redirect(next_url or url_for("home"))
 
     return render_template(
@@ -1939,6 +2044,22 @@ def google_complete():
 @app.get("/api/health")
 def health():
     return jsonify({"ok": True, "ts": int(time.time())})
+
+
+@app.get("/robots.txt")
+def robots_txt():
+    return (
+        "User-agent: *\n"
+        "Disallow: /admin\n"
+        "Disallow: /api/\n",
+        200,
+        {"Content-Type": "text/plain; charset=utf-8"},
+    )
+
+
+@app.get("/favicon.ico")
+def favicon():
+    return send_from_directory(app.static_folder, "icons/icon-192.png", mimetype="image/png")
 
 @app.route("/admin")
 @require_admin
@@ -1958,7 +2079,7 @@ def admin_login():
         creds = get_admin_credentials()
         if login == creds["login"] and check_password_hash(creds["password_hash"], password):
             session[ADMIN_SESSION_KEY] = True
-            next_url = request.args.get("next")
+            next_url = safe_next_url(request.args.get("next"))
             return redirect(next_url or url_for("admin"))
         error = "Identifiants invalides"
 
@@ -1972,4 +2093,5 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=9001, debug=True)
+    debug_enabled = os.getenv("FLASK_DEBUG", "0").strip().lower() in {"1", "true", "yes", "on"}
+    app.run(host="0.0.0.0", port=9001, debug=debug_enabled)

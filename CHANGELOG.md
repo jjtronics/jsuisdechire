@@ -22,6 +22,9 @@
 - Archive sans base SQLite, secrets, environnement virtuel ni uploads locaux.
 - Backup distant automatique avant chaque déploiement.
 - Vérification systemd, des fichiers t6/t7, des logos et des routes HTTP après mise en ligne.
+- Renforcement production : Gunicorn, clé de session dédiée, CSRF, en-têtes de sécurité et filtrage des réglages publics.
+- Refonte mobile du classement en cartes détaillables, clarification du texte d’accueil et précache du service worker.
+- Ajout de descriptions courtes pour clarifier chaque mini-jeu dans l’administration.
 
 ### Documentation
 

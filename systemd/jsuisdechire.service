@@ -1,0 +1,19 @@
+[Unit]
+Description=jsuisdechire production app
+After=network.target
+
+[Service]
+User=jsuis
+Group=jsuis
+WorkingDirectory=/opt/jsuisdechire/app
+EnvironmentFile=-/etc/jsuisdechire.env
+Environment="PATH=/opt/jsuisdechire/app/.venv/bin"
+Environment="FLASK_ENV=production"
+ExecStart=/opt/jsuisdechire/app/.venv/bin/gunicorn --workers 2 --bind 0.0.0.0:9001 --access-logfile - --error-logfile - app:app
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

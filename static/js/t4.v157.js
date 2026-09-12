@@ -126,21 +126,7 @@
   }
 
   function updateStatus(extra=""){
-    const lines=[
-      `HTTPS: ${location.protocol==='https:'}`,
-      `SecureContext: ${!!window.isSecureContext}`,
-      `UA: ${navigator.userAgent}`,
-      `Events: ${events}`,
-      `LastEvent(ms): ${Math.round(lastTs)}`,
-      `Src: dm=${src.dm}`,
-      `Std: ${currentStd().toFixed(4)}`,
-      `Mode: ${ST.mode} dur=${ST.duration}ms low=${ST.low_good} high=${ST.high_bad}`,
-      ST.cheat_enabled
-        ? `Cheat: thr=${ST.cheat_std_threshold ?? '—'} minE=${ST.cheat_min_events} flagged=${cheatState && cheatState.detected}`
-        : 'Cheat: disabled',
-      note?`Note: ${note}`:""
-    ]; if(extra) lines.push(extra);
-    status.textContent=lines.filter(Boolean).join("\n");
+    status.textContent = extra || "";
   }
   function pushVal(v){
     if(finished) return;

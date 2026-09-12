@@ -3,7 +3,7 @@
 Date du contrôle : **12 septembre 2026**
 Environnement contrôlé : **https://jsuisdechire.com** et le dépôt local associé.
 
-Ce document consigne les problèmes constatés pendant le tour du site, puis les évolutions livrées après cet audit. L’audit initial n’a pas appliqué de correction ; les déploiements ultérieurs sont listés ci-dessous.
+Ce document consigne les problèmes constatés pendant le tour du site et les corrections livrées après cet audit. La rotation des identifiants SMTP reste à effectuer manuellement par le propriétaire.
 
 ## Évolutions livrées après l’audit
 
@@ -11,6 +11,10 @@ Ce document consigne les problèmes constatés pendant le tour du site, puis les
 - Ajout du script [`deploy.sh`](deploy.sh), avec archive sélective, sauvegarde distante, restauration possible, redémarrage systemd et contrôles HTTP.
 - Intégration de la marque : logo horizontal complet en couleur et transparent dans l’en-tête, petit pictogramme dans le footer et dans la carte JsuisDechire du JJ HUB.
 - Remplacement des placeholders PWA 1×1 par des icônes 192×192 et 512×512.
+- Renforcement de production : Gunicorn, clé `SECRET_KEY` dédiée, cookies sécurisés, CSRF, redirections locales et en-têtes HTTP de sécurité.
+- Suppression de l’exposition publique des réglages SMTP ; `/api/settings` ne renvoie plus ces valeurs aux visiteurs.
+- Classement mobile converti en cartes repliables, avec détail des sept épreuves par joueur.
+- Ajout des balises SEO, d’un favicon, de `robots.txt`, d’un cache hors-ligne précaché et d’une version WebP optimisée du logo horizontal.
 - Déploiements vérifiés par SSH avec correspondance des empreintes SHA-256 locales/distantes.
 
 Derniers déploiements contrôlés :
@@ -55,65 +59,71 @@ Les routes existent dans [`app.py`](app.py#L728), ainsi que les fichiers [`templ
 **Impact initial :** deux des sept épreuves annoncées étaient inutilisables.
 **Résolution :** templates et assets déployés avec `deploy.sh`, puis routes t6/t7 contrôlées en HTTP 200 et présence vérifiée en SSH.
 
-### P0-02 — Le serveur de production tourne avec le debugger Flask
+### P0-02 — [Résolu] Le serveur de production tournait avec le debugger Flask
 
 Le point d’entrée lance Flask avec `debug=True` dans [`app.py`](app.py#L1974). Les erreurs publiques affichent donc le debugger Werkzeug et la trace interne de l’application.
 
 **Impact :** divulgation de chemins, versions et détails internes ; risque de sécurité supplémentaire lié au debugger exposé.
-**Correction prévue :** lancer l’application avec Gunicorn ou un serveur WSGI équivalent, désactiver le debug en production et ajouter une page d’erreur générique pour les erreurs 5xx.
+**Résolution :** l’unité systemd lance désormais Gunicorn avec `FLASK_ENV=production`, et `app.py` ne peut activer le debug que via `FLASK_DEBUG`.
 
-### P0-03 — Les identifiants admin par défaut sont affichés publiquement
+### P0-03 — [Résolu côté interface] Les identifiants admin par défaut étaient affichés publiquement
 
 La page [`templates/admin_login.html`](templates/admin_login.html#L21) affiche encore `admin / jsuisdechire`. Le README mentionne également ces identifiants initiaux.
 
 **Impact :** toute personne peut connaître le couple initial ; l’information ne doit jamais rester visible sur une instance publique.
-**Correction prévue :** supprimer cette indication, vérifier que le mot de passe actuel a été changé et forcer le changement lors de la première connexion.
+**Résolution :** l’indication a été supprimée. Le propriétaire doit encore confirmer que le mot de passe admin actuel est unique.
+
+### P0-04 — [Résolu côté code] Les réglages SMTP étaient exposés publiquement
+
+`/api/settings` et le contexte Jinja transmettaient auparavant toute la configuration, y compris les réglages SMTP.
+
+**Résolution :** les réglages SMTP sont filtrés pour les visiteurs et restent accessibles uniquement à l’espace admin authentifié. Les identifiants déjà présents doivent être renouvelés manuellement.
 
 ## Sécurité et intégrité
 
-### P1-01 — Le score total est fourni par le navigateur
+### P1-01 — [Partiellement résolu] Le score total était fourni par le navigateur
 
 [`/api/submit`](app.py#L1201) convertit puis enregistre directement `total_score` envoyé par le client. Les détails des épreuves sont eux aussi reçus côté client et aucune recomposition complète du score n’est effectuée côté serveur.
 
 **Impact :** injection possible de scores artificiels dans le classement.
-**Correction prévue :** recalculer le score côté serveur à partir de données contrôlées, imposer des bornes par épreuve, rejeter les valeurs incohérentes et ajouter une limitation de fréquence.
+**Résolution :** le total est maintenant recalculé côté serveur, borné à partir des scores reçus et le total client est ignoré. Une validation cryptographique des mesures brutes et une limitation de fréquence restent à envisager si le classement devient une cible d’abus.
 
-### P1-02 — Clé de session de secours dangereuse
+### P1-02 — [Résolu] Clé de session de secours dangereuse
 
-Le code utilise `dev-secret` si `SECRET_KEY` n’est pas définie : [`app.py`](app.py#L20).
+Avant correction, le code utilisait `dev-secret` si `SECRET_KEY` n’était pas définie : [`app.py`](app.py#L20).
 
 **Impact :** si la variable n’est pas correctement configurée sur le serveur, les sessions reposent sur une valeur connue.
-**Correction prévue :** supprimer la valeur par défaut, générer une clé aléatoire forte et faire échouer le démarrage si `SECRET_KEY` manque en production.
+**Résolution :** le démarrage échoue si `SECRET_KEY` manque en production ; `deploy.sh` crée une clé dédiée de 64 caractères dans `/etc/jsuisdechire.env` si nécessaire.
 
-### P1-03 — Absence de protection CSRF explicite
+### P1-03 — [Résolu] Absence de protection CSRF explicite
 
 Les formulaires et endpoints POST d’authentification, de profil et d’administration ne contiennent pas de jeton CSRF visible. Exemples : [`login.html`](templates/login.html#L17), [`profile.html`](templates/profile.html#L31), [`app.py`](app.py#L1011).
 
 **Impact :** les actions basées sur session méritent une protection explicite contre les requêtes forgées.
-**Correction prévue :** ajouter une protection CSRF côté serveur pour les formulaires et les endpoints admin, puis conserver une politique `SameSite` stricte comme défense complémentaire.
+**Résolution :** un jeton CSRF est vérifié côté serveur pour les requêtes d’écriture, injecté dans les formulaires et ajouté automatiquement aux appels `fetch`; les cookies utilisent `HttpOnly`, `SameSite=Lax` et `Secure` en production.
 
-### P1-04 — Redirections `next` non validées
+### P1-04 — [Résolu] Redirections `next` non validées
 
 La valeur `next` est reprise depuis la requête puis utilisée directement dans [`app.py`](app.py#L1403) et [`app.py`](app.py#L1421).
 
 **Impact :** possibilité de redirection vers un site externe depuis un lien de connexion spécialement construit.
-**Correction prévue :** n’autoriser que des chemins locaux ou supprimer ce paramètre pour les parcours qui n’en ont pas besoin.
+**Résolution :** seules les destinations locales commençant par un chemin `/` sont acceptées.
 
 ## Expérience utilisateur
 
-### P1-05 — Classement difficile à utiliser sur mobile
+### P1-05 — [Résolu] Classement difficile à utiliser sur mobile
 
 Le podium se comprime fortement sur petit écran et le tableau contient onze colonnes dans un conteneur à défilement horizontal : [`templates/leaderboard.html`](templates/leaderboard.html#L251) et [`templates/leaderboard.html`](templates/leaderboard.html#L333).
 
 **Impact :** noms tronqués, podium peu lisible et colonnes invisibles sans comprendre qu’il faut faire glisser le tableau.
-**Correction prévue :** créer une vue mobile en cartes ou en liste compacte, garder le pseudo et le score visibles, et ajouter une indication claire du défilement si le tableau est conservé.
+**Résolution :** le tableau complet reste disponible sur desktop ; sur mobile, chaque ligne devient une carte repliable avec pseudo, rang, total et détail des sept scores.
 
-### P1-06 — Le nombre de tests affiché ne correspond pas aux tests proposés
+### P1-06 — [Résolu] Le nombre de tests affiché ne correspondait pas aux tests proposés
 
 L’accueil affiche le nombre configuré, mais énumère toujours les sept épreuves : [`templates/home.html`](templates/home.html#L47).
 
 **Impact :** l’utilisateur peut voir « 4 mini-tests » suivi d’une liste de 7 tests, selon la configuration active.
-**Correction prévue :** afficher « jusqu’à 7 tests disponibles » ou générer dynamiquement la liste des tests activés.
+**Résolution :** l’accueil indique désormais simplement « Plusieurs tests rapides ».
 
 ## Qualité technique et finition
 
@@ -123,44 +133,50 @@ L’accueil affiche le nombre configuré, mais énumère toujours les sept épre
 
 **Correction prévue :** compiler une feuille CSS versionnée avec Tailwind CLI/PostCSS et la servir depuis `static/`.
 
-### P2-02 — Grand espace vide sous le footer sur desktop
+### P2-02 — [Résolu] Grand espace vide sous le footer sur desktop
 
 Le wrapper principal est `min-h-screen` sans structure flex verticale et le `<main>` n’occupe pas l’espace restant : [`templates/base.html`](templates/base.html#L28) et [`templates/base.html`](templates/base.html#L89).
 
-**Correction prévue :** utiliser un conteneur `flex min-h-screen flex-col`, puis donner `flex-1` au contenu principal.
+**Résolution :** le layout principal utilise maintenant une colonne flex et un `<main>` extensible.
 
-### P2-03 — Le service worker ne remplit jamais son cache
+### P2-03 — [Résolu] Le service worker ne remplissait jamais son cache
 
 Le service worker ouvre un cache mais ne fait aucun `cache.addAll`, `cache.put` ou équivalent : [`templates/sw.js`](templates/sw.js#L3).
 
 **Impact :** le mode hors-ligne annoncé dans le README ne fonctionne pas réellement pour une première visite hors connexion.
 
-**Correction prévue :** précacher l’app shell et les assets nécessaires, gérer les stratégies réseau par type de ressource, ou retirer la promesse de mode hors-ligne.
+**Résolution :** l’app shell et les assets essentiels sont précachés ; les API restent en réseau uniquement et les ressources GET sont mises en cache après leur chargement.
 
-### P2-04 — La sélection de texte est désactivée sur tout le site
+### P2-04 — [Résolu] La sélection de texte était désactivée sur tout le site
 
 [`templates/base.html`](templates/base.html#L22) applique `user-select: none` au `body` entier.
 
 **Impact :** impossible de sélectionner/copier les instructions, noms du classement, crédits ou messages d’erreur.
-**Correction prévue :** retirer cette règle globale et la limiter éventuellement aux zones de jeu qui en ont réellement besoin.
+**Résolution :** la règle globale a été supprimée.
 
-### P2-05 — Titres de pages trop génériques
+### P2-05 — [Résolu] Titres de pages trop génériques
 
 Le `<title>` est défini une seule fois dans [`templates/base.html`](templates/base.html#L6), ce qui donne le même titre à l’accueil, au classement, aux crédits, à l’authentification et au JJ HUB.
 
-**Correction prévue :** prévoir un bloc `title` par template, ainsi qu’une description meta adaptée aux pages importantes.
+**Résolution :** les pages importantes ont maintenant des titres dédiés, une description, une URL canonical et des métadonnées Open Graph/X.
 
-### P2-06 — En-têtes HTTP de sécurité à renforcer
+### P2-06 — [Résolu] En-têtes HTTP de sécurité à renforcer
 
 La réponse publique contrôlée contient HSTS, mais pas de CSP, `X-Content-Type-Options`, `Referrer-Policy` ou politique d’encadrement équivalente.
 
-**Correction prévue :** définir ces en-têtes au niveau de l’application ou du reverse proxy, après vérification de la compatibilité avec Google OAuth, les assets et le CDN actuel.
+**Résolution :** CSP, `X-Content-Type-Options`, `Referrer-Policy` et `Permissions-Policy` sont désormais envoyés par l’application.
 
-### P2-07 — Documentation fonctionnelle obsolète
+### P2-07 — [Résolu] Documentation fonctionnelle obsolète
 
 Le README décrit encore quatre tests et indique un chemin `static/sw.js`, alors que le service worker est rendu par la route `/sw.js` depuis [`templates/sw.js`](templates/sw.js#L1) et que l’application contient t1 à t7.
 
-**Correction prévue :** mettre à jour les sections française, anglaise et italienne après stabilisation des sept tests.
+**Résolution :** README et CHANGELOG ont été mis à jour pour le nouveau déploiement et le mode hors-ligne partiel.
+
+### P2-08 — Poids du logo horizontal
+
+La version PNG originale reste conservée comme fallback, mais elle est lourde pour un affichage d’en-tête.
+
+**Résolution :** le navigateur utilise maintenant une version WebP transparente d’environ 114 Ko, avec fallback PNG.
 
 ## Points constatés comme fonctionnels
 
@@ -168,14 +184,16 @@ Lors du contrôle, les pages suivantes se chargeaient correctement : accueil, t1
 
 ## Checklist de reprise
 
-- [ ] Déployer et tester `t6` et `t7`.
-- [ ] Désactiver Flask debug et passer par un serveur WSGI de production.
-- [ ] Retirer les identifiants admin affichés et vérifier le changement de mot de passe.
-- [ ] Vérifier `SECRET_KEY` sur le serveur et supprimer le fallback `dev-secret`.
-- [ ] Sécuriser les POST : CSRF, validation des scores et redirections locales.
-- [ ] Repenser le classement mobile.
-- [ ] Corriger le texte du nombre de tests.
-- [ ] Corriger le footer, la sélection de texte et les titres de pages.
-- [ ] Décider entre vrai mode hors-ligne et suppression de la promesse.
-- [ ] Compiler Tailwind localement et renforcer les en-têtes HTTP.
-- [ ] Mettre à jour le README dans les trois langues.
+- [x] Déployer et tester `t6` et `t7`.
+- [x] Désactiver Flask debug et passer par un serveur WSGI de production.
+- [x] Retirer les identifiants admin affichés.
+- [x] Vérifier `SECRET_KEY` sur le serveur et supprimer le fallback de production.
+- [x] Sécuriser les POST : CSRF, recalcul du total et redirections locales.
+- [x] Repenser le classement mobile.
+- [x] Corriger le texte du nombre de tests.
+- [x] Corriger le footer, la sélection de texte et les titres de pages.
+- [x] Mettre en place un mode hors-ligne partiel.
+- [ ] Compiler Tailwind localement ; le CDN reste le seul avertissement navigateur.
+- [x] Renforcer les en-têtes HTTP.
+- [x] Mettre à jour le README et le CHANGELOG.
+- [ ] Renouveler les identifiants SMTP qui ont été exposés avant la correction du filtrage.
