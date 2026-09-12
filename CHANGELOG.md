@@ -13,6 +13,7 @@
 - Logo horizontal complet en couleur, avec fond transparent, dans l’en-tête.
 - Taille du logo d’en-tête doublée pour une meilleure visibilité.
 - Petit pictogramme placé devant la phrase « Reste en vibe » dans le footer.
+- Petit pictogramme du footer exporté avec un vrai fond transparent pour s’intégrer proprement au dégradé.
 - Pictogramme officiel utilisé dans la carte JsuisDechire du JJ HUB.
 - Favicon et icônes PWA remplacés par des assets de marque aux dimensions attendues.
 
