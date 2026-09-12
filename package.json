@@ -1,0 +1,11 @@
+{
+  "name": "jsuisdechire-assets",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i ./static/css/tailwind.input.css -o ./static/css/tailwind.css --minify",
+    "test:js": "for file in static/js/*.js; do node --check \"$file\"; done"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

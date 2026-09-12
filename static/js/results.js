@@ -133,6 +133,23 @@
       details.append(el("div","",t("results.pursuit_detail_base",{score:formatScore(prs.score)})));
     }
   }
+  if(bal){
+    if(bal.mode==="sensors"){ details.append(el("div","",t("results.balance_sensors_detail",{std:(bal.std_g?.toFixed(3)??"0"), score:formatScore(bal.score)}))); }
+    else if(bal.mode==="touch"){ details.append(el("div","",t("results.balance_touch_detail",{std:(bal.std_px?.toFixed(1)??"0"), score:formatScore(bal.score)}))); }
+  }
+  if(mem){
+    const mistakes = Number(mem.mistakes);
+    const elapsed = Number(mem.elapsed_ms);
+    const pairs = Number(mem.pairs);
+    const seconds = Number.isFinite(elapsed) ? Math.round(elapsed/1000) : null;
+    const timeLabel = seconds!=null ? `${seconds}s` : '—';
+    details.append(el("div","",t("results.memory_detail",{
+      score:formatScore(mem.score),
+      mistakes:Number.isFinite(mistakes)?mistakes:0,
+      time:timeLabel,
+      pairs:Number.isFinite(pairs)?pairs:"—"
+    })));
+  }
   if(rfl){
     const hits = Number(rfl.hits);
     const attempts = Number(rfl.attempts);
@@ -169,23 +186,6 @@
       distance: distanceLabel,
       time: timeLabel
     })));
-  }
-  if(mem){
-    const mistakes = Number(mem.mistakes);
-    const elapsed = Number(mem.elapsed_ms);
-    const pairs = Number(mem.pairs);
-    const seconds = Number.isFinite(elapsed) ? Math.round(elapsed/1000) : null;
-    const timeLabel = seconds!=null ? `${seconds}s` : '—';
-    details.append(el("div","",t("results.memory_detail",{
-      score:formatScore(mem.score),
-      mistakes:Number.isFinite(mistakes)?mistakes:0,
-      time:timeLabel,
-      pairs:Number.isFinite(pairs)?pairs:"—"
-    })));
-  }
-  if(bal){
-    if(bal.mode==="sensors"){ details.append(el("div","",t("results.balance_sensors_detail",{std:(bal.std_g?.toFixed(3)??"0"), score:formatScore(bal.score)}))); }
-    else if(bal.mode==="touch"){ details.append(el("div","",t("results.balance_touch_detail",{std:(bal.std_px?.toFixed(1)??"0"), score:formatScore(bal.score)}))); }
   }
   if(!bal && localStorage.getItem("jsd:skip:t4")==="1") details.append(el("div","text-amber-700",t("results.balance_skipped")));
   box.append(details);
@@ -252,6 +252,8 @@
             customErrorMessage="Ton surnom est vérifié par un autre joueur. Connecte-toi pour enregistrer le score.";
           } else if(result.response.error==='missing_nickname'){
             customErrorMessage="Choisis un surnom pour sauvegarder ton score.";
+          } else if(result.response.error==='rate_limited'){
+            customErrorMessage=t('results.rate_limited');
           }
         }
       }

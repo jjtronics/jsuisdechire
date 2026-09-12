@@ -86,7 +86,7 @@ La page [`templates/admin_login.html`](templates/admin_login.html#L21) affiche e
 [`/api/submit`](app.py#L1201) convertit puis enregistre directement `total_score` envoyé par le client. Les détails des épreuves sont eux aussi reçus côté client et aucune recomposition complète du score n’est effectuée côté serveur.
 
 **Impact :** injection possible de scores artificiels dans le classement.
-**Résolution :** le total est maintenant recalculé côté serveur, borné à partir des scores reçus et le total client est ignoré. Une validation cryptographique des mesures brutes et une limitation de fréquence restent à envisager si le classement devient une cible d’abus.
+**Résolution :** le total est recalculé côté serveur, arrondi comme dans le client, les mesures enregistrées sont converties et bornées côté serveur, et les soumissions sont limitées à six par minute et par adresse client. Une validation cryptographique des mesures brutes resterait utile si le classement devient une cible d’abus sophistiquée.
 
 ### P1-02 — [Résolu] Clé de session de secours dangereuse
 
@@ -127,11 +127,11 @@ L’accueil affiche le nombre configuré, mais énumère toujours les sept épre
 
 ## Qualité technique et finition
 
-### P2-01 — Tailwind est chargé depuis le CDN en production
+### P2-01 — [Résolu] Tailwind était chargé depuis le CDN en production
 
 [`templates/base.html`](templates/base.html#L7) charge `cdn.tailwindcss.com`. Le navigateur signale que cette méthode est destinée au développement.
 
-**Correction prévue :** compiler une feuille CSS versionnée avec Tailwind CLI/PostCSS et la servir depuis `static/`.
+**Résolution :** Tailwind est compilé localement via `package.json` et `tailwind.config.js`, puis servi depuis `static/css/tailwind.css` avec l’empreinte d’asset habituelle. La CSP n’autorise plus le CDN Tailwind ni `unsafe-eval`.
 
 ### P2-02 — [Résolu] Grand espace vide sous le footer sur desktop
 
@@ -146,6 +146,7 @@ Le service worker ouvre un cache mais ne fait aucun `cache.addAll`, `cache.put` 
 **Impact :** le mode hors-ligne annoncé dans le README ne fonctionne pas réellement pour une première visite hors connexion.
 
 **Résolution :** l’app shell et les assets essentiels sont précachés ; les API restent en réseau uniquement et les ressources GET sont mises en cache après leur chargement.
+Le cache porte un nom versionné par l’empreinte des templates et assets, et les clients prennent immédiatement le nouveau service worker.
 
 ### P2-04 — [Résolu] La sélection de texte était désactivée sur tout le site
 
@@ -180,7 +181,7 @@ La version PNG originale reste conservée comme fallback, mais elle est lourde p
 
 ## Points constatés comme fonctionnels
 
-Lors du contrôle, les pages suivantes se chargeaient correctement : accueil, t1 à t5, résultats, classement, connexion, inscription, crédits et JJ HUB. Le JJ HUB affichait bien les six cartes dans l’ordre attendu. Aucun problème JavaScript bloquant n’a été observé sur ces pages ; le principal avertissement console concernait le CDN Tailwind.
+Lors du contrôle, les pages suivantes se chargeaient correctement : accueil, t1 à t7, résultats, classement, connexion, inscription, crédits et JJ HUB. Le JJ HUB affichait bien les six cartes dans l’ordre attendu. Aucun problème JavaScript bloquant n’a été observé sur ces pages ; le CDN Tailwind a depuis été remplacé par une feuille locale.
 
 ## Checklist de reprise
 
@@ -193,7 +194,10 @@ Lors du contrôle, les pages suivantes se chargeaient correctement : accueil, t1
 - [x] Corriger le texte du nombre de tests.
 - [x] Corriger le footer, la sélection de texte et les titres de pages.
 - [x] Mettre en place un mode hors-ligne partiel.
-- [ ] Compiler Tailwind localement ; le CDN reste le seul avertissement navigateur.
+- [x] Compiler Tailwind localement et retirer l’avertissement CDN.
+- [x] Valider et limiter les soumissions de scores côté serveur.
+- [x] Ajouter des tests automatisés Flask et des contrôles de syntaxe JavaScript.
+- [x] Renforcer les repères clavier, les focus visibles et le respect de `prefers-reduced-motion`.
 - [x] Renforcer les en-têtes HTTP.
 - [x] Mettre à jour le README et le CHANGELOG.
 - [ ] Renouveler les identifiants SMTP qui ont été exposés avant la correction du filtrage.

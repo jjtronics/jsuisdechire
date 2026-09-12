@@ -72,6 +72,7 @@ require_file static/js/t6.js
 require_file static/js/t7.js
 require_file static/icons/icon-192.png
 require_file static/icons/icon-512.png
+require_file static/css/tailwind.css
 require_file systemd/jsuisdechire.service
 
 if command -v python3 >/dev/null 2>&1; then
@@ -155,7 +156,7 @@ run_root tar \
 mkdir -p "$STAGING_DIR"
 tar -xzf "/tmp/${REMOTE_ARCHIVE}" -C "$STAGING_DIR"
 
-for required_file in app.py templates/base.html templates/t6.html templates/t7.html static/js/t6.js static/js/t7.js static/icons/icon-192.png static/icons/icon-512.png systemd/jsuisdechire.service; do
+for required_file in app.py templates/base.html templates/t6.html templates/t7.html static/js/t6.js static/js/t7.js static/icons/icon-192.png static/icons/icon-512.png static/css/tailwind.css systemd/jsuisdechire.service; do
   if [[ ! -f "${STAGING_DIR}/${required_file}" ]]; then
     echo "Fichier absent de l'archive : ${required_file}" >&2
     exit 1
@@ -186,6 +187,7 @@ run_root test -f "${REMOTE_APP_DIR}/templates/t6.html"
 run_root test -f "${REMOTE_APP_DIR}/templates/t7.html"
 run_root test -f "${REMOTE_APP_DIR}/static/js/t6.js"
 run_root test -f "${REMOTE_APP_DIR}/static/js/t7.js"
+run_root test -f "${REMOTE_APP_DIR}/static/css/tailwind.css"
 run_root test -f "${REMOTE_APP_DIR}/static/branding/logo-horizontal.png"
 run_root test -f "${REMOTE_APP_DIR}/static/branding/logo-horizontal.webp"
 run_root test -f "${REMOTE_APP_DIR}/static/icons/icon-192.png"

@@ -1,6 +1,7 @@
 .env
 .env.deploy
 .venv/
+node_modules/
 __pycache__/
 *.py[cod]
 *.sqlite

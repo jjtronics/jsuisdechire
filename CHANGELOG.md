@@ -26,6 +26,9 @@
 - Refonte mobile du classement en cartes détaillables, clarification du texte d’accueil et précache du service worker.
 - Ajout de descriptions courtes pour clarifier chaque mini-jeu dans l’administration.
 - Réorganisation des réglages admin dans l’ordre des tests 1 à 7.
+- Tailwind compilé localement, validation et limitation des soumissions renforcées, tests automatisés ajoutés.
+- Classement et détails de résultats harmonisés dans l’ordre des tests 1 à 7, avec améliorations d’accessibilité et de cache PWA.
+- Correction de l’enregistrement des scores : le nombre de paramètres SQL correspond désormais aux 31 colonnes utilisées.
 
 ### Documentation
 

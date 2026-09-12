@@ -17,7 +17,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 APP_NAME = "jsuisdechire"
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.sqlite")
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 configured_secret_key = os.getenv("SECRET_KEY")
 if not configured_secret_key and os.getenv("FLASK_ENV") == "production":
     raise RuntimeError("SECRET_KEY doit être définie en production.")
@@ -154,7 +154,7 @@ def add_security_headers(response):
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
-        "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline' 'unsafe-eval'; "
+        "script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; "
         "font-src 'self' https: data:; connect-src 'self' https://accounts.google.com; form-action 'self';",
     )
@@ -274,6 +274,8 @@ GOOGLE_PENDING_SESSION_KEY = "pending_google_signup"
 DEFAULT_USER_ROLE = "player"
 PASSWORD_RESET_TOKEN_TTL = 3600
 SMTP_SECURITY_MODES = {"none", "starttls", "ssl"}
+SCORE_SUBMIT_RATE_LIMIT = 6
+SCORE_SUBMIT_RATE_WINDOW_SECONDS = 60
 
 def get_db():
     if "db" not in g:
@@ -330,6 +332,11 @@ def ensure_schema(db=None):
         used_at INTEGER,
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS rate_limits (
+        key TEXT PRIMARY KEY,
+        window_started INTEGER NOT NULL,
+        request_count INTEGER NOT NULL
+    )''')
 
     # Ensure new columns exist without requiring a destructive migration
     score_columns = {row["name"] for row in db.execute("PRAGMA table_info(scores)").fetchall()}
@@ -377,6 +384,49 @@ def ensure_schema(db=None):
 def init_db():
     db = get_db()
     ensure_schema(db)
+
+
+def consume_rate_limit(bucket: str, identity: str, limit: int, window_seconds: int) -> bool:
+    """Consume one request from a small SQLite-backed sliding window.
+
+    The counter lives in SQLite rather than process memory so the limit is
+    shared by all Gunicorn workers. On a database error we fail open to keep
+    score submission available, while recording the problem in the logs.
+    """
+    now = int(time.time())
+    identity_hash = hashlib.sha256(identity.encode("utf-8", "ignore")).hexdigest()
+    key = f"{bucket}:{identity_hash}"
+    db = get_db()
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        db.execute(
+            "DELETE FROM rate_limits WHERE window_started < ?",
+            (now - window_seconds,),
+        )
+        row = db.execute(
+            "SELECT window_started, request_count FROM rate_limits WHERE key = ?",
+            (key,),
+        ).fetchone()
+        if row is not None and now - int(row["window_started"]) < window_seconds:
+            if int(row["request_count"]) >= limit:
+                db.rollback()
+                return False
+            db.execute(
+                "UPDATE rate_limits SET request_count = request_count + 1 WHERE key = ?",
+                (key,),
+            )
+        else:
+            db.execute(
+                "INSERT INTO rate_limits(key, window_started, request_count) VALUES(?, ?, 1) "
+                "ON CONFLICT(key) DO UPDATE SET window_started = excluded.window_started, request_count = excluded.request_count",
+                (key, now),
+            )
+        db.commit()
+        return True
+    except sqlite3.Error:
+        db.rollback()
+        app.logger.exception("Impossible de mettre à jour la limitation de fréquence (%s).", bucket)
+        return True
 
 def get_settings():
     if hasattr(g, "settings_cache"):
@@ -1285,6 +1335,18 @@ def api_nickname_check():
 
 @app.post("/api/submit")
 def submit():
+    client_identity = request.remote_addr or "unknown"
+    if not consume_rate_limit(
+        "score_submit",
+        client_identity,
+        SCORE_SUBMIT_RATE_LIMIT,
+        SCORE_SUBMIT_RATE_WINDOW_SECONDS,
+    ):
+        response = jsonify({"ok": False, "error": "rate_limited"})
+        response.status_code = 429
+        response.headers["Retry-After"] = str(SCORE_SUBMIT_RATE_WINDOW_SECONDS)
+        return response
+
     data = request.get_json(silent=True) or {}
     settings = get_settings()
     nickname = (data.get("nickname") or "").strip()
@@ -1324,6 +1386,8 @@ def submit():
     }
 
     def _parse_float(value):
+        if isinstance(value, bool):
+            return None
         try:
             parsed = float(value)
         except (TypeError, ValueError):
@@ -1333,11 +1397,78 @@ def submit():
         return parsed
 
     def _parse_int(value):
+        if isinstance(value, bool):
+            return None
         try:
             parsed = int(value)
         except (TypeError, ValueError):
             return None
         return parsed
+
+    field_specs = {
+        "rxn": {
+            "score": ("float", 0, 100),
+            "median": ("float", 0, 120000),
+            "mean": ("float", 0, 120000),
+        },
+        "str": {
+            "score": ("float", 0, 100),
+            "accuracy": ("float", 0, 1),
+            "mean": ("float", 0, 120000),
+        },
+        "prs": {
+            "score": ("float", 0, 100),
+            "mean_error_px": ("float", 0, 5000),
+            "time_to_catch_ms": ("float", 0, 120000),
+        },
+        "bal": {
+            "score": ("float", 0, 100),
+            "std_g": ("float", 0, 100),
+            "std_px": ("float", 0, 100000),
+            "events": ("int", 0, 100000),
+            "event_count": ("int", 0, 100000),
+            "duration_ms": ("int", 0, 120000),
+        },
+        "mem": {
+            "score": ("float", 0, 100),
+            "elapsed_ms": ("int", 0, 300000),
+            "mistakes": ("int", 0, 1000),
+        },
+        "rfl": {
+            "score": ("float", 0, 100),
+            "hits": ("int", 0, 100),
+            "attempts": ("int", 1, 100),
+            "best_error_px": ("float", 0, 5000),
+            "avg_error_px": ("float", 0, 5000),
+        },
+        "drv": {
+            "score": ("float", 0, 100),
+            "collisions": ("int", 0, 1000),
+            "distance_m": ("float", 0, 100000),
+            "elapsed_ms": ("int", 0, 600000),
+        },
+    }
+    validated_sections = {name: {} for name in sections}
+    invalid_fields = []
+    for section_name, specs in field_specs.items():
+        section = sections[section_name]
+        for field_name, (field_type, minimum, maximum) in specs.items():
+            raw_value = section.get(field_name)
+            if raw_value is None or raw_value == "":
+                continue
+            parser = _parse_int if field_type == "int" else _parse_float
+            parsed_value = parser(raw_value)
+            if parsed_value is None or not minimum <= parsed_value <= maximum:
+                invalid_fields.append(f"{section_name}.{field_name}")
+                continue
+            validated_sections[section_name][field_name] = parsed_value
+
+    if invalid_fields:
+        return jsonify({
+            "ok": False,
+            "error": "invalid_score_data",
+            "fields": invalid_fields[:12],
+        }), 400
 
     score_weights = {
         "rxn": 0.18,
@@ -1351,39 +1482,39 @@ def submit():
     weighted_score = 0.0
     weight_sum = 0.0
     for name, weight in score_weights.items():
-        score_value = _parse_float(sections[name].get("score"))
+        score_value = validated_sections[name].get("score")
         if score_value is None:
             continue
         weighted_score += max(0.0, min(100.0, score_value)) * weight
         weight_sum += weight
     if weight_sum <= 0:
         return jsonify({"ok": False, "error": "missing_scores"}), 400
-    total = int(weighted_score / weight_sum)
+    total = int(math.floor((weighted_score / weight_sum) + 0.5))
 
     fields = {
-        "rxn_score": sections["rxn"].get("score"),
-        "rxn_median": sections["rxn"].get("median"),
-        "rxn_mean": sections["rxn"].get("mean"),
-        "str_score": sections["str"].get("score"),
-        "str_accuracy": sections["str"].get("accuracy"),
-        "str_mean": sections["str"].get("mean"),
-        "prs_score": sections["prs"].get("score"),
-        "prs_error": sections["prs"].get("mean_error_px"),
-        "time_to_catch_ms": sections["prs"].get("time_to_catch_ms"),
-        "rfl_score": sections["rfl"].get("score"),
-        "rfl_hits": sections["rfl"].get("hits"),
-        "rfl_attempts": sections["rfl"].get("attempts"),
-        "rfl_best_error": sections["rfl"].get("best_error_px"),
-        "rfl_avg_error": sections["rfl"].get("avg_error_px"),
-        "drv_score": sections["drv"].get("score"),
-        "drv_collisions": sections["drv"].get("collisions"),
-        "drv_distance": sections["drv"].get("distance_m"),
-        "drv_duration_ms": sections["drv"].get("elapsed_ms"),
-        "bal_score": sections["bal"].get("score"),
-        "bal_std": sections["bal"].get("std_g"),
-        "mem_score": sections["mem"].get("score"),
-        "mem_time_ms": sections["mem"].get("elapsed_ms"),
-        "mem_errors": sections["mem"].get("mistakes"),
+        "rxn_score": validated_sections["rxn"].get("score"),
+        "rxn_median": validated_sections["rxn"].get("median"),
+        "rxn_mean": validated_sections["rxn"].get("mean"),
+        "str_score": validated_sections["str"].get("score"),
+        "str_accuracy": validated_sections["str"].get("accuracy"),
+        "str_mean": validated_sections["str"].get("mean"),
+        "prs_score": validated_sections["prs"].get("score"),
+        "prs_error": validated_sections["prs"].get("mean_error_px"),
+        "time_to_catch_ms": validated_sections["prs"].get("time_to_catch_ms"),
+        "rfl_score": validated_sections["rfl"].get("score"),
+        "rfl_hits": validated_sections["rfl"].get("hits"),
+        "rfl_attempts": validated_sections["rfl"].get("attempts"),
+        "rfl_best_error": validated_sections["rfl"].get("best_error_px"),
+        "rfl_avg_error": validated_sections["rfl"].get("avg_error_px"),
+        "drv_score": validated_sections["drv"].get("score"),
+        "drv_collisions": validated_sections["drv"].get("collisions"),
+        "drv_distance": validated_sections["drv"].get("distance_m"),
+        "drv_duration_ms": validated_sections["drv"].get("elapsed_ms"),
+        "bal_score": validated_sections["bal"].get("score"),
+        "bal_std": validated_sections["bal"].get("std_g"),
+        "mem_score": validated_sections["mem"].get("score"),
+        "mem_time_ms": validated_sections["mem"].get("elapsed_ms"),
+        "mem_errors": validated_sections["mem"].get("mistakes"),
     }
 
     bal_section = sections["bal"]
@@ -1402,8 +1533,10 @@ def submit():
 
     if cheat_settings_enabled and isinstance(bal_section, dict):
         mode = bal_section.get("mode")
-        std_value = _parse_float(bal_section.get("std_g"))
-        events_value = _parse_int(bal_section.get("events") or bal_section.get("event_count"))
+        std_value = validated_sections["bal"].get("std_g")
+        events_value = validated_sections["bal"].get("events")
+        if events_value is None:
+            events_value = validated_sections["bal"].get("event_count")
         reported_cheat = bal_section.get("cheat") if isinstance(bal_section.get("cheat"), dict) else {}
         threshold = cheat_threshold_value if (cheat_threshold_value is not None and cheat_threshold_value >= 0) else None
         min_events = cheat_min_events_value if (cheat_min_events_value is not None and cheat_min_events_value > 0) else 0
@@ -1428,7 +1561,7 @@ def submit():
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, drv_score, drv_collisions, drv_distance, drv_duration_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, drv_score, drv_collisions, drv_distance, drv_duration_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],

@@ -30,7 +30,7 @@
 
 ### 🛠️ Stack & architecture
 - **Backend** : Flask + SQLite (`data.sqlite`).
-- **Frontend** : Templates Jinja + Tailwind CDN + JavaScript vanilla.
+- **Frontend** : Templates Jinja + Tailwind CSS compilé localement + JavaScript vanilla.
 - **Service worker** : route `/sw.js`, rendu depuis `templates/sw.js`.
 - **Gestion des paramètres** : `/api/settings` (lecture), `/api/admin/*` (écriture, scores, purge).
 - **Stockage local** : `localStorage` pour l'état de session et les scores avant soumission.
@@ -40,6 +40,7 @@
 ├── app.py              # Routes Flask + API + admin + scoring
 ├── templates/          # Pages (home, t1..t7, leaderboard, admin, JJ HUB, etc.)
 ├── static/js/          # Logique front (tests, session, i18n, résultats)
+├── static/css/         # Feuille Tailwind compilée et source
 ├── static/branding/    # Logos horizontaux et pictogrammes de la marque
 ├── static/icons/       # PWA icons & manifest
 ├── deploy.sh           # Déploiement SSH reproductible
@@ -51,6 +52,8 @@
 python -m venv .venv
 source .venv/bin/activate  # Windows : .venv\Scripts\activate
 pip install flask werkzeug standard-imghdr
+npm install
+npm run build:css
 export FLASK_ENV=development  # optionnel pour le debug
 python app.py  # démarre sur 0.0.0.0:9001
 ```
@@ -60,7 +63,14 @@ python app.py  # démarre sur 0.0.0.0:9001
 - La base SQLite (`data.sqlite`) est créée automatiquement.
 - Variables utiles :
   - `SECRET_KEY` (clé de session Flask) – obligatoire en production ; une clé temporaire est générée uniquement en développement.
-  - `ASSET_VERSION` pour invalider le cache des assets statiques.
+- `ASSET_VERSION` pour invalider le cache des assets statiques.
+
+Contrôles avant livraison :
+
+```bash
+python -m unittest discover -s tests -v
+npm run test:js
+```
 
 ### 🚚 Déploiement
 
@@ -120,7 +130,7 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 
 ### 🛠️ Stack & architecture
 - **Backend**: Flask + SQLite (`data.sqlite`).
-- **Frontend**: Jinja templates, Tailwind CDN, and vanilla JavaScript.
+- **Frontend**: Jinja templates, locally compiled Tailwind CSS, and vanilla JavaScript.
 - **Service worker**: `/sw.js`, rendered from `templates/sw.js`.
 - **Settings management**: `/api/settings` (read) & `/api/admin/*` (write, scores, purge).
 - **Local storage**: keeps session progress and scores before submission.
@@ -193,7 +203,7 @@ MIT License (see [LICENSE](LICENSE)).
 
 ### 🛠️ Stack & architettura
 - **Backend**: Flask + SQLite (`data.sqlite`).
-- **Frontend**: Template Jinja, Tailwind da CDN e JavaScript vanilla.
+- **Frontend**: Template Jinja, Tailwind CSS compilato localmente e JavaScript vanilla.
 - **Service worker**: route `/sw.js`, renderizzata da `templates/sw.js`.
 - **Gestione impostazioni**: `/api/settings` (lettura) e `/api/admin/*` (scrittura, punteggi, pulizia).
 - **Storage locale**: `localStorage` conserva stato della sessione e punteggi prima dell'invio.

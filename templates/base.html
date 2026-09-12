@@ -34,8 +34,7 @@
     <meta name="twitter:title" content="{{ page_title }}" />
     <meta name="twitter:description" content="Plusieurs mini-tests funs pour savoir si tu dois poser le verre." />
     <meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}{{ asset_url('branding/logo-horizontal.webp') }}" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','system-ui']}}}}</script>
+    <link rel="stylesheet" href="{{ asset_url('css/tailwind.css') }}" />
     <link rel="manifest" href="{{ asset_url('manifest.webmanifest') }}">
     <meta name="theme-color" content="#f43f5e" />
     <link rel="icon" href="{{ asset_url('icons/icon-192.png') }}">
@@ -58,13 +57,26 @@
     </script>
     <style>
   * { -webkit-tap-highlight-color: transparent; }
+  :where(a, button, input, select, textarea, summary):focus-visible {
+    outline: 3px solid rgb(244 63 94 / 0.75);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
   </style>
   <meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
 
   </head>
   <body class="h-full bg-gradient-to-b from-pink-50 to-rose-100 text-gray-900 dark:from-slate-900 dark:to-slate-800 dark:text-slate-100">
     <div class="min-h-screen flex flex-col">
-      <nav class="sticky top-0 backdrop-blur bg-white/70 dark:bg-slate-900/60 border-b border-white/20 z-10">
+      <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-rose-700 focus:shadow-lg dark:focus:bg-slate-900 dark:focus:text-rose-200" data-i18n="nav.skip_to_content">Aller au contenu</a>
+      <nav aria-label="Navigation principale" data-i18n-attr="aria-label:nav.primary_label" class="sticky top-0 backdrop-blur bg-white/70 dark:bg-slate-900/60 border-b border-white/20 z-10">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <a href="/" class="flex shrink-0 items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-rose-50 dark:focus-visible:ring-offset-slate-900" aria-label="J'suis Déchiré .com">
             <picture>
@@ -79,7 +91,7 @@
             </picture>
           </a>
           <div class="flex items-center gap-2 flex-wrap justify-end">
-            <select id="langSelect" aria-label="Langue" title="Langue" class="text-sm rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700 px-2 py-1"></select>
+            <select id="langSelect" aria-label="Langue" title="Langue" data-i18n-attr="aria-label:nav.language_label,title:nav.language_label" class="text-sm rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700 px-2 py-1"></select>
             <a href="/leaderboard" class="text-sm px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700" data-i18n="nav.leaderboard">Top</a>
             {% if current_user_payload %}
             <div class="relative">
@@ -136,7 +148,7 @@
           </div>
         </div>
       </nav>
-      <main class="max-w-5xl mx-auto w-full flex-1 px-4 py-6">
+      <main id="main-content" tabindex="-1" class="max-w-5xl mx-auto w-full flex-1 px-4 py-6 focus:outline-none">
         {% block content %}{% endblock %}
       </main>
       <footer class="mt-12 border-t border-rose-100/60 dark:border-slate-700 bg-gradient-to-r from-rose-600/10 via-rose-500/5 to-rose-600/10">
