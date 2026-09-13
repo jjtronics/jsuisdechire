@@ -63,7 +63,7 @@ python app.py  # démarre sur 0.0.0.0:9001
 - La base SQLite (`data.sqlite`) est créée automatiquement.
 - Variables utiles :
   - `SECRET_KEY` (clé de session Flask) – obligatoire en production ; une clé temporaire est générée uniquement en développement.
-  - `GOOGLE_ANALYTICS_ID` (identifiant de mesure GA4 au format `G-XXXXXXXXXX`) – active les statistiques après consentement de l’utilisateur ; laissé vide, le suivi reste désactivé.
+  - `GOOGLE_ANALYTICS_ID` (identifiant de mesure GA4 au format `G-XXXXXXXXXX`) – active GA4 avec Consent Mode v2 : refus par défaut dans l’EEE, au Royaume-Uni et en Suisse, autorisation par défaut ailleurs ; laissé vide, le suivi reste désactivé.
 - `ASSET_VERSION` pour invalider le cache des assets statiques.
 
 Contrôles avant livraison :
@@ -161,14 +161,14 @@ python app.py  # defaults to 0.0.0.0:9001
 - SQLite database is created automatically.
 - Optional env vars:
   - `SECRET_KEY` – session signing key.
-  - `GOOGLE_ANALYTICS_ID` – GA4 measurement ID (`G-XXXXXXXXXX`); tracking starts only after user consent, and remains disabled when empty.
+  - `GOOGLE_ANALYTICS_ID` – GA4 measurement ID (`G-XXXXXXXXXX`); Consent Mode v2 denies consent by default in the EEA, United Kingdom and Switzerland and grants it elsewhere; tracking remains disabled when empty.
   - `ASSET_VERSION` – bump to bust static caches.
 
 ### 👩‍💻 Admin & scoring
 - Admin login: `/admin`; use a unique login and password.
 - Change credentials, clear scores, fine-tune each mini-game, validate settings, or test SMTP delivery to an explicit address from the dashboard.
 - The SMTP password is never injected into the admin HTML; leaving the field blank keeps the existing secret.
-- Google Analytics 4 is opt-in: set `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` in the production environment to enable anonymous audience measurement after consent.
+- Google Analytics 4 uses Google Consent Mode v2: set `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` in production to enable regional consent handling, with consent denied by default in the EEA, United Kingdom and Switzerland and granted elsewhere. The banner lets visitors accept or refuse, and preferences remain available in the footer.
 - `/api/submit` stores total + per-test scores, timestamp, and nickname.
 
 ### 🎨 Customization tips
@@ -236,14 +236,14 @@ python app.py  # espone 0.0.0.0:9001
 - Il database SQLite viene creato automaticamente.
 - Variabili opzionali:
   - `SECRET_KEY` – chiave di sessione Flask.
-  - `GOOGLE_ANALYTICS_ID` – ID di misurazione GA4 (`G-XXXXXXXXXX`); il tracciamento parte solo dopo il consenso e resta disattivato se vuoto.
+  - `GOOGLE_ANALYTICS_ID` – ID di misurazione GA4 (`G-XXXXXXXXXX`); Consent Mode v2 nega il consenso per impostazione predefinita nello SEE, nel Regno Unito e in Svizzera e lo concede altrove; il tracciamento resta disattivato se vuoto.
   - `ASSET_VERSION` – incrementa per forzare il refresh degli asset statici.
 
 ### 👩‍💻 Admin & punteggi
 - Login admin: `/admin`; usa credenziali uniche.
 - Dal pannello puoi cambiare credenziali, cancellare i punteggi, calibrare ogni mini-gioco, validare i parametri o testare l’invio SMTP verso un indirizzo esplicito.
 - La password SMTP non viene mai inserita nell’HTML dell’admin; lasciare vuoto il campo conserva il segreto esistente.
-- Google Analytics 4 è attivato solo dopo il consenso: imposta `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` nell’ambiente di produzione per abilitare le statistiche di visita anonime.
+- Google Analytics 4 usa Google Consent Mode v2: imposta `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` nell’ambiente di produzione per gestire il consenso per area geografica. Il consenso è negato per impostazione predefinita nello SEE, nel Regno Unito e in Svizzera e concesso altrove; il banner e le preferenze nel footer permettono di modificarlo.
 - `/api/submit` salva punteggio totale, dettaglio per test, timestamp e nickname.
 
 ### 🎨 Personalizzazione rapida

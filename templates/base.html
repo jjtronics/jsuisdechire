@@ -76,11 +76,25 @@
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { window.dataLayer.push(arguments); }
+    // Consent Mode avancé : Google applique le refus régional aux visiteurs
+    // de l'EEE, du Royaume-Uni et de la Suisse, et l'autorisation ailleurs.
     gtag('consent', 'default', {
       analytics_storage: 'granted',
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted'
+    });
+    gtag('consent', 'default', {
+      analytics_storage: 'denied',
       ad_storage: 'denied',
       ad_user_data: 'denied',
-      ad_personalization: 'denied'
+      ad_personalization: 'denied',
+      region: [
+        'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE',
+        'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT',
+        'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'GB', 'CH'
+      ],
+      wait_for_update: 500
     });
   </script>
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
@@ -93,12 +107,6 @@
       const loadAnalytics = () => {
         if (analyticsConfigured) return;
         analyticsConfigured = true;
-        window.gtag('consent', 'update', {
-          analytics_storage: 'granted',
-          ad_storage: 'denied',
-          ad_user_data: 'denied',
-          ad_personalization: 'denied'
-        });
         window.gtag('js', new Date());
         window.gtag('config', measurementId, {
           send_page_view: false,
@@ -106,6 +114,16 @@
           allow_ad_personalization_signals: false
         });
         window.gtag('event', 'page_view', { send_to: measurementId });
+      };
+
+      const updateConsent = (state) => {
+        const granted = state === 'granted';
+        window.gtag('consent', 'update', {
+          analytics_storage: granted ? 'granted' : 'denied',
+          ad_storage: granted ? 'granted' : 'denied',
+          ad_user_data: granted ? 'granted' : 'denied',
+          ad_personalization: granted ? 'granted' : 'denied'
+        });
       };
 
       const showBanner = () => {
@@ -118,21 +136,22 @@
         if (banner) banner.classList.add('hidden');
       };
 
+      const setStoredConsent = (value) => {
+        try { localStorage.setItem(consentKey, value); } catch (err) {}
+      };
+
       window.jsdAnalytics = {
         accept() {
-          try { localStorage.setItem(consentKey, 'accepted'); } catch (err) {}
+          setStoredConsent('accepted');
+          updateConsent('granted');
           hideBanner();
           loadAnalytics();
         },
         refuse() {
-          try { localStorage.setItem(consentKey, 'refused'); } catch (err) {}
-          window.gtag('consent', 'update', {
-            analytics_storage: 'denied',
-            ad_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied'
-          });
+          setStoredConsent('refused');
+          updateConsent('denied');
           hideBanner();
+          loadAnalytics();
         },
         reset() {
           try { localStorage.removeItem(consentKey); } catch (err) {}
@@ -148,10 +167,16 @@
         }
         let consent = null;
         try { consent = localStorage.getItem(consentKey); } catch (err) {}
-        if (consent !== 'refused') {
-          try { localStorage.setItem(consentKey, 'accepted'); } catch (err) {}
-          loadAnalytics();
+        if (consent === 'accepted') {
+          updateConsent('granted');
+          hideBanner();
+        } else if (consent === 'refused') {
+          updateConsent('denied');
+          hideBanner();
+        } else {
+          showBanner();
         }
+        loadAnalytics();
       });
     })();
   </script>
@@ -165,7 +190,7 @@
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0">
             <h2 id="analyticsConsentTitle" class="text-sm font-black text-slate-900 dark:text-slate-100" data-i18n="analytics.title">Améliorer le site avec des statistiques anonymes</h2>
-            <p id="analyticsConsentDescription" class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300" data-i18n="analytics.description">Les statistiques Google Analytics sont activées par défaut pour améliorer l’expérience. Tu peux les refuser à tout moment.</p>
+            <p id="analyticsConsentDescription" class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300" data-i18n="analytics.description">Dans l’UE, au Royaume-Uni et en Suisse, les statistiques restent désactivées jusqu’à ton choix. Ailleurs, elles sont activées par défaut. Tu peux modifier ce choix à tout moment.</p>
           </div>
           <div class="flex shrink-0 gap-2">
             <button type="button" data-analytics-action="refuse" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" data-i18n="analytics.refuse">Refuser</button>

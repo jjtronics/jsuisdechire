@@ -34,7 +34,7 @@
 - Ajout d’un envoi d’email de test vers une adresse explicitement saisie.
 - Suppression des anciennes variantes JavaScript t3/t4 non référencées ; les versions actives restent `t3.v156.js` et `t4.v157.js`.
 - Le bouton SMTP distingue désormais le diagnostic de connexion d’un envoi d’email de test vers un destinataire explicitement saisi.
-- Intégration GA4 prête à activer via `GOOGLE_ANALYTICS_ID`, avec consentement explicite, refus persistant et lien de gestion des préférences ; les pages admin sont exclues.
+- Intégration GA4 via `GOOGLE_ANALYTICS_ID` avec Consent Mode v2 régionalisé, refus persistant et lien de gestion des préférences ; les pages admin sont exclues.
 - Tailwind compilé localement, validation et limitation des soumissions renforcées, tests automatisés ajoutés.
 - Classement et détails de résultats harmonisés dans l’ordre des tests 1 à 7, avec améliorations d’accessibilité et de cache PWA.
 - Correction de l’enregistrement des scores : le nombre de paramètres SQL correspond désormais aux 31 colonnes utilisées.
@@ -43,3 +43,4 @@
 
 - Audit technique et UX détaillé dans [`AUDIT.md`](AUDIT.md).
 - README mis à jour pour les sept tests, le JJ HUB, le branding et le nouveau workflow de déploiement.
+- Consent Mode Google v2 régionalisé pour GA4 : refus par défaut dans l’EEE, au Royaume-Uni et en Suisse, autorisation ailleurs, avec acceptation/refus complets depuis la bannière.
