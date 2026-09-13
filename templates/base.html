@@ -77,7 +77,7 @@
     window.dataLayer = window.dataLayer || [];
     function gtag() { window.dataLayer.push(arguments); }
     gtag('consent', 'default', {
-      analytics_storage: 'denied',
+      analytics_storage: 'granted',
       ad_storage: 'denied',
       ad_user_data: 'denied',
       ad_personalization: 'denied'
@@ -126,6 +126,12 @@
         },
         refuse() {
           try { localStorage.setItem(consentKey, 'refused'); } catch (err) {}
+          window.gtag('consent', 'update', {
+            analytics_storage: 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied'
+          });
           hideBanner();
         },
         reset() {
@@ -142,8 +148,10 @@
         }
         let consent = null;
         try { consent = localStorage.getItem(consentKey); } catch (err) {}
-        if (consent === 'accepted') loadAnalytics();
-        if (!consent) showBanner();
+        if (consent !== 'refused') {
+          try { localStorage.setItem(consentKey, 'accepted'); } catch (err) {}
+          loadAnalytics();
+        }
       });
     })();
   </script>
@@ -157,7 +165,7 @@
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0">
             <h2 id="analyticsConsentTitle" class="text-sm font-black text-slate-900 dark:text-slate-100" data-i18n="analytics.title">Améliorer le site avec des statistiques anonymes</h2>
-            <p id="analyticsConsentDescription" class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300" data-i18n="analytics.description">Nous utilisons Google Analytics pour mesurer les visites et améliorer l’expérience. Aucun cookie de mesure n’est utilisé sans ton accord.</p>
+            <p id="analyticsConsentDescription" class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300" data-i18n="analytics.description">Les statistiques Google Analytics sont activées par défaut pour améliorer l’expérience. Tu peux les refuser à tout moment.</p>
           </div>
           <div class="flex shrink-0 gap-2">
             <button type="button" data-analytics-action="refuse" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" data-i18n="analytics.refuse">Refuser</button>
