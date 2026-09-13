@@ -27,6 +27,7 @@
 - Refonte mobile du classement en cartes détaillables, clarification du texte d’accueil et précache du service worker.
 - Ajout de descriptions courtes pour clarifier chaque mini-jeu dans l’administration.
 - Réorganisation des réglages admin dans l’ordre des tests 1 à 7.
+- Ajout d’un bouton de test live sur chaque mini-jeu : l’aperçu s’ouvre dans un nouvel onglet avec les réglages affichés, sans sauvegarde ni pollution de la progression réelle.
 - Refonte de la page des paramètres admin : en-tête dédié, navigation par sections, champs plus lisibles, état des modifications et barre d’actions persistante.
 - Ajout d’un diagnostic SMTP admin : vérification de la connexion, du chiffrement et de l’authentification sans envoi d’email.
 - Sécurisation des paramètres SMTP : le mot de passe n’est plus injecté dans la page admin et reste inchangé si le champ est vide.

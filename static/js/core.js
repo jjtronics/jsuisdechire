@@ -1,4 +1,7 @@
 (function(){
+  if (window.jsdConfig && window.jsdConfig.preview){
+    return;
+  }
   const HOME_ROUTE = '/';
   const RESULTS_ROUTE = '/results';
   const PATH_TO_TEST = {

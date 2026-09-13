@@ -91,7 +91,7 @@ Le script exclut la base SQLite, les secrets, l’environnement virtuel et les u
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques).
-- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
+- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test, lancer chaque mini-jeu en aperçu avec les valeurs non sauvegardées, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
 - Le mot de passe SMTP n’est jamais injecté dans le HTML de l’admin ; un champ vide conserve le secret existant.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.
 
@@ -166,7 +166,7 @@ python app.py  # defaults to 0.0.0.0:9001
 
 ### 👩‍💻 Admin & scoring
 - Admin login: `/admin`; use a unique login and password.
-- Change credentials, clear scores, fine-tune each mini-game, validate settings, or test SMTP delivery to an explicit address from the dashboard.
+- Change credentials, clear scores, fine-tune each mini-game, launch a live preview with unsaved values, validate settings, or test SMTP delivery to an explicit address from the dashboard.
 - The SMTP password is never injected into the admin HTML; leaving the field blank keeps the existing secret.
 - Google Analytics 4 uses Google Consent Mode v2: set `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` in production to enable regional consent handling, with consent denied by default in the EEA, United Kingdom and Switzerland and granted elsewhere. The banner lets visitors accept or refuse, and preferences remain available in the footer.
 - `/api/submit` stores total + per-test scores, timestamp, and nickname.
@@ -241,7 +241,7 @@ python app.py  # espone 0.0.0.0:9001
 
 ### 👩‍💻 Admin & punteggi
 - Login admin: `/admin`; usa credenziali uniche.
-- Dal pannello puoi cambiare credenziali, cancellare i punteggi, calibrare ogni mini-gioco, validare i parametri o testare l’invio SMTP verso un indirizzo esplicito.
+- Dal pannello puoi cambiare credenziali, cancellare i punteggi, calibrare ogni mini-gioco, avviare un’anteprima dal vivo con i valori non salvati, validare i parametri o testare l’invio SMTP verso un indirizzo esplicito.
 - La password SMTP non viene mai inserita nell’HTML dell’admin; lasciare vuoto il campo conserva il segreto esistente.
 - Google Analytics 4 usa Google Consent Mode v2: imposta `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` nell’ambiente di produzione per gestire il consenso per area geografica. Il consenso è negato per impostazione predefinita nello SEE, nel Regno Unito e in Svizzera e concesso altrove; il banner e le preferenze nel footer permettono di modificarlo.
 - `/api/submit` salva punteggio totale, dettaglio per test, timestamp e nickname.

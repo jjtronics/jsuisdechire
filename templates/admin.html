@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'reaction',
       title: 'admin.groups.reaction.title',
       description: 'admin.groups.reaction.description',
+      preview: { route: '/t1', enabledKey: 'game_rxn_enabled' },
       fields: [
         {k:'rxn_trials', label:'admin.fields.reaction.trials', helper:'admin.helpers.reaction.trials', type:'number', step:'1', min:'1', max:'20'},
         {k:'rxn_wait_min_ms', label:'admin.fields.reaction.wait_min', helper:'admin.helpers.reaction.wait_min', type:'number', step:'50', min:'0'},
@@ -197,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'stroop',
       title: 'admin.groups.stroop.title',
       description: 'admin.groups.stroop.description',
+      preview: { route: '/t2', enabledKey: 'game_str_enabled' },
       fields: [
         {k:'str_rounds', label:'admin.fields.stroop.rounds', helper:'admin.helpers.stroop.rounds', type:'number', step:'1', min:'1', max:'30'},
         {k:'str_acc_weight', label:'admin.fields.stroop.acc_weight', helper:'admin.helpers.stroop.acc_weight', type:'number', step:'0.05', min:'0', max:'1'},
@@ -209,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'pursuit',
       title: 'admin.groups.pursuit.title',
       description: 'admin.groups.pursuit.description',
+      preview: { route: '/t3', enabledKey: 'game_prs_enabled' },
       fields: [
         {k:'prs_timeSpeed', label:'admin.fields.pursuit.speed', helper:'admin.helpers.pursuit.speed', type:'number', step:'0.05', min:'0.1', max:'5'},
         {k:'prs_duration_ms', label:'admin.fields.pursuit.duration', helper:'admin.helpers.pursuit.duration', type:'number', step:'100', min:'2000', max:'30000'},
@@ -221,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'balance',
       title: 'admin.groups.balance.title',
       description: 'admin.groups.balance.description',
+      preview: { route: '/t4', enabledKey: 'game_bal_enabled' },
       fields: [
         {k:'bal_mode', label:'admin.fields.balance.mode', helper:'admin.helpers.balance.mode', type:'select', options:[['mag','admin.fields.balance.mode.magnitude'], ['lin','admin.fields.balance.mode.linear']]},
         {k:'bal_duration_ms', label:'admin.fields.balance.duration', helper:'admin.helpers.balance.duration', type:'number', step:'100', min:'3000', max:'30000'},
@@ -237,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'memory',
       title: 'admin.groups.memory.title',
       description: 'admin.groups.memory.description',
+      preview: { route: '/t5', enabledKey: 'game_mem_enabled' },
       fields: [
         {k:'mem_pairs', label:'admin.fields.memory.pairs', helper:'admin.helpers.memory.pairs', type:'number', step:'1', min:'2', max:'12'},
         {k:'mem_initial_reveal_ms', label:'admin.fields.memory.reveal', helper:'admin.helpers.memory.reveal', type:'number', step:'50', min:'300', max:'6000'},
@@ -251,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'reflex',
       title: 'admin.groups.reflex.title',
       description: 'admin.groups.reflex.description',
+      preview: { route: '/t6', enabledKey: 'game_rfl_enabled' },
       fields: [
         {k:'rfl_attempts', label:'admin.fields.reflex.attempts', helper:'admin.helpers.reflex.attempts', type:'number', step:'1', min:'1', max:'20'},
         {k:'rfl_velocity_scale', label:'admin.fields.reflex.velocity_scale', helper:'admin.helpers.reflex.velocity_scale', type:'number', step:'0.1', min:'0.5', max:'20'},
@@ -266,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'driving',
       title: 'admin.groups.driving.title',
       description: 'admin.groups.driving.description',
+      preview: { route: '/t7', enabledKey: 'game_drv_enabled' },
       fields: [
         {k:'drv_lane_count', label:'admin.fields.driving.lane_count', helper:'admin.helpers.driving.lane_count', type:'number', step:'1', min:'2', max:'5'},
         {k:'drv_duration_ms', label:'admin.fields.driving.duration', helper:'admin.helpers.driving.duration', type:'number', step:'500', min:'5000', max:'120000'},
@@ -410,6 +417,23 @@ document.addEventListener('DOMContentLoaded', () => {
       section.append(grid);
     }
 
+    if (group.preview){
+      const action = el('div','mt-5 flex flex-col gap-3 rounded-2xl border border-indigo-200/70 bg-indigo-50/70 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/20 sm:flex-row sm:items-center sm:justify-between');
+      const copy = el('div','space-y-1');
+      const title = el('p','text-sm font-bold text-slate-800 dark:text-slate-100', t('admin.preview.title'));
+      title.dataset.i18n = 'admin.preview.title';
+      const description = el('p','text-xs leading-5 text-slate-600 dark:text-slate-300', t('admin.preview.description'));
+      description.dataset.i18n = 'admin.preview.description';
+      copy.append(title, description);
+      const button = el('button','inline-flex shrink-0 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40', t('admin.preview.button'));
+      button.type = 'button';
+      button.dataset.previewRoute = group.preview.route;
+      button.dataset.previewEnabledKey = group.preview.enabledKey;
+      button.dataset.i18n = 'admin.preview.button';
+      action.append(copy, button);
+      section.append(action);
+    }
+
     if (group.actions === 'smtp-test'){
       const action = el('div','mt-5 flex flex-col gap-3 rounded-2xl border border-cyan-200/70 bg-cyan-50/70 p-4 dark:border-cyan-900/60 dark:bg-cyan-950/20 sm:flex-row sm:items-center sm:justify-between');
       const copy = el('div','space-y-1');
@@ -498,6 +522,44 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     return data;
+  }
+
+  function openGamePreview(button){
+    const route = button && button.dataset.previewRoute;
+    const enabledKey = button && button.dataset.previewEnabledKey;
+    const previewGroup = GROUPS.find(group => group.preview && group.preview.route === route);
+    if (!route || !enabledKey || !previewGroup) return;
+
+    const current = collectSettings();
+    const previewSettings = {};
+    GROUPS.filter(group => group.id === 'games' || group.preview).forEach(group => {
+      (group.fields || []).forEach(field => {
+        if (Object.prototype.hasOwnProperty.call(current, field.k)) {
+          previewSettings[field.k] = current[field.k];
+        }
+      });
+    });
+
+    GROUPS.find(group => group.id === 'games').fields
+      .filter(field => field.k.startsWith('game_'))
+      .forEach(field => { previewSettings[field.k] = false; });
+    previewSettings[enabledKey] = true;
+    previewSettings.session_total_games = 1;
+
+    const previewWindow = window.open('about:blank', '_blank');
+    if (!previewWindow){
+      msg.className = 'w-full text-xs font-semibold text-rose-300 lg:w-auto';
+      msg.textContent = translateOrFallback('admin.preview.blocked', 'Autorise les fenêtres contextuelles pour ouvrir le test.');
+      return;
+    }
+
+    previewWindow.name = JSON.stringify({
+      source: 'jsd-admin-preview-v1',
+      settings: previewSettings
+    });
+    previewWindow.location.href = `${route}?admin_preview=1`;
+    msg.className = 'w-full text-xs text-indigo-200 lg:w-auto';
+    msg.textContent = translateOrFallback('admin.preview.opened', 'Aperçu ouvert avec les valeurs actuelles.');
   }
 
   function validateSettings(data){
@@ -656,6 +718,8 @@ document.addEventListener('DOMContentLoaded', () => {
   wrap.addEventListener('click', event => {
     if (event.target.closest('#smtpTestBtn')) testSmtp();
     if (event.target.closest('#smtpEmailTestBtn')) sendSmtpTestEmail();
+    const previewButton = event.target.closest('[data-preview-route]');
+    if (previewButton) openGamePreview(previewButton);
   });
   wrap.addEventListener('input', event => {
     if (event.target.matches('[data-key]')) markSettingsDirty();

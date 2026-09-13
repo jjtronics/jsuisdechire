@@ -175,6 +175,9 @@
   }
 
   function isActive(testId){
+    if (window.jsdConfig && window.jsdConfig.preview){
+      return true;
+    }
     return getSequence().includes(testId);
   }
 
@@ -189,6 +192,21 @@
 
   function setupPage(testId, options){
     options = options || {};
+    if (window.jsdConfig && window.jsdConfig.preview){
+      const nextEl = options.nextSelector ? document.querySelector(options.nextSelector) : null;
+      if (nextEl){
+        nextEl.setAttribute('href', RESULTS_ROUTE);
+      }
+      const backEl = options.backSelector ? document.querySelector(options.backSelector) : null;
+      if (backEl && options.hideBackIfFirst){
+        backEl.classList.add('hidden');
+        backEl.setAttribute('href', HOME_ROUTE);
+      }
+      if (typeof options.onReady === 'function'){
+        options.onReady({ sequence: [testId], index: 0, nextRoute: RESULTS_ROUTE, prevRoute: HOME_ROUTE });
+      }
+      return { sequence: [testId], index: 0, nextRoute: RESULTS_ROUTE, prevRoute: HOME_ROUTE };
+    }
     const sequence = ensureSequence();
     if (!sequence.length){
       if (location.pathname !== RESULTS_ROUTE){

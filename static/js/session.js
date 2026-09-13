@@ -126,6 +126,9 @@
 
   async function submitScore(options){
     options = options || {};
+    if (window.jsdConfig && window.jsdConfig.preview){
+      return { status: 'preview' };
+    }
     if (!options.force && submissionState() === '1'){
       return { status: 'already', cached: getLastSubmissionInfo() };
     }
