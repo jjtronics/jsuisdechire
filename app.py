@@ -404,7 +404,9 @@ def validate_settings(settings: dict) -> list[str]:
     return list(dict.fromkeys(errors))
 
 DEFAULT_ADMIN_LOGIN = "admin"
-DEFAULT_ADMIN_PASSWORD_HASH = generate_password_hash("jsuisdechire")
+# Never ship a usable admin password. A fresh installation must be configured
+# explicitly before the admin area can be used.
+DEFAULT_ADMIN_PASSWORD_HASH = None
 ADMIN_SESSION_KEY = "admin_authenticated"
 USER_SESSION_KEY = "user_authenticated_id"
 GOOGLE_PENDING_SESSION_KEY = "pending_google_signup"
@@ -1409,7 +1411,7 @@ def api_admin_credentials_update():
     data = request.get_json(silent=True) or {}
     creds = get_admin_credentials()
     current_password = data.get("current_password") or ""
-    if not check_password_hash(creds["password_hash"], current_password):
+    if not creds["password_hash"] or not check_password_hash(creds["password_hash"], current_password):
         return jsonify({"ok": False, "error": "invalid_password"}), 400
 
     new_login = (data.get("login") or "").strip()
@@ -2454,7 +2456,11 @@ def admin_login():
         login = (request.form.get("login") or "").strip()
         password = request.form.get("password") or ""
         creds = get_admin_credentials()
-        if login == creds["login"] and check_password_hash(creds["password_hash"], password):
+        if (
+            creds["password_hash"]
+            and login == creds["login"]
+            and check_password_hash(creds["password_hash"], password)
+        ):
             session[ADMIN_SESSION_KEY] = True
             next_url = safe_next_url(request.args.get("next"))
             return redirect(next_url or url_for("admin"))

@@ -66,12 +66,12 @@ Le point d’entrée lance Flask avec `debug=True` dans [`app.py`](app.py#L1974)
 **Impact :** divulgation de chemins, versions et détails internes ; risque de sécurité supplémentaire lié au debugger exposé.
 **Résolution :** l’unité systemd lance désormais Gunicorn avec `FLASK_ENV=production`, et `app.py` ne peut activer le debug que via `FLASK_DEBUG`.
 
-### P0-03 — [Résolu côté interface] Les identifiants admin par défaut étaient affichés publiquement
+### P0-03 — [Résolu] Les identifiants admin par défaut étaient affichés publiquement
 
 La page [`templates/admin_login.html`](templates/admin_login.html#L21) affiche encore `admin / jsuisdechire`. Le README mentionne également ces identifiants initiaux.
 
 **Impact :** toute personne peut connaître le couple initial ; l’information ne doit jamais rester visible sur une instance publique.
-**Résolution :** l’indication a été supprimée. Le propriétaire doit encore confirmer que le mot de passe admin actuel est unique.
+**Résolution :** l’indication a été supprimée, le fallback vers le mot de passe connu a été retiré du code et le secret admin de production a été renouvelé. Les routes `/admin` et `/api/admin/*` restent protégées par session.
 
 ### P0-04 — [Résolu côté code] Les réglages SMTP étaient exposés publiquement
 

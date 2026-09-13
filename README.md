@@ -90,7 +90,7 @@ REMOTE_HOST=192.168.1.30 RUN_HTTP_CHECKS=0 ./deploy.sh
 Le script exclut la base SQLite, les secrets, l’environnement virtuel et les uploads locaux de l’archive ; il sauvegarde l’installation distante avant copie, installe la configuration Gunicorn/systemd, crée une clé de session de production si nécessaire, redémarre le service et contrôle les routes principales ainsi que les nouveaux assets de marque.
 
 ### 👩‍💻 Admin & scores
-- Accès admin : `/admin` (utiliser un login et un mot de passe uniques).
+- Accès admin : `/admin` (utiliser un login et un mot de passe uniques ; aucun mot de passe par défaut n’est accepté).
 - Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test, lancer chaque mini-jeu en aperçu avec les valeurs non sauvegardées, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
 - Le mot de passe SMTP n’est jamais injecté dans le HTML de l’admin ; un champ vide conserve le secret existant.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.

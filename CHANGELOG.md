@@ -31,6 +31,7 @@
 - Refonte de la page des paramètres admin : en-tête dédié, navigation par sections, champs plus lisibles, état des modifications et barre d’actions persistante.
 - Ajout d’un diagnostic SMTP admin : vérification de la connexion, du chiffrement et de l’authentification sans envoi d’email.
 - Sécurisation des paramètres SMTP : le mot de passe n’est plus injecté dans la page admin et reste inchangé si le champ est vide.
+- Durcissement de l’authentification admin : suppression du mot de passe par défaut connu et rotation du secret de production.
 - Validation cohérente des seuils, durées et pondérations avant sauvegarde, avec avertissement en cas de modifications non enregistrées et retour aux valeurs sauvegardées.
 - Ajout d’un envoi d’email de test vers une adresse explicitement saisie.
 - Suppression des anciennes variantes JavaScript t3/t4 non référencées ; les versions actives restent `t3.v156.js` et `t4.v157.js`.

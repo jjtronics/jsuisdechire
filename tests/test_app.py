@@ -68,6 +68,36 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertIn("jsd-cache-v", service_worker.get_data(as_text=True))
         self.assertIn("Cache-Control", service_worker.headers)
 
+    def test_admin_routes_require_authentication(self):
+        admin_page = self.client.get("/admin")
+        self.assertEqual(admin_page.status_code, 302)
+        self.assertIn("/admin/login", admin_page.headers["Location"])
+
+        protected_api_requests = (
+            ("/api/admin/settings", "post"),
+            ("/api/admin/users", "get"),
+            ("/api/admin/scores", "get"),
+        )
+        for path, method in protected_api_requests:
+            with self.subTest(path=path):
+                if method == "post":
+                    response = self.client.post(path, json={}, headers={"X-CSRFToken": self.csrf_token})
+                else:
+                    response = self.client.get(path)
+                self.assertEqual(response.status_code, 401)
+
+    def test_admin_has_no_known_password_fallback(self):
+        response = self.client.post(
+            "/admin/login",
+            data={
+                "csrf_token": self.csrf_token,
+                "login": "admin",
+                "password": "jsuisdechire",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Identifiants invalides", response.get_data(as_text=True))
+
     def test_submit_recalculates_total_and_normalizes_values(self):
         response = self.post_json("/api/submit", self.valid_payload())
         self.assertEqual(response.status_code, 200)
