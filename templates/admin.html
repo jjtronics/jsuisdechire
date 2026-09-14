@@ -238,6 +238,116 @@
     box-shadow: 0 8px 18px -14px rgba(79, 70, 229, .7);
   }
 
+  #adminGameSelection .admin-game-card {
+    position: relative;
+    min-height: 9.5rem;
+    overflow: hidden;
+    width: 100%;
+    border: 3px solid rgba(255,255,255,.82);
+    border-radius: 1.35rem;
+    background-color: #172033;
+    background-image: linear-gradient(145deg,rgba(15,23,42,.02),rgba(15,23,42,.78)),url('{{ asset_url("branding/game-selector-sprite-cartoon.png") }}');
+    background-size: 500% 200%;
+    background-repeat: no-repeat;
+    color: #fff;
+    text-align: left;
+    box-shadow: inset 0 0 0 1px rgba(15,23,42,.28), 0 10px 0 -6px rgba(15,23,42,.2);
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease, border-color .2s ease, filter .2s ease;
+    touch-action: manipulation;
+  }
+
+  #adminGameSelection .admin-game-card:hover {
+    transform: translateY(-4px) rotate(-.6deg);
+    box-shadow: inset 0 0 0 1px rgba(15,23,42,.28), 0 16px 0 -8px rgba(15,23,42,.22), 0 20px 28px -18px rgba(15,23,42,.7);
+  }
+
+  #adminGameSelection .admin-game-card:active { transform: scale(.98); }
+
+  #adminGameSelection .admin-game-card.is-enabled {
+    border-color: #34d399;
+    box-shadow: 0 0 0 3px rgba(52,211,153,.25), 0 10px 0 -6px rgba(5,150,105,.35), 0 18px 30px -20px rgba(5,150,105,.75);
+  }
+
+  #adminGameSelection .admin-game-card.is-disabled {
+    filter: grayscale(.75);
+    opacity: .65;
+  }
+
+  #adminGameSelection .admin-game-card::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 62%;
+    background: linear-gradient(transparent,rgba(2,6,23,.92));
+    pointer-events: none;
+  }
+
+  #adminGameSelection .admin-game-index,
+  #adminGameSelection .admin-game-status,
+  #adminGameSelection .admin-game-copy,
+  #adminGameSelection .admin-game-check { position: absolute; z-index: 2; }
+
+  #adminGameSelection .admin-game-index {
+    left: .7rem;
+    top: .7rem;
+    display: grid;
+    height: 1.55rem;
+    min-width: 1.55rem;
+    place-items: center;
+    padding: 0 .35rem;
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: .55rem;
+    background: rgba(15,23,42,.45);
+    font-size: .62rem;
+    font-weight: 950;
+    letter-spacing: .08em;
+  }
+
+  #adminGameSelection .admin-game-status {
+    right: .65rem;
+    top: .7rem;
+    border-radius: 999px;
+    background: rgba(15,23,42,.62);
+    padding: .35rem .5rem;
+    color: rgba(255,255,255,.88);
+    font-size: .56rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  #adminGameSelection .admin-game-check {
+    right: .62rem;
+    top: 2.15rem;
+    display: grid;
+    height: 2rem;
+    width: 2rem;
+    place-items: center;
+    border: 3px solid rgba(255,255,255,.9);
+    border-radius: .75rem;
+    background: #10b981;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 950;
+    opacity: 0;
+    transform: scale(.65) rotate(-10deg);
+    transition: opacity .2s ease, transform .25s cubic-bezier(.2,.8,.2,1);
+  }
+
+  #adminGameSelection .admin-game-card.is-enabled .admin-game-check {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+
+  #adminGameSelection .admin-game-copy { bottom: .7rem; left: .75rem; right: .5rem; }
+  #adminGameSelection .admin-game-title { display: block; font-size: 1rem; font-weight: 950; line-height: 1.05; text-shadow: 0 2px 12px rgba(0,0,0,.45); }
+  #adminGameSelection .admin-game-caption { display: block; margin-top: .3rem; color: rgba(255,255,255,.72); font-size: .64rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
+  @media (max-width: 380px) {
+    #adminGameSelection .admin-game-card { min-height: 8.7rem; }
+    #adminGameSelection .admin-game-title { font-size: .9rem; }
+  }
+
 </style>
 
 <script>
@@ -677,6 +787,89 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   }
 
+  const ADMIN_GAME_CATALOG = [
+    {id:'t1', key:'game_rxn_enabled', title:'selection.game.t1.title', caption:'selection.game.t1.caption', x:0, y:0},
+    {id:'t2', key:'game_str_enabled', title:'selection.game.t2.title', caption:'selection.game.t2.caption', x:25, y:0},
+    {id:'t3', key:'game_prs_enabled', title:'selection.game.t3.title', caption:'selection.game.t3.caption', x:50, y:0},
+    {id:'t4', key:'game_bal_enabled', title:'selection.game.t4.title', caption:'selection.game.t4.caption', x:75, y:0},
+    {id:'t5', key:'game_mem_enabled', title:'selection.game.t5.title', caption:'selection.game.t5.caption', x:100, y:0},
+    {id:'t6', key:'game_rfl_enabled', title:'selection.game.t6.title', caption:'selection.game.t6.caption', x:0, y:100},
+    {id:'t7', key:'game_drv_enabled', title:'selection.game.t7.title', caption:'selection.game.t7.caption', x:25, y:100},
+    {id:'t8', key:'game_pong_enabled', title:'selection.game.t8.title', caption:'selection.game.t8.caption', x:50, y:100},
+    {id:'t9', key:'game_ice_enabled', title:'selection.game.t9.title', caption:'selection.game.t9.caption', x:75, y:100},
+    {id:'t10', key:'game_tilt_enabled', title:'selection.game.t10.title', caption:'selection.game.t10.caption', x:100, y:100}
+  ];
+
+  function gameSelectionSection(group, settings){
+    const panel = el('div', 'space-y-5');
+    const toolbar = el('div', 'flex flex-col gap-3 rounded-2xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50 via-cyan-50 to-indigo-50 p-4 dark:border-emerald-900/60 dark:from-emerald-950/25 dark:via-cyan-950/20 dark:to-indigo-950/25 sm:flex-row sm:items-center sm:justify-between');
+    const toolbarCopy = el('div', 'space-y-1');
+    const toolbarTitle = el('p', 'text-sm font-black text-slate-900 dark:text-slate-100', t('admin.game_selection.kicker'));
+    toolbarTitle.dataset.i18n = 'admin.game_selection.kicker';
+    const toolbarHint = el('p', 'text-xs leading-5 text-slate-600 dark:text-slate-300', t('admin.game_selection.hint'));
+    toolbarHint.dataset.i18n = 'admin.game_selection.hint';
+    toolbarCopy.append(toolbarTitle, toolbarHint);
+    const activeCount = el('span', 'inline-flex shrink-0 items-center justify-center rounded-xl border border-emerald-300 bg-white/80 px-3 py-2 text-sm font-black text-emerald-700 shadow-sm dark:border-emerald-800 dark:bg-slate-950/40 dark:text-emerald-300');
+    activeCount.id = 'adminGameSelectionCount';
+    toolbar.append(toolbarCopy, activeCount);
+    panel.append(toolbar);
+
+    const grid = el('div', 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4');
+    grid.id = 'adminGameSelection';
+    const enabledKeys = new Set(ADMIN_GAME_CATALOG.map(game => game.key));
+    const updateCount = () => {
+      const enabled = Array.from(panel.querySelectorAll('input[data-game-enabled]')).filter(input => input.checked).length;
+      activeCount.textContent = t('admin.game_selection.enabled_count').replace('{count}', String(enabled)).replace('{total}', String(ADMIN_GAME_CATALOG.length));
+    };
+
+    ADMIN_GAME_CATALOG.forEach((game, index) => {
+      const shell = el('div', 'relative');
+      const input = el('input', 'sr-only');
+      input.type = 'checkbox';
+      input.id = `admin-${game.key}`;
+      input.dataset.key = game.key;
+      input.dataset.gameEnabled = 'true';
+      input.tabIndex = -1;
+      input.checked = settings[game.key] === undefined ? true : !!settings[game.key];
+
+      const button = el('button', 'admin-game-card' + (input.checked ? ' is-enabled' : ' is-disabled'));
+      button.type = 'button';
+      button.style.backgroundPosition = `${game.x}% ${game.y}%`;
+      button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
+      button.setAttribute('aria-label', t(game.title));
+
+      const indexBadge = el('span', 'admin-game-index', String(index + 1).padStart(2, '0'));
+      const status = el('span', 'admin-game-status', input.checked ? t('admin.game_selection.active') : t('admin.game_selection.inactive'));
+      const check = el('span', 'admin-game-check', '✓');
+      check.setAttribute('aria-hidden', 'true');
+      const copy = el('span', 'admin-game-copy');
+      const title = el('span', 'admin-game-title', t(game.title));
+      title.dataset.i18n = game.title;
+      const caption = el('span', 'admin-game-caption', t(game.caption));
+      caption.dataset.i18n = game.caption;
+      copy.append(title, caption);
+      button.append(indexBadge, status, check, copy);
+      button.addEventListener('click', () => {
+        input.checked = !input.checked;
+        button.classList.toggle('is-enabled', input.checked);
+        button.classList.toggle('is-disabled', !input.checked);
+        button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
+        status.textContent = input.checked ? t('admin.game_selection.active') : t('admin.game_selection.inactive');
+        input.dispatchEvent(new Event('change', {bubbles: true}));
+        updateCount();
+      });
+      shell.append(input, button);
+      grid.append(shell);
+    });
+    panel.append(grid);
+
+    const secondary = el('div', 'grid gap-4 md:grid-cols-2');
+    (group.fields || []).filter(field => !enabledKeys.has(field.k)).forEach(field => secondary.append(fieldRow(field, settings[field.k])));
+    panel.append(secondary);
+    updateCount();
+    return panel;
+  }
+
   function groupSection(group, settings){
     const section = el('section','scroll-mt-24 rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7');
     section.id = `admin-group-${group.id}`;
@@ -695,7 +888,9 @@ document.addEventListener('DOMContentLoaded', () => {
     );
     section.append(header);
 
-    if (group.fields && group.fields.length){
+    if (group.id === 'games'){
+      section.append(gameSelectionSection(group, settings));
+    } else if (group.fields && group.fields.length){
       const grid = el('div','grid gap-4 md:grid-cols-2');
       group.fields.forEach(f=>grid.append(fieldRow(f, settings[f.k])));
       section.append(grid);

@@ -1,5 +1,23 @@
 # Journal des changements
 
+## 15 septembre 2026 — Refonte cartoon des mini-jeux
+
+### Réaction, Stroop & mobile
+
+- Le Test 1 · Réaction devient un vrai bouton cartoon carré : surface orange pendant l’attente, passage au vert au signal, reflets, socle sombre, ombre portée et effet d’enfoncement au toucher.
+- Le Test 2 · Stroop reprend l’univers des cartes de peinture du logo : carte centrale pour le mot affiché, six cartes de couleurs tactiles avec relief, éclaboussures et animations d’appui.
+- Le bouton de démarrage Stroop revient au design global du site pour garder une hiérarchie claire.
+- Suppression des pictogrammes décoratifs des en-têtes de mini-jeux afin de libérer de l’espace sur smartphone.
+
+## 15 septembre 2026 — Sélection des jeux admin par cartes
+
+### Administration & UX mobile
+
+- Remplacement des cases à cocher de l’onglet « Sélection des jeux » par la grille de cartes cartoon déjà utilisée côté joueur.
+- Activation et désactivation d’un mini-jeu en cliquant directement sur sa carte, avec coche verte, état lisible et compteur des jeux actifs.
+- Conservation des réglages du nombre de jeux tirés par partie, du choix des jeux par le joueur et des évaluations joueurs sous la grille.
+- Interface adaptée aux écrans tactiles et aux petits écrans.
+
 ## 15 septembre 2026 — Finalisation de l’espace d’administration
 
 ### UX, sécurité et documentation

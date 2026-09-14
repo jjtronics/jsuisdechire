@@ -28,6 +28,7 @@
 - **Résultats stylés** avec résumé, détails par test et bouton de partage.
 - **Parcours fluide** : une épreuve terminée ne peut pas être rejouée accidentellement ; la partie continue vers le mini-jeu suivant ou le score final.
 - **Avis facultatifs** : après le score final, le joueur peut ouvrir un formulaire mobile pour noter chaque mini-jeu joué sur 5 étoiles et qualifier sa difficulté, avec rappel du score obtenu.
+- **Mini-jeux cartoon** : Réaction utilise un vrai bouton orange/vert à presser, tandis que Stroop transforme les cartes de peinture en boutons de couleur tactiles.
 - **Classement public** (`/leaderboard`) avec sauvegarde automatique après chaque run.
 - **Panneau admin** (`/admin`) pour configurer les paramètres ou purger la base.
 - **Mode hors-ligne léger** grâce au service worker et aux assets versionnés.
@@ -96,7 +97,7 @@ Le script exclut la base SQLite, les secrets, l’environnement virtuel et les u
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques ; aucun mot de passe par défaut n’est accepté).
-- La page des paramètres est organisée en onglets : partie & expérience, mini-jeux, compte & email, retours joueurs et édition des scores. Les mini-jeux disposent d’un second niveau de navigation pour n’afficher qu’un panneau de calibration à la fois, sans retirer aucune option.
+- La page des paramètres est organisée en onglets : partie & expérience, mini-jeux, compte & email, retours joueurs et édition des scores. Dans « Sélection des jeux », les mini-jeux se gèrent avec la même grille de cartes cartoon que côté joueur : clic pour activer/désactiver, coche verte et compteur des jeux actifs. Les mini-jeux disposent aussi d’un second niveau de navigation pour n’afficher qu’un panneau de calibration à la fois, sans retirer aucune option.
 - Tu peux modifier login/mot de passe, purger les scores depuis l’éditeur dédié, ajuster les paramètres de chaque test, activer le choix des jeux par le joueur, lancer chaque mini-jeu en aperçu avec les valeurs non sauvegardées, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
 - Les actions globales restent en bas de page, sans barre flottante persistante sur mobile. La suppression des scores demande une modale intégrée au thème et la saisie obligatoire de « EFFACER » avant validation.
 - Le panneau admin inclut aussi les retours joueurs : synthèse par mini-jeu, moyenne d’étoiles, tendance de difficulté, recommandation d’ajustement et tableau détaillé triable/filtrable, regroupé sur une ligne par votant avec login et date.
@@ -141,6 +142,7 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 - **Optional feedback**: after the final score, players can rate every game they played from 1 to 5 stars and describe the difficulty, with their score shown on each card.
 - **Stylish results screen** with summary, per-test breakdown, and share button.
 - **Smooth flow**: once a test is finished, it cannot be accidentally replayed; the session continues to the next game or final score.
+- **Cartoon mini-games**: Reaction uses a real orange-to-green press button, while Stroop turns the paint cards into tactile color buttons.
 - **Public leaderboard** (`/leaderboard`) with automatic saving after each run.
 - **Admin console** (`/admin`) to tweak settings or wipe the database.
 - **Offline-friendly** thanks to a service worker and versioned assets.
@@ -182,7 +184,7 @@ python app.py  # defaults to 0.0.0.0:9001
 
 ### 👩‍💻 Admin & scoring
 - Admin login: `/admin`; use a unique login and password.
-- The settings page is organized into tabs: session & experience, mini-games, account & email, player feedback, and score editor. Mini-games have a second navigation level so only one calibration panel is shown at a time, without removing any option.
+- The settings page is organized into tabs: session & experience, mini-games, account & email, player feedback, and score editor. The “Game selection” panel reuses the cartoon card grid from the player flow: click a card to enable/disable a game, with a green check and active-game counter. Mini-games also have a second navigation level so only one calibration panel is shown at a time, without removing any option.
 - Change credentials, clear scores from the dedicated score editor, fine-tune each mini-game, enable player game selection, launch a live preview with unsaved values, validate settings, or test SMTP delivery to an explicit address from the dashboard.
 - Global actions stay at the bottom of the page and are not persistently fixed on mobile. Clearing scores uses a themed modal and requires typing “DELETE” before confirmation.
 - The admin dashboard also includes sortable/filterable player feedback grouped to one row per voter, with login and vote date, per-game averages, difficulty trends, tuning recommendations, and individual vote deletion.
@@ -227,6 +229,7 @@ MIT License (see [LICENSE](LICENSE)).
 - **Schermata risultati stilosa** con riepilogo, dettagli per test e pulsante di condivisione.
 - **Flusso più semplice**: dopo la fine di un test non è possibile rigiocarlo per errore; la partita passa al gioco successivo o al punteggio finale.
 - **Feedback facoltativo**: dopo il punteggio finale, il giocatore può valutare ogni mini-gioco provato da 1 a 5 stelle e indicare la difficoltà, con il punteggio ottenuto visibile su ogni scheda.
+- **Mini-giochi cartoon**: Reazione usa un vero pulsante da premere che passa da arancione a verde, mentre Stroop trasforma le carte di colore in pulsanti tattili.
 - **Classifica pubblica** (`/leaderboard`) che si aggiorna automaticamente dopo ogni run.
 - **Pannello admin** (`/admin`) per ritoccare i parametri o pulire il database.
 - **Modalità offline parziale** grazie al service worker e agli asset versionati.
@@ -267,7 +270,7 @@ python app.py  # espone 0.0.0.0:9001
 
 ### 👩‍💻 Admin & punteggi
 - Login admin: `/admin`; usa credenziali uniche.
-- La pagina impostazioni è divisa in schede per partita, mini-giochi, account/email, feedback giocatori ed edizione dei punteggi; i mini-giochi hanno una seconda navigazione per calibrare un pannello alla volta.
+- La pagina impostazioni è divisa in schede per partita, mini-giochi, account/email, feedback giocatori ed edizione dei punteggi. In « Selezione giochi » la gestione usa la stessa griglia di schede cartoon del giocatore: clic per attivare/disattivare, spunta verde e contatore dei giochi attivi. I mini-giochi hanno inoltre una seconda navigazione per calibrare un pannello alla volta.
 - Dal pannello puoi cambiare credenziali, cancellare i punteggi nell’editor dedicato, calibrare ogni mini-gioco, avviare un’anteprima dal vivo con i valori non salvati, validare i parametri o testare l’invio SMTP verso un indirizzo esplicito.
 - Le azioni globali restano in fondo alla pagina e non sono fissate permanentemente su mobile. La cancellazione dei punteggi usa una modale coerente col tema e richiede di digitare « DELETE » prima della conferma.
 - Il pannello admin include anche i feedback: riepilogo per gioco, medie globali, tendenze di difficoltà, tabella dettagliata ordinabile e filtrabile con una riga per votante, login e data, oltre alla cancellazione individuale dei voti.
