@@ -18,9 +18,25 @@
     {key:"black",css:"black"}
   ];
 
-  const word=el("div","h-24 flex items-center justify-center text-4xl font-extrabold select-none","");
-  const grid=el("div","grid grid-cols-3 gap-2");
-  const info=el("div","text-sm text-gray-500","0/8");
+  const style=document.createElement("style");
+  style.textContent=`
+    #t2 .t2-word{min-height:12rem;margin-bottom:1rem;border:4px solid rgba(255,255,255,.8);border-radius:28px;background:radial-gradient(circle at 50% 30%,#fff 0,#f5f3ff 45%,#e0e7ff 100%);box-shadow:inset 0 0 0 1px rgba(99,102,241,.14),0 24px 48px -28px rgba(79,70,229,.7);font-size:clamp(2.4rem,10vw,5.2rem);font-weight:950;letter-spacing:-.06em;transition:color 100ms ease,transform 150ms ease;}
+    #t2 .t2-word::before{content:'STROOP';position:absolute;top:1rem;left:1.25rem;color:rgba(99,102,241,.35);font-size:.65rem;letter-spacing:.25em;}
+    #t2 .t2-color-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;}
+    #t2 .t2-color-grid button{min-height:3.8rem;border:2px solid rgba(148,163,184,.22);border-radius:18px;background:rgba(255,255,255,.88);box-shadow:0 12px 20px -16px rgba(15,23,42,.65);font-size:1rem;font-weight:950;transition:transform 120ms ease,box-shadow 120ms ease,filter 120ms ease;touch-action:manipulation;}
+    #t2 .t2-color-grid button:not(:disabled):active{transform:translateY(1px) scale(.97);filter:brightness(.96);}
+    #t2 .t2-color-grid button:disabled{opacity:.55;cursor:default;}
+    #t2 .t2-round-info{display:flex;justify-content:center;margin-top:1rem;padding:.7rem 1rem;border-radius:9999px;background:rgba(224,231,255,.7);color:#3730a3;font-size:.85rem;font-weight:950;}
+    html.dark #t2 .t2-word{border-color:rgba(255,255,255,.12);background:radial-gradient(circle at 50% 30%,#334155 0,#0f172a 100%);}
+    html.dark #t2 .t2-color-grid button{border-color:rgba(148,163,184,.28);background:rgba(15,23,42,.78);}
+    html.dark #t2 .t2-round-info{background:rgba(49,46,129,.3);color:#c7d2fe;}
+    @media(max-width:520px){#t2 .t2-color-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  `;
+  document.head.appendChild(style);
+
+  const word=el("div","t2-word relative flex items-center justify-center select-none","");
+  const grid=el("div","t2-color-grid");
+  const info=el("div","t2-round-info","0/8");
   box.append(word,grid,info);
 
   function normInt(v,f){const n=parseInt(v,10);return Number.isFinite(n)?n:f;}

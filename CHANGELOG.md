@@ -1,5 +1,19 @@
 # Journal des changements
 
+## 14 septembre 2026 — Sélection des jeux avant la partie
+
+### Fonctionnalités
+
+- Ajout d’un réglage admin pour laisser le joueur choisir les mini-jeux utilisés dans sa partie.
+- Ajout de la page `/select-games` avec grille tactile, sélection/désélection, compteur du nombre requis et tirage aléatoire.
+- Respect de la liste des jeux activés et de `session_total_games`, avec conservation de la séquence dans `localStorage`.
+- Ajout d’un sprite illustré cartoon pour les cartes de jeu, optimisé pour les petits écrans.
+- Traductions du parcours ajoutées en français, anglais et italien.
+
+### Documentation
+
+- README complété avec le parcours de sélection, le réglage admin et les nouveaux assets.
+
 ## 12 septembre 2026 — JJ HUB, branding et déploiement
 
 ### Fonctionnalités

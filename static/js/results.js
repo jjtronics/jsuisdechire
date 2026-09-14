@@ -18,38 +18,48 @@
     if(parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
       return -42;
     }
-    const w={rxn:0.18,str:0.18,prs:0.18,rfl:0.12,drv:0.12,mem:0.12,bal:0.1}; let score=0,wsum=0;
+    const w={rxn:0.18,str:0.18,prs:0.18,rfl:0.12,pong:0.10,drv:0.12,mem:0.12,bal:0.1,ice:0.10,tilt:0.10}; let score=0,wsum=0;
     if(parts.rxn && Number.isFinite(parts.rxn.score)){score+=parts.rxn.score*w.rxn; wsum+=w.rxn;}
     if(parts.str && Number.isFinite(parts.str.score)){score+=parts.str.score*w.str; wsum+=w.str;}
     if(parts.prs && Number.isFinite(parts.prs.score)){score+=parts.prs.score*w.prs; wsum+=w.prs;}
     if(parts.rfl && Number.isFinite(parts.rfl.score)){score+=parts.rfl.score*w.rfl; wsum+=w.rfl;}
+    if(parts.pong && Number.isFinite(parts.pong.score)){score+=parts.pong.score*w.pong; wsum+=w.pong;}
     if(parts.drv && Number.isFinite(parts.drv.score)){score+=parts.drv.score*w.drv; wsum+=w.drv;}
     if(parts.mem && Number.isFinite(parts.mem.score)){score+=parts.mem.score*w.mem; wsum+=w.mem;}
     if(parts.bal && Number.isFinite(parts.bal.score)){score+=parts.bal.score*w.bal; wsum+=w.bal;}
+    if(parts.ice && Number.isFinite(parts.ice.score)){score+=parts.ice.score*w.ice; wsum+=w.ice;}
+    if(parts.tilt && Number.isFinite(parts.tilt.score)){score+=parts.tilt.score*w.tilt; wsum+=w.tilt;}
     if(wsum<=0) return NaN;
     return score/wsum;
   }
 
-  let rxn=null, str=null, prs=null, rfl=null, drv=null, mem=null, bal=null, total=NaN;
+  let rxn=null, str=null, prs=null, rfl=null, pong=null, drv=null, mem=null, bal=null, ice=null, tilt=null, total=NaN;
   if(session && typeof session.gatherScores==='function'){
     const gathered=session.gatherScores();
     rxn=gathered.rxn;
     str=gathered.str;
     prs=gathered.prs;
     rfl=gathered.rfl;
+    pong=gathered.pong;
     drv=gathered.drv;
     mem=gathered.mem;
     bal=gathered.bal;
+    ice=gathered.ice;
+    tilt=gathered.tilt;
     total=gathered.total;
   } else {
     rxn=fallbackRead('jsd:rxn');
     str=fallbackRead('jsd:str');
     prs=fallbackRead('jsd:prs');
     rfl=fallbackRead('jsd:rfl');
+    pong=fallbackRead('jsd:pong');
     drv=fallbackRead('jsd:drv');
     mem=fallbackRead('jsd:mem');
     bal=fallbackRead('jsd:bal');
-    total=fallbackCompute({rxn,str,prs,rfl,drv,mem,bal});
+    ice=fallbackRead('jsd:ice');
+    total=fallbackCompute({rxn,str,prs,rfl,pong,drv,mem,bal,ice});
+    tilt=fallbackRead('jsd:tilt');
+    total=fallbackCompute({rxn,str,prs,rfl,pong,drv,mem,bal,ice,tilt});
   }
 
   const cheatDetected=!!(bal && bal.cheat && bal.cheat.detected);
@@ -159,12 +169,25 @@
     const attemptsLabel = Number.isFinite(attempts) ? Math.max(0, Math.trunc(attempts)) : 0;
     const bestLabel = Number.isFinite(best) ? `${best.toFixed(best >= 100 ? 0 : 1)} px` : '—';
     const avgLabel = Number.isFinite(avg) ? `${avg.toFixed(avg >= 100 ? 0 : 1)} px` : '—';
-    details.append(el("div","",t("results.reflex_detail",{
+    details.append(el("div","",t("results.shell_detail",{
       score: formatScore(rfl.score),
       hits: hitsLabel,
       attempts: attemptsLabel,
       best: bestLabel,
       avg: avgLabel
+    })));
+  }
+  if(pong){
+    const hits = Number(pong.hits);
+    const attempts = Number(pong.attempts);
+    const best = Number(pong.best_error_px);
+    const avg = Number(pong.avg_error_px);
+    details.append(el("div","",t("results.pong_detail",{
+      score: formatScore(pong.score),
+      hits: Number.isFinite(hits) ? Math.max(0, Math.trunc(hits)) : 0,
+      attempts: Number.isFinite(attempts) ? Math.max(0, Math.trunc(attempts)) : 0,
+      best: Number.isFinite(best) ? `${best.toFixed(best >= 100 ? 0 : 1)} px` : '—',
+      avg: Number.isFinite(avg) ? `${avg.toFixed(avg >= 100 ? 0 : 1)} px` : '—'
     })));
   }
   if(drv){
@@ -185,6 +208,25 @@
       obstacles: obstaclesLabel == null ? '—' : obstaclesLabel,
       distance: distanceLabel,
       time: timeLabel
+    })));
+  }
+  if(ice){
+    const hits = Number(ice.hits);
+    const mistakes = Number(ice.mistakes);
+    const combo = Number(ice.best_combo);
+    details.append(el("div","",t("results.ice_detail",{
+      score: formatScore(ice.score),
+      hits: Number.isFinite(hits) ? Math.max(0, Math.trunc(hits)) : 0,
+      mistakes: Number.isFinite(mistakes) ? Math.max(0, Math.trunc(mistakes)) : 0,
+      combo: Number.isFinite(combo) ? Math.max(0, Math.trunc(combo)) : 0
+    })));
+  }
+  if(tilt){
+    details.append(el("div","",t("results.tilt_detail",{
+      score: formatScore(tilt.score),
+      catches: Number.isFinite(Number(tilt.catches)) ? Math.max(0, Math.trunc(Number(tilt.catches))) : 0,
+      collisions: Number.isFinite(Number(tilt.collisions)) ? Math.max(0, Math.trunc(Number(tilt.collisions))) : 0,
+      control: Number.isFinite(Number(tilt.control)) ? Math.round(Number(tilt.control)*100) : 0
     })));
   }
   if(!bal && localStorage.getItem("jsd:skip:t4")==="1") details.append(el("div","text-amber-700",t("results.balance_skipped")));
@@ -307,7 +349,7 @@
       if(session && typeof session.resetProgress==='function'){
         session.resetProgress({keepNickname:true});
       } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:drv','jsd:mem','jsd:bal','jsd:score_submitted','jsd:last_submission']
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:score_submitted','jsd:last_submission']
           .forEach(key=>localStorage.removeItem(key));
       }
     }catch(err){

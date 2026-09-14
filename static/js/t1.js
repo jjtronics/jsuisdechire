@@ -8,6 +8,18 @@
   const BASE_CLASS="h-36 rounded-xl flex items-center justify-center text-lg font-semibold cursor-pointer select-none transition-colors bg-gray-100 dark:bg-slate-800";
   const container=document.getElementById("t1");
   const area=container.appendChild(el("div",BASE_CLASS,t("t1.tap_to_start")));
+  area.classList.add("t1-reaction-area");
+
+  const style=document.createElement("style");
+  style.textContent=`
+    #t1 .t1-reaction-area{min-height:18rem;border:4px solid rgba(255,255,255,.84);border-radius:28px;background:radial-gradient(circle at 50% 20%,#fff 0,#f8fafc 38%,#e2e8f0 100%);box-shadow:inset 0 0 0 1px rgba(148,163,184,.22),0 24px 48px -28px rgba(15,23,42,.7);color:#334155;font-size:clamp(1.05rem,3vw,1.4rem);font-weight:950;letter-spacing:-.02em;transition:background 180ms ease,transform 120ms ease,box-shadow 180ms ease;}
+    #t1 .t1-reaction-area:not(.bg-green-500):not(.bg-yellow-200):active{transform:scale(.995);}
+    #t1 .t1-reaction-area.bg-yellow-200{background:radial-gradient(circle at 50% 20%,#fef3c7 0,#fbbf24 100%)!important;color:#78350f;box-shadow:0 0 0 5px rgba(251,191,36,.18),0 24px 48px -24px rgba(180,83,9,.7);}
+    #t1 .t1-reaction-area.bg-green-500{background:radial-gradient(circle at 50% 20%,#86efac 0,#16a34a 100%)!important;color:#fff;box-shadow:0 0 0 6px rgba(34,197,94,.2),0 0 50px rgba(34,197,94,.45);font-size:clamp(1.35rem,4vw,2rem);}
+    #t1 .t1-reaction-area.opacity-60{filter:saturate(.7);box-shadow:none;}
+    html.dark #t1 .t1-reaction-area:not(.bg-green-500):not(.bg-yellow-200){border-color:rgba(255,255,255,.12);background:radial-gradient(circle at 50% 20%,#334155 0,#0f172a 100%);color:#e2e8f0;}
+  `;
+  document.head.appendChild(style);
 
   function normInt(v,f){const n=parseInt(v,10);return Number.isFinite(n)?n:f;}
   function normFloat(v,f){if(v==null)return f;const n=parseFloat(String(v).replace(',','.'));return Number.isFinite(n)?n:f;}
@@ -31,7 +43,7 @@
 
   function beep(){try{const C=(window.AudioContext||window.webkitAudioContext);if(!C)return;const c=new C();const o=c.createOscillator();const g=c.createGain();o.type="triangle";o.frequency.value=880;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(0.001,c.currentTime);g.gain.exponentialRampToValueAtTime(0.2,c.currentTime+0.01);o.start();setTimeout(()=>{g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.02);o.stop(c.currentTime+0.03);},100);}catch(e){}}
 
-  function restoreIdle(){area.className=BASE_CLASS; area.style.backgroundColor=""; area.style.color="";}
+  function restoreIdle(){area.className=BASE_CLASS+" t1-reaction-area"; area.style.backgroundColor=""; area.style.color="";}
   function progressLabel(){return t("t1.tap_with_progress",{current:trial,total:cfg.trials});}
 
   function computeScore(median){

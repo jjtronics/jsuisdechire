@@ -3,6 +3,7 @@
     return;
   }
   const HOME_ROUTE = '/';
+  const SELECT_ROUTE = '/select-games';
   const RESULTS_ROUTE = '/results';
   const PATH_TO_TEST = {
     '/t1': 't1',
@@ -12,8 +13,11 @@
     '/t5': 't5',
     '/t6': 't6',
     '/t7': 't7',
+    '/t8': 't8',
+    '/t9': 't9',
+    '/t10': 't10',
   };
-  const FALLBACK_SEQUENCE = ['t1', 't2', 't3', 't4', 't5', 't6', 't7'];
+  const FALLBACK_SEQUENCE = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10'];
   const FALLBACK_ROUTES = {
     t1: '/t1',
     t2: '/t2',
@@ -22,6 +26,9 @@
     t5: '/t5',
     t6: '/t6',
     t7: '/t7',
+    t8: '/t8',
+    t9: '/t9',
+    t10: '/t10',
   };
 
   const path = location.pathname;
@@ -34,6 +41,9 @@
     t5: localStorage.getItem('jsd:done:t5') === '1',
     t6: localStorage.getItem('jsd:done:t6') === '1',
     t7: localStorage.getItem('jsd:done:t7') === '1',
+    t8: localStorage.getItem('jsd:done:t8') === '1',
+    t9: localStorage.getItem('jsd:done:t9') === '1',
+    t10: localStorage.getItem('jsd:done:t10') === '1',
   };
   const skippedT4 = localStorage.getItem('jsd:skip:t4') === '1';
 
@@ -83,7 +93,7 @@
   const sequence = getSequence();
 
   if (!currentTestId && path !== RESULTS_ROUTE){
-    if ((path === '/t1' || path === '/t2' || path === '/t3' || path === '/t4' || path === '/t5' || path === RESULTS_ROUTE) && !hasNickname){
+    if ((currentTestId || path === RESULTS_ROUTE || path === SELECT_ROUTE) && !hasNickname){
       location.replace(HOME_ROUTE);
     }
     return;

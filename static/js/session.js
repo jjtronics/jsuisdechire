@@ -40,7 +40,7 @@
     if (parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
       return -42;
     }
-    const weights = { rxn:0.18, str:0.18, prs:0.18, rfl:0.12, drv:0.12, mem:0.12, bal:0.1 };
+    const weights = { rxn:0.18, str:0.18, prs:0.18, rfl:0.12, drv:0.12, mem:0.12, bal:0.1, pong:0.10, ice:0.10, tilt:0.10 };
     let score = 0;
     let weightSum = 0;
 
@@ -60,6 +60,10 @@
       score += parts.rfl.score * weights.rfl;
       weightSum += weights.rfl;
     }
+    if (parts && parts.pong && Number.isFinite(parts.pong.score)){
+      score += parts.pong.score * weights.pong;
+      weightSum += weights.pong;
+    }
     if (parts && parts.drv && Number.isFinite(parts.drv.score)){
       score += parts.drv.score * weights.drv;
       weightSum += weights.drv;
@@ -71,6 +75,14 @@
     if (parts && parts.bal && Number.isFinite(parts.bal.score)){
       score += parts.bal.score * weights.bal;
       weightSum += weights.bal;
+    }
+    if (parts && parts.ice && Number.isFinite(parts.ice.score)){
+      score += parts.ice.score * weights.ice;
+      weightSum += weights.ice;
+    }
+    if (parts && parts.tilt && Number.isFinite(parts.tilt.score)){
+      score += parts.tilt.score * weights.tilt;
+      weightSum += weights.tilt;
     }
 
     if (weightSum <= 0){
@@ -84,11 +96,14 @@
     const str = readJson('jsd:str');
     const prs = readJson('jsd:prs');
     const rfl = readJson('jsd:rfl');
+    const pong = readJson('jsd:pong');
     const drv = readJson('jsd:drv');
     const mem = readJson('jsd:mem');
     const bal = readJson('jsd:bal');
-    const total = computeTotal({ rxn, str, prs, rfl, drv, mem, bal });
-    return { rxn, str, prs, rfl, drv, mem, bal, total };
+    const ice = readJson('jsd:ice');
+    const tilt = readJson('jsd:tilt');
+    const total = computeTotal({ rxn, str, prs, rfl, pong, drv, mem, bal, ice, tilt });
+    return { rxn, str, prs, rfl, pong, drv, mem, bal, ice, tilt, total };
   }
 
   function hasNickname(){
@@ -135,7 +150,7 @@
     if (!hasNickname()){
       return { status: 'nonick' };
     }
-    const { rxn, str, prs, rfl, drv, mem, bal, total } = gatherScores();
+    const { rxn, str, prs, rfl, pong, drv, mem, bal, ice, tilt, total } = gatherScores();
     if (!Number.isFinite(total)){
       return { status: 'noscore' };
     }
@@ -149,7 +164,7 @@
       return { status: 'nonick' };
     }
 
-    const payload = { nickname, total_score: total, rxn, str, prs, rfl, drv, mem, bal };
+    const payload = { nickname, total_score: total, rxn, str, prs, rfl, pong, drv, mem, bal, ice, tilt };
     const totalForStorage = Number.isFinite(total) ? Math.trunc(total) : null;
 
     try {
@@ -189,7 +204,7 @@
     options = options || {};
     const keepNickname = options.keepNickname !== false;
     invalidateSubmission();
-    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:drv','jsd:mem','jsd:bal','jsd:test_sequence_v1']
+    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:test_sequence_v1','jsd:test_sequence_v2']
       .forEach(key => localStorage.removeItem(key));
     if (!keepNickname){
       localStorage.removeItem('jsd:nick');

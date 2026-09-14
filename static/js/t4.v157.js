@@ -7,18 +7,31 @@
   const t=(window.i18n)||((key,vars)=>key);
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
   const box=document.getElementById("t4");
-  const info=el("div","text-sm text-gray-500",t("t4.sensor_instruction",{seconds:8}));
-  const btn=el("button","px-4 py-2 rounded-xl bg-black text-white",t("t4.button_label",{seconds:8}));
-  const levelWrap=el("div","mt-4 w-full max-w-xs flex flex-col gap-2 items-stretch");
+  const style=document.createElement("style");
+  style.textContent=`
+    #t4 .t4-instruction{padding:.8rem 1rem;border:1px solid rgba(14,165,233,.2);border-radius:16px;background:rgba(240,249,255,.78);color:#075985;text-align:center;font-size:.9rem;font-weight:800;}
+    #t4 .t4-start{min-height:3.25rem;min-width:13rem;margin-top:1rem;border-radius:16px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);color:#fff;font-size:1rem;font-weight:950;box-shadow:0 16px 28px -18px rgba(37,99,235,.9);}
+    #t4 .t4-level{width:100%;max-width:30rem;margin:1rem auto 0;padding:1rem;border:1px solid rgba(14,165,233,.18);border-radius:22px;background:linear-gradient(135deg,rgba(240,249,255,.92),rgba(238,242,255,.82));box-shadow:0 18px 36px -28px rgba(30,64,175,.7);}
+    #t4 .t4-motion-bar{position:relative;height:.75rem;border-radius:9999px;background:rgba(186,230,253,.7);overflow:hidden;}
+    #t4 .t4-motion-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#22c55e,#facc15,#f43f5e);transition:none;will-change:width;}
+    #t4 .t4-fallback{width:100%;margin-top:1rem;}
+    html.dark #t4 .t4-instruction{border-color:rgba(56,189,248,.25);background:rgba(14,116,144,.16);color:#bae6fd;}
+    html.dark #t4 .t4-level{border-color:rgba(56,189,248,.22);background:linear-gradient(135deg,rgba(14,116,144,.16),rgba(49,46,129,.2));}
+    html.dark #t4 .t4-motion-bar{background:rgba(14,116,144,.24);}
+  `;
+  document.head.appendChild(style);
+  const info=el("div","t4-instruction",t("t4.sensor_instruction",{seconds:8}));
+  const btn=el("button","t4-start px-4 py-2",t("t4.button_label",{seconds:8}));
+  const levelWrap=el("div","t4-level flex flex-col gap-2 items-stretch");
   const motionWrap=el("div","w-full flex flex-col gap-1 items-stretch text-left");
   const motionLabel=el("p","text-xs font-medium text-slate-500 dark:text-slate-400",t("t4.motion_indicator_label"));
-  const motionBar=el("div","h-2 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 overflow-hidden");
-  const motionFill=el("div","h-full w-0 bg-rose-400/80 dark:bg-rose-400/90 transition-all duration-150 ease-out","");
+  const motionBar=el("div","t4-motion-bar");
+  const motionFill=el("div","t4-motion-fill w-0","");
   const motionValue=el("p","text-xs font-mono text-slate-500 dark:text-slate-400 text-right",t("t4.motion_indicator_value",{value:"0.000"}));
   motionBar.append(motionFill);
   motionWrap.append(motionLabel,motionBar,motionValue);
   levelWrap.append(motionWrap);
-  const fallbackWrap=el("div","hidden mt-3");
+  const fallbackWrap=el("div","t4-fallback hidden mt-3");
   const status=el("div","sr-only","");
   box.append(info,btn,levelWrap,fallbackWrap,status);
 
@@ -56,6 +69,7 @@
   let started=false, finished=false, events=0, lastTs=0, note="", src={dm:false};
   let cheatState={detected:false};
   let stats={count:0, mean:0, m2:0};
+  let liveValues=[];
   let watchdog=null, endTimer=null, fallbackMode=false, measureStart=0;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 
@@ -76,6 +90,7 @@
 
   function resetStats(){
     stats={count:0, mean:0, m2:0};
+    liveValues=[];
   }
 
   function currentStd(){
@@ -83,15 +98,22 @@
     return Math.sqrt(stats.m2 / stats.count);
   }
 
+  function currentLiveStd(){
+    if (liveValues.length < 2) return 0;
+    const mean=liveValues.reduce((sum,value)=>sum+value,0)/liveValues.length;
+    const variance=liveValues.reduce((sum,value)=>sum+Math.pow(value-mean,2),0)/liveValues.length;
+    return Math.sqrt(variance);
+  }
+
   function updateMotionIndicator(){
     if(!motionFill || !motionValue) return;
-    const std=currentStd();
+    const std=currentLiveStd();
     const low=Number.isFinite(ST.low_good)?Math.max(0,ST.low_good):0;
     const high=Number.isFinite(ST.high_bad)?Math.max(low+1e-3,ST.high_bad):low+0.05;
     let score;
-    if (std <= low) score = 1;
-    else if (std >= high) score = 0;
-    else score = (high - std) / Math.max(1e-6, high - low);
+    // The live bar intentionally uses the short window without the scoring
+    // floor, so even a small movement is visible immediately.
+    score = 1 - (std / Math.max(1e-6, high));
     score = Math.max(0, Math.min(1, score));
     const hue = 120 * score;
     motionFill.style.width=`${Math.round(score*100)}%`;
@@ -136,6 +158,8 @@
     stats.mean+=delta/stats.count;
     const delta2=v-stats.mean;
     stats.m2+=delta*delta2;
+    liveValues.push(v);
+    if(liveValues.length>6) liveValues.shift();
     events++;
     lastTs=performance.now();
   }

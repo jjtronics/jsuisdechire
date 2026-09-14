@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="space-y-6">
+<div id="adminPageLayout" class="flex flex-col space-y-6">
   <section class="relative isolate overflow-hidden rounded-[2rem] border border-white/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-fuchsia-950 p-6 text-white shadow-xl shadow-indigo-950/15 sm:p-8">
     <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-fuchsia-500/25 blur-3xl"></div>
     <div class="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl"></div>
@@ -15,7 +15,7 @@
         <p class="max-w-xl text-sm leading-6 text-slate-200" data-i18n-html="admin.intro_html">Cette page regroupe les réglages de l’application. Modifie-les puis enregistre en bas de page.</p>
       </div>
       <div class="shrink-0 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
-        <p class="text-2xl font-black">7</p>
+        <p class="text-2xl font-black">10</p>
         <p class="text-xs font-semibold text-slate-300" data-i18n="admin.hero.tests">mini-jeux calibrables</p>
       </div>
     </div>
@@ -61,7 +61,7 @@
       <div class="rounded-[1.5rem] border border-white/50 bg-white/80 p-4 shadow-lg shadow-slate-900/5 backdrop-blur dark:bg-slate-900/60 dark:shadow-black/10">
         <div class="mb-3 flex items-center justify-between gap-3">
           <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400" data-i18n="admin.nav.title">Sections</p>
-          <span class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">10</span>
+          <span class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">13</span>
         </div>
         <nav id="adminNavLinks" class="flex min-w-0 gap-1.5 overflow-x-auto pb-1 lg:block lg:space-y-1" aria-label="Sections des paramètres"></nav>
       </div>
@@ -95,7 +95,7 @@
     </div>
   </section>
 
-  <section class="sticky bottom-4 z-20 rounded-[1.75rem] border border-slate-800/80 bg-slate-950/95 p-5 text-white shadow-2xl shadow-slate-950/20 backdrop-blur-md sm:p-6">
+  <section id="globalActions" class="sticky bottom-4 z-20 rounded-[1.75rem] border border-slate-800/80 bg-slate-950/95 p-5 text-white shadow-2xl shadow-slate-950/20 backdrop-blur-md sm:p-6">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div class="space-y-1">
         <div class="flex flex-wrap items-center gap-2">
@@ -134,6 +134,19 @@
   </section>
 </div>
 
+<style>
+  @media (max-width: 1023px) {
+    #globalActions {
+      order: 10;
+      position: static;
+    }
+
+    #scoreEditor {
+      order: 11;
+    }
+  }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const t = window.i18n || ((key) => key);
@@ -161,8 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'game_bal_enabled', label:'admin.fields.games.balance_enabled', helper:'admin.helpers.games.balance_enabled', type:'checkbox'},
         {k:'game_mem_enabled', label:'admin.fields.games.memory_enabled', helper:'admin.helpers.games.memory_enabled', type:'checkbox'},
         {k:'game_rfl_enabled', label:'admin.fields.games.reflex_enabled', helper:'admin.helpers.games.reflex_enabled', type:'checkbox'},
+        {k:'game_pong_enabled', label:'admin.fields.games.pong_enabled', helper:'admin.helpers.games.pong_enabled', type:'checkbox'},
         {k:'game_drv_enabled', label:'admin.fields.games.driving_enabled', helper:'admin.helpers.games.driving_enabled', type:'checkbox'},
-        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'7'}
+        {k:'game_ice_enabled', label:'admin.fields.games.ice_enabled', helper:'admin.helpers.games.ice_enabled', type:'checkbox'},
+        {k:'game_tilt_enabled', label:'admin.fields.games.tilt_enabled', helper:'admin.helpers.games.tilt_enabled', type:'checkbox'},
+        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'10'},
+        {k:'session_user_select_enabled', label:'admin.fields.games.user_select_enabled', helper:'admin.helpers.games.user_select_enabled', type:'checkbox'}
       ]
     },
     {
@@ -216,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'prs_timeSpeed', label:'admin.fields.pursuit.speed', helper:'admin.helpers.pursuit.speed', type:'number', step:'0.05', min:'0.1', max:'5'},
         {k:'prs_duration_ms', label:'admin.fields.pursuit.duration', helper:'admin.helpers.pursuit.duration', type:'number', step:'100', min:'2000', max:'30000'},
         {k:'prs_captureRadius', label:'admin.fields.pursuit.capture', helper:'admin.helpers.pursuit.capture', type:'number', step:'1', min:'8', max:'200'},
+        {k:'prs_target_diameter', label:'admin.fields.pursuit.diameter', helper:'admin.helpers.pursuit.diameter', type:'number', step:'4', min:'24', max:'140'},
         {k:'prs_jitterAmp', label:'admin.fields.pursuit.jitter', helper:'admin.helpers.pursuit.jitter', type:'number', step:'0.01', min:'0', max:'0.3'},
         {k:'prs_max_attempts', label:'admin.fields.pursuit.max_attempts', helper:'admin.helpers.pursuit.max_attempts', type:'number', step:'1', min:'1', max:'50'}
       ]
@@ -259,13 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
       preview: { route: '/t6', enabledKey: 'game_rfl_enabled' },
       fields: [
         {k:'rfl_attempts', label:'admin.fields.reflex.attempts', helper:'admin.helpers.reflex.attempts', type:'number', step:'1', min:'1', max:'20'},
-        {k:'rfl_velocity_scale', label:'admin.fields.reflex.velocity_scale', helper:'admin.helpers.reflex.velocity_scale', type:'number', step:'0.1', min:'0.5', max:'20'},
-        {k:'rfl_gravity', label:'admin.fields.reflex.gravity', helper:'admin.helpers.reflex.gravity', type:'number', step:'10', min:'200', max:'4000'},
-        {k:'rfl_cup_speed_min', label:'admin.fields.reflex.cup_speed_min', helper:'admin.helpers.reflex.cup_speed_min', type:'number', step:'5', min:'10', max:'400'},
-        {k:'rfl_cup_speed_max', label:'admin.fields.reflex.cup_speed_max', helper:'admin.helpers.reflex.cup_speed_max', type:'number', step:'5', min:'20', max:'500'},
-        {k:'rfl_success_weight', label:'admin.fields.reflex.success_weight', helper:'admin.helpers.reflex.success_weight', type:'number', step:'0.05', min:'0', max:'1'},
-        {k:'rfl_accuracy_weight', label:'admin.fields.reflex.accuracy_weight', helper:'admin.helpers.reflex.accuracy_weight', type:'number', step:'0.05', min:'0', max:'1'},
-        {k:'rfl_accuracy_tolerance_px', label:'admin.fields.reflex.tolerance', helper:'admin.helpers.reflex.tolerance', type:'number', step:'1', min:'10', max:'300'}
+        {k:'rfl_shuffle_moves', label:'admin.fields.reflex.shuffle_moves', helper:'admin.helpers.reflex.shuffle_moves', type:'number', step:'1', min:'3', max:'12'},
+        {k:'rfl_cup_speed_max', label:'admin.fields.reflex.cup_speed_max', helper:'admin.helpers.reflex.cup_speed_max', type:'number', step:'5', min:'20', max:'500'}
       ]
     },
     {
@@ -279,11 +292,58 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'drv_initial_speed_px_s', label:'admin.fields.driving.initial_speed', helper:'admin.helpers.driving.initial_speed', type:'number', step:'5', min:'60', max:'500'},
         {k:'drv_speed_growth_per_s', label:'admin.fields.driving.speed_growth', helper:'admin.helpers.driving.speed_growth', type:'number', step:'0.01', min:'0', max:'20'},
         {k:'drv_spawn_interval_ms', label:'admin.fields.driving.spawn_interval', helper:'admin.helpers.driving.spawn_interval', type:'number', step:'10', min:'200', max:'4000'},
+        {k:'drv_spawn_interval_decay_per_s', label:'admin.fields.driving.spawn_decay', helper:'admin.helpers.driving.spawn_decay', type:'number', step:'1', min:'0', max:'100'},
         {k:'drv_spawn_jitter_ms', label:'admin.fields.driving.spawn_jitter', helper:'admin.helpers.driving.spawn_jitter', type:'number', step:'10', min:'0', max:'3000'},
+        {k:'drv_lane_change_chance', label:'admin.fields.driving.lane_change_chance', helper:'admin.helpers.driving.lane_change_chance', type:'number', step:'0.01', min:'0', max:'1'},
+        {k:'drv_lane_change_warning_ms', label:'admin.fields.driving.lane_change_warning', helper:'admin.helpers.driving.lane_change_warning', type:'number', step:'50', min:'300', max:'2000'},
+        {k:'drv_lane_change_duration_ms', label:'admin.fields.driving.lane_change_duration', helper:'admin.helpers.driving.lane_change_duration', type:'number', step:'50', min:'300', max:'2000'},
         {k:'drv_collision_penalty', label:'admin.fields.driving.collision_penalty', helper:'admin.helpers.driving.collision_penalty', type:'number', step:'1', min:'0', max:'50'},
         {k:'drv_max_collisions', label:'admin.fields.driving.max_collisions', helper:'admin.helpers.driving.max_collisions', type:'number', step:'1', min:'1', max:'20'},
         {k:'drv_time_weight', label:'admin.fields.driving.time_weight', helper:'admin.helpers.driving.time_weight', type:'number', step:'0.05', min:'0', max:'1'},
         {k:'drv_avoid_weight', label:'admin.fields.driving.avoid_weight', helper:'admin.helpers.driving.avoid_weight', type:'number', step:'0.05', min:'0', max:'1'}
+      ]
+    },
+    {
+      id: 'pong',
+      title: 'admin.groups.pong.title',
+      description: 'admin.groups.pong.description',
+      preview: { route: '/t8', enabledKey: 'game_pong_enabled' },
+      fields: [
+        {k:'pong_attempts', label:'admin.fields.pong.attempts', helper:'admin.helpers.pong.attempts', type:'number', step:'1', min:'1', max:'20'},
+        {k:'pong_velocity_scale', label:'admin.fields.pong.velocity_scale', helper:'admin.helpers.pong.velocity_scale', type:'number', step:'0.1', min:'0.5', max:'20'},
+        {k:'pong_gravity', label:'admin.fields.pong.gravity', helper:'admin.helpers.pong.gravity', type:'number', step:'10', min:'200', max:'4000'},
+        {k:'pong_cup_speed', label:'admin.fields.pong.cup_speed', helper:'admin.helpers.pong.cup_speed', type:'number', step:'5', min:'20', max:'500'},
+        {k:'pong_accuracy_tolerance_px', label:'admin.fields.pong.tolerance', helper:'admin.helpers.pong.tolerance', type:'number', step:'1', min:'10', max:'300'}
+      ]
+    },
+    {
+      id: 'ice',
+      title: 'admin.groups.ice.title',
+      description: 'admin.groups.ice.description',
+      preview: { route: '/t9', enabledKey: 'game_ice_enabled' },
+      fields: [
+        {k:'ice_duration_ms', label:'admin.fields.ice.duration', helper:'admin.helpers.ice.duration', type:'number', step:'500', min:'5000', max:'60000'},
+        {k:'ice_spawn_interval_ms', label:'admin.fields.ice.spawn_interval', helper:'admin.helpers.ice.spawn_interval', type:'number', step:'10', min:'180', max:'3000'},
+        {k:'ice_spawn_interval_decay_per_s', label:'admin.fields.ice.spawn_decay', helper:'admin.helpers.ice.spawn_decay', type:'number', step:'1', min:'0', max:'80'},
+        {k:'ice_fall_speed_px_s', label:'admin.fields.ice.fall_speed', helper:'admin.helpers.ice.fall_speed', type:'number', step:'5', min:'60', max:'500'},
+        {k:'ice_speed_growth_per_s', label:'admin.fields.ice.speed_growth', helper:'admin.helpers.ice.speed_growth', type:'number', step:'1', min:'0', max:'40'},
+        {k:'ice_max_objects', label:'admin.fields.ice.max_objects', helper:'admin.helpers.ice.max_objects', type:'number', step:'1', min:'4', max:'30'},
+        {k:'ice_combo_window_ms', label:'admin.fields.ice.combo_window', helper:'admin.helpers.ice.combo_window', type:'number', step:'50', min:'300', max:'3000'}
+      ]
+    },
+    {
+      id: 'tilt',
+      title: 'admin.groups.tilt.title',
+      description: 'admin.groups.tilt.description',
+      preview: { route: '/t10', enabledKey: 'game_tilt_enabled' },
+      fields: [
+        {k:'tilt_duration_ms', label:'admin.fields.tilt.duration', helper:'admin.helpers.tilt.duration', type:'number', step:'500', min:'10000', max:'90000'},
+        {k:'tilt_sensitivity', label:'admin.fields.tilt.sensitivity', helper:'admin.helpers.tilt.sensitivity', type:'number', step:'0.1', min:'0.3', max:'3'},
+        {k:'tilt_target_speed_px_s', label:'admin.fields.tilt.speed', helper:'admin.helpers.tilt.speed', type:'number', step:'5', min:'60', max:'500'},
+        {k:'tilt_spawn_interval_ms', label:'admin.fields.tilt.spawn_interval', helper:'admin.helpers.tilt.spawn_interval', type:'number', step:'10', min:'250', max:'3000'},
+        {k:'tilt_spawn_decay_per_s', label:'admin.fields.tilt.spawn_decay', helper:'admin.helpers.tilt.spawn_decay', type:'number', step:'1', min:'0', max:'80'},
+        {k:'tilt_tolerance_px', label:'admin.fields.tilt.tolerance', helper:'admin.helpers.tilt.tolerance', type:'number', step:'1', min:'10', max:'100'},
+        {k:'tilt_max_collisions', label:'admin.fields.tilt.max_collisions', helper:'admin.helpers.tilt.max_collisions', type:'number', step:'1', min:'1', max:'20'}
       ]
     }
   ];
@@ -294,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsState = document.getElementById('settingsState');
   let settingsDirty = false;
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!==undefined) e.innerHTML=h; return e;};
-  const GROUP_BADGES = { general: 'G', games: 'S', email: '✉', reaction: '01', stroop: '02', pursuit: '03', balance: '04', memory: '05', reflex: '06', driving: '07' };
+  const GROUP_BADGES = { general: 'G', games: 'S', email: '✉', reaction: '01', stroop: '02', pursuit: '03', balance: '04', memory: '05', reflex: '06', driving: '07', pong: '08', ice: '09', tilt: '10' };
 
   function setSettingsState(state){
     if (!settingsState) return;
@@ -578,7 +638,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const weightGroups = [
       ['str_acc_weight', 'str_speed_weight'],
       ['mem_accuracy_weight', 'mem_speed_weight'],
-      ['rfl_success_weight', 'rfl_accuracy_weight'],
       ['drv_time_weight', 'drv_avoid_weight'],
     ];
     for (const [first, second] of weightGroups){
@@ -592,7 +651,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ['str_speed_best_ms', 'str_speed_worst_ms'],
       ['mem_time_best_ms', 'mem_time_worst_ms'],
       ['bal_low_good', 'bal_high_bad'],
-      ['rfl_cup_speed_min', 'rfl_cup_speed_max'],
     ];
     for (const [lower, upper] of orderedPairs){
       if (data[lower] >= data[upper]){
@@ -1004,7 +1062,17 @@ document.addEventListener('DOMContentLoaded', () => {
       {key:'mem_time_ms', label:'admin.scores.mem_time_ms', type:'number', decimals:0},
       {key:'mem_errors', label:'admin.scores.mem_errors', type:'number', decimals:0},
       {key:'bal_score', label:'admin.scores.bal_score', type:'number', decimals:0},
-      {key:'bal_std', label:'admin.scores.bal_std', type:'number', decimals:3}
+      {key:'bal_std', label:'admin.scores.bal_std', type:'number', decimals:3},
+      {key:'ice_score', label:'admin.scores.ice_score', type:'number', decimals:0},
+      {key:'ice_hits', label:'admin.scores.ice_hits', type:'number', decimals:0},
+      {key:'ice_mistakes', label:'admin.scores.ice_mistakes', type:'number', decimals:0},
+      {key:'ice_best_combo', label:'admin.scores.ice_best_combo', type:'number', decimals:0},
+      {key:'ice_elapsed_ms', label:'admin.scores.ice_elapsed_ms', type:'number', decimals:0}
+      ,{key:'tilt_score', label:'admin.scores.tilt_score', type:'number', decimals:0}
+      ,{key:'tilt_catches', label:'admin.scores.tilt_catches', type:'number', decimals:0}
+      ,{key:'tilt_collisions', label:'admin.scores.tilt_collisions', type:'number', decimals:0}
+      ,{key:'tilt_control', label:'admin.scores.tilt_control', type:'number', decimals:2}
+      ,{key:'tilt_elapsed_ms', label:'admin.scores.tilt_elapsed_ms', type:'number', decimals:0}
     ];
 
     const scoreState = {

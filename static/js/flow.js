@@ -1,6 +1,7 @@
 (function(){
-  const STORAGE_KEY = 'jsd:test_sequence_v1';
+  const STORAGE_KEY = 'jsd:test_sequence_v2';
   const HOME_ROUTE = '/';
+  const SELECT_ROUTE = '/select-games';
   const RESULTS_ROUTE = '/results';
   const TESTS = [
     { id: 't1', route: '/t1', settingKey: 'game_rxn_enabled', doneKey: 'jsd:done:t1' },
@@ -10,6 +11,9 @@
     { id: 't5', route: '/t5', settingKey: 'game_mem_enabled', doneKey: 'jsd:done:t5' },
     { id: 't6', route: '/t6', settingKey: 'game_rfl_enabled', doneKey: 'jsd:done:t6' },
     { id: 't7', route: '/t7', settingKey: 'game_drv_enabled', doneKey: 'jsd:done:t7' },
+    { id: 't8', route: '/t8', settingKey: 'game_pong_enabled', doneKey: 'jsd:done:t8' },
+    { id: 't9', route: '/t9', settingKey: 'game_ice_enabled', doneKey: 'jsd:done:t9' },
+    { id: 't10', route: '/t10', settingKey: 'game_tilt_enabled', doneKey: 'jsd:done:t10' },
   ];
 
   function safeParseInt(value){
@@ -45,11 +49,12 @@
       enabled[test.id] = normalizeBoolean(rawSettings[test.settingKey], true);
     });
     const desiredTotal = safeParseInt(rawSettings.session_total_games);
-    return { enabled, desiredTotal };
+    const userSelectEnabled = normalizeBoolean(rawSettings.session_user_select_enabled, false);
+    return { enabled, desiredTotal, userSelectEnabled };
   }
 
   function computeSignature(config){
-    const payload = { desiredTotal: config.desiredTotal, enabled: {} };
+    const payload = { desiredTotal: config.desiredTotal, userSelectEnabled: config.userSelectEnabled, enabled: {} };
     TESTS.forEach((test) => {
       payload.enabled[test.id] = !!config.enabled[test.id];
     });
@@ -119,6 +124,39 @@
     return selected.map((idx) => pool[idx].id);
   }
 
+  function targetCount(config){
+    const availableCount = TESTS.filter((test) => config.enabled[test.id]).length || TESTS.length;
+    let desired = config.desiredTotal;
+    if (!Number.isFinite(desired) || desired == null || desired <= 0){
+      desired = availableCount;
+    }
+    return Math.min(Math.max(1, Math.trunc(desired)), availableCount);
+  }
+
+  function isUserSelectionEnabled(){
+    return normalizeSettings(getSettings()).userSelectEnabled;
+  }
+
+  function availableTests(){
+    const config = normalizeSettings(getSettings());
+    const enabled = TESTS.filter((test) => config.enabled[test.id]);
+    return enabled.length ? enabled : TESTS.slice();
+  }
+
+  function commitUserSelection(ids){
+    const config = normalizeSettings(getSettings());
+    const allowed = new Set(availableTests().map((test) => test.id));
+    const selected = Array.from(new Set(Array.isArray(ids) ? ids : []))
+      .filter((id) => allowed.has(id));
+    const target = targetCount(config);
+    if (selected.length !== target){
+      return { ok: false, target, selected: selected.length };
+    }
+    const signature = computeSignature(config);
+    writeStoredSequence(selected, signature);
+    return { ok: true, tests: selected.slice(), target };
+  }
+
   function ensureSequence(options){
     options = options || {};
     const config = normalizeSettings(getSettings());
@@ -183,6 +221,9 @@
 
   function prepareNewRun(){
     resetStoredSequence();
+    if (isUserSelectionEnabled()){
+      return SELECT_ROUTE;
+    }
     const sequence = ensureSequence({ force: true });
     if (!sequence.length){
       return RESULTS_ROUTE;
@@ -283,6 +324,11 @@
     previousRoute,
     firstRoute,
     prepareNewRun,
+    isUserSelectionEnabled,
+    availableTests,
+    targetCount: () => targetCount(normalizeSettings(getSettings())),
+    commitUserSelection,
+    selectRoute: SELECT_ROUTE,
     resetSequence: resetStoredSequence,
     isActive,
     setupPage,

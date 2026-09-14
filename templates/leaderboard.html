@@ -427,6 +427,17 @@
             <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
           </a>
         </th>
+        {% set key = 'pong_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
+            <span data-i18n="leaderboard.pong">Beer pong</span>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
+        </th>
         {% set key = 'drv_score' %}
         {% set default_order = sort_defaults.get(key, 'desc') %}
         {% set is_active = active_sort_key == key %}

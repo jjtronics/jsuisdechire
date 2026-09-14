@@ -11,10 +11,10 @@
 ## 🇫🇷 Français
 
 ### 🍸 Aperçu
-**jsuisdechire** est une web app Flask pleine de paillettes pour vérifier ton état après l'apéro. Tu enchaînes jusqu'à sept mini-jeux (réaction, couleurs, poursuite, équilibre, mémoire, réflexe gobelet et conduite), tu obtiens un score façon "soirée entre potes", et tu peux grimper sur le leaderboard si tu assures. Fun garanti, mais rappel : ce n'est PAS un dispositif médical.
+**jsuisdechire** est une web app Flask pleine de paillettes pour vérifier ton état après l'apéro. Tu enchaînes jusqu'à dix mini-jeux (réaction, couleurs, poursuite, équilibre, mémoire, où est la balle ?, conduite, tir au gobelet, glaçon fou et barman précis), tu obtiens un score façon "soirée entre potes", et tu peux grimper sur le leaderboard si tu assures. Fun garanti, mais rappel : ce n'est PAS un dispositif médical.
 
 ### ✨ Fonctionnalités
-- **7 tests rapides** :
+- **10 tests rapides** :
   - 🟢 *Réaction (t1)* – Tape dès que ça passe au vert, ton temps médian devient ton score.
   - 🌈 *Couleurs (t2)* – Version Stroop : clique la vraie couleur, pas le mot, vitesse + précision.
   - 🎯 *Poursuite (t3)* – Attrape une cible qui virevolte; précision ou temps de capture.
@@ -22,6 +22,9 @@
   - 🥤 *Réflexe gobelet (t6)* – Ajuste l’angle et la puissance pour faire entrer la balle dans le gobelet.
   - 🚗 *Conduite sobre (t7)* – Change de voie et évite les obstacles sans multiplier les collisions.
   - 🧠 *Mémoire (t5)* – Retrouve les séquences en limitant les erreurs et le temps de réponse.
+  - 🧊 *Glaçon fou (t9)* – Attrape les glaçons qui tombent et évite les fruits/pièges en gardant ton combo.
+  - 🍸 *Barman précis (t10)* – Incline ton téléphone pour guider un verre, attraper les glaçons et éviter les éclaboussures.
+- **Parties personnalisables** : si l'option est activée dans l'admin, le joueur choisit les mini-jeux de sa partie depuis une grille mobile illustrée, ou demande un tirage aléatoire.
 - **Résultats stylés** avec résumé, détails par test et bouton de partage.
 - **Classement public** (`/leaderboard`) avec sauvegarde automatique après chaque run.
 - **Panneau admin** (`/admin`) pour configurer les paramètres ou purger la base.
@@ -38,10 +41,10 @@
 ```
 📁 jsuisdechire/
 ├── app.py              # Routes Flask + API + admin + scoring
-├── templates/          # Pages (home, t1..t7, leaderboard, admin, JJ HUB, etc.)
+├── templates/          # Pages (home, sélection, t1..t10, leaderboard, admin, JJ HUB, etc.)
 ├── static/js/          # Logique front (tests, session, i18n, résultats)
 ├── static/css/         # Feuille Tailwind compilée et source
-├── static/branding/    # Logos horizontaux et pictogrammes de la marque
+├── static/branding/    # Logos, pictogrammes et visuels de sélection des jeux
 ├── static/icons/       # PWA icons & manifest
 ├── deploy.sh           # Déploiement SSH reproductible
 └── data.sqlite         # Créé automatiquement au lancement
@@ -87,11 +90,11 @@ Les paramètres peuvent être placés dans un fichier local `.env.deploy` non ve
 REMOTE_HOST=192.168.1.30 RUN_HTTP_CHECKS=0 ./deploy.sh
 ```
 
-Le script exclut la base SQLite, les secrets, l’environnement virtuel et les uploads locaux de l’archive ; il sauvegarde l’installation distante avant copie, installe la configuration Gunicorn/systemd, crée une clé de session de production si nécessaire, redémarre le service et contrôle les routes principales ainsi que les nouveaux assets de marque.
+Le script exclut la base SQLite, les secrets, l’environnement virtuel et les uploads locaux de l’archive ; il sauvegarde l’installation distante avant copie, crée en plus une copie dédiée de `data.sqlite`, installe uniquement les fichiers applicatifs, crée une clé de session de production si nécessaire, redémarre le service et contrôle les routes principales ainsi que les nouveaux assets de marque. Il ne supprime ni ne remplace jamais la base de production. Pour provisionner les identifiants admin sur le serveur malgré l’exclusion de `data.sqlite`, définis `ADMIN_LOGIN` et `ADMIN_PASSWORD` dans `.env.deploy` : le mot de passe est envoyé uniquement sous forme de hash et écrit dans la base distante pendant le déploiement.
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques ; aucun mot de passe par défaut n’est accepté).
-- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test, lancer chaque mini-jeu en aperçu avec les valeurs non sauvegardées, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
+- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test, activer le choix des jeux par le joueur, lancer chaque mini-jeu en aperçu avec les valeurs non sauvegardées, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
 - Le mot de passe SMTP n’est jamais injecté dans le HTML de l’admin ; un champ vide conserve le secret existant.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.
 
@@ -99,6 +102,7 @@ Le script exclut la base SQLite, les secrets, l’environnement virtuel et les u
 - Ajuste les durées, seuils et poids dans `DEFAULT_SETTINGS` (dans `app.py`).
 - Modifie les textes (multi-langues) dans `static/js/i18n.js`.
 - Ajoute des variantes de mini-jeux en doublant les fichiers `t3.v###.js` / `t4.v###.js`.
+- Le parcours de sélection est rendu par `templates/select_games.html`, avec la séquence persistée dans `localStorage` par `static/js/flow.js`.
 
 ### 🤝 Contribution
 1. Fork / clone, crée une branche (localement) et garde un ton fun.
@@ -113,7 +117,7 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 ## 🇬🇧 English
 
 ### 🍸 Overview
-**jsuisdechire** is a glittery Flask web app to check your post-party vibes. Blaze through up to seven mini-games (reaction, colors, pursuit, balance, memory, cup reflex and driving), earn a "party mode" score, and climb the leaderboard if you nail it. It's goofy fun, but remember: this is **not** a medical tool.
+**jsuisdechire** is a glittery Flask web app to check your post-party vibes. Blaze through up to eight mini-games (reaction, colors, pursuit, balance, memory, where is the ball?, driving and cup shot), earn a "party mode" score, and climb the leaderboard if you nail it. It's goofy fun, but remember: this is **not** a medical tool.
 
 ### ✨ Features
 - **7 bite-sized tests**:
@@ -124,6 +128,7 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
   - 🥤 *Cup reflex (t6)* – Adjust angle and power to land the ball in the cup.
   - 🚗 *Sober driving (t7)* – Switch lanes and avoid obstacles without piling up collisions.
   - 🧠 *Memory (t5)* – Reproduce sequences while keeping mistakes and response time low.
+- **Custom sessions**: when enabled in the admin console, players can choose their games from a mobile-friendly illustrated grid or use a random draw.
 - **Stylish results screen** with summary, per-test breakdown, and share button.
 - **Public leaderboard** (`/leaderboard`) with automatic saving after each run.
 - **Admin console** (`/admin`) to tweak settings or wipe the database.
@@ -140,9 +145,9 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 ```
 📁 jsuisdechire/
 ├── app.py              # Flask routes, API, admin, scoring pipeline
-├── templates/          # Pages (home, t1..t7, leaderboard, admin, JJ HUB, ...)
+├── templates/          # Pages (home, selection, t1..t10, leaderboard, admin, JJ HUB, ...)
 ├── static/js/          # Front logic (tests, session, i18n, results)
-├── static/branding/    # Horizontal logos and brand marks
+├── static/branding/    # Logos, brand marks, and game-selection visuals
 ├── static/icons/       # PWA icons & manifest
 ├── deploy.sh           # Reproducible SSH deployment
 └── data.sqlite         # Autogenerated database
@@ -166,7 +171,7 @@ python app.py  # defaults to 0.0.0.0:9001
 
 ### 👩‍💻 Admin & scoring
 - Admin login: `/admin`; use a unique login and password.
-- Change credentials, clear scores, fine-tune each mini-game, launch a live preview with unsaved values, validate settings, or test SMTP delivery to an explicit address from the dashboard.
+- Change credentials, clear scores, fine-tune each mini-game, enable player game selection, launch a live preview with unsaved values, validate settings, or test SMTP delivery to an explicit address from the dashboard.
 - The SMTP password is never injected into the admin HTML; leaving the field blank keeps the existing secret.
 - Google Analytics 4 uses Google Consent Mode v2: set `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` in production to enable regional consent handling, with consent denied by default in the EEA, United Kingdom and Switzerland and granted elsewhere. The banner lets visitors accept or refuse, and preferences remain available in the footer.
 - `/api/submit` stores total + per-test scores, timestamp, and nickname.
@@ -175,6 +180,7 @@ python app.py  # defaults to 0.0.0.0:9001
 - Tweak thresholds and weights in `DEFAULT_SETTINGS` inside `app.py`.
 - Update translations inside `static/js/i18n.js`.
 - Craft alternate game flows by cloning `t3.v###.js` / `t4.v###.js` blueprints.
+- The selection flow lives in `templates/select_games.html`; the chosen sequence is persisted in `localStorage` by `static/js/flow.js`.
 
 ### 🤝 Contributing
 1. Fork/clone, hack on a feature (keep it playful).
@@ -200,6 +206,7 @@ MIT License (see [LICENSE](LICENSE)).
   - 🥤 *Riflesso bicchiere (t6)* – Regola angolo e potenza per centrare il bicchiere.
   - 🚗 *Guida sobria (t7)* – Cambia corsia ed evita gli ostacoli senza accumulare collisioni.
   - 🧠 *Memoria (t5)* – Ripeti le sequenze limitando errori e tempo di risposta.
+- **Partite personalizzabili**: se attivata dall'admin, la selezione dei giochi avviene da una griglia illustrata ottimizzata per smartphone, oppure tramite estrazione casuale.
 - **Schermata risultati stilosa** con riepilogo, dettagli per test e pulsante di condivisione.
 - **Classifica pubblica** (`/leaderboard`) che si aggiorna automaticamente dopo ogni run.
 - **Pannello admin** (`/admin`) per ritoccare i parametri o pulire il database.

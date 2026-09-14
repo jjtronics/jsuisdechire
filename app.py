@@ -220,9 +220,11 @@ DEFAULT_SETTINGS = {
     "prs_timeSpeed": 0.75,
     "prs_duration_ms": 10000,
     "prs_captureRadius": 36,
+    "prs_target_diameter": 68,
     "prs_jitterAmp": 0.05,
     "prs_max_attempts": 10,
     "rfl_attempts": 5,
+    "rfl_shuffle_moves": 5,
     "rfl_velocity_scale": 4.8,
     "rfl_gravity": 1800,
     "rfl_cup_speed_min": 70,
@@ -230,12 +232,21 @@ DEFAULT_SETTINGS = {
     "rfl_success_weight": 0.7,
     "rfl_accuracy_weight": 0.3,
     "rfl_accuracy_tolerance_px": 60,
+    "pong_attempts": 5,
+    "pong_velocity_scale": 4.8,
+    "pong_gravity": 1800,
+    "pong_cup_speed": 160,
+    "pong_accuracy_tolerance_px": 60,
     "drv_lane_count": 3,
     "drv_duration_ms": 45000,
     "drv_initial_speed_px_s": 220,
     "drv_speed_growth_per_s": 3.2,
     "drv_spawn_interval_ms": 900,
+    "drv_spawn_interval_decay_per_s": 12,
     "drv_spawn_jitter_ms": 260,
+    "drv_lane_change_chance": 0.22,
+    "drv_lane_change_warning_ms": 900,
+    "drv_lane_change_duration_ms": 800,
     "drv_collision_penalty": 18,
     "drv_max_collisions": 6,
     "drv_time_weight": 0.6,
@@ -256,14 +267,32 @@ DEFAULT_SETTINGS = {
     "mem_speed_weight": 0.4,
     "mem_time_best_ms": 45000,
     "mem_time_worst_ms": 120000,
-    "session_total_games": 7,
+    "ice_duration_ms": 20000,
+    "ice_spawn_interval_ms": 720,
+    "ice_spawn_interval_decay_per_s": 12,
+    "ice_fall_speed_px_s": 150,
+    "ice_speed_growth_per_s": 7,
+    "ice_max_objects": 12,
+    "ice_combo_window_ms": 1100,
+    "tilt_duration_ms": 30000,
+    "tilt_sensitivity": 1.0,
+    "tilt_target_speed_px_s": 160,
+    "tilt_spawn_interval_ms": 900,
+    "tilt_spawn_decay_per_s": 14,
+    "tilt_tolerance_px": 26,
+    "tilt_max_collisions": 5,
+    "session_total_games": 10,
+    "session_user_select_enabled": False,
     "game_rxn_enabled": True,
     "game_str_enabled": True,
     "game_prs_enabled": True,
     "game_bal_enabled": True,
     "game_mem_enabled": True,
     "game_rfl_enabled": True,
+    "game_pong_enabled": True,
     "game_drv_enabled": True,
+    "game_ice_enabled": True,
+    "game_tilt_enabled": True,
     "nickname_max_length": 32,
     "smtp_host": "",
     "smtp_port": 587,
@@ -291,6 +320,7 @@ SETTING_RANGES = {
     "prs_timeSpeed": (0.1, 5, float),
     "prs_duration_ms": (2000, 30000, int),
     "prs_captureRadius": (8, 200, float),
+    "prs_target_diameter": (24, 140, int),
     "prs_jitterAmp": (0, 0.3, float),
     "prs_max_attempts": (1, 50, int),
     "bal_duration_ms": (3000, 30000, int),
@@ -307,6 +337,7 @@ SETTING_RANGES = {
     "mem_time_best_ms": (5000, 180000, int),
     "mem_time_worst_ms": (6000, 300000, int),
     "rfl_attempts": (1, 20, int),
+    "rfl_shuffle_moves": (3, 12, int),
     "rfl_velocity_scale": (0.5, 20, float),
     "rfl_gravity": (200, 4000, float),
     "rfl_cup_speed_min": (10, 400, float),
@@ -314,28 +345,55 @@ SETTING_RANGES = {
     "rfl_success_weight": (0, 1, float),
     "rfl_accuracy_weight": (0, 1, float),
     "rfl_accuracy_tolerance_px": (10, 300, float),
+    "pong_attempts": (1, 20, int),
+    "pong_velocity_scale": (0.5, 20, float),
+    "pong_gravity": (200, 4000, float),
+    "pong_cup_speed": (20, 500, float),
+    "pong_accuracy_tolerance_px": (10, 300, float),
     "drv_lane_count": (2, 5, int),
     "drv_duration_ms": (5000, 120000, int),
     "drv_initial_speed_px_s": (60, 500, float),
     "drv_speed_growth_per_s": (0, 20, float),
     "drv_spawn_interval_ms": (200, 4000, int),
+    "drv_spawn_interval_decay_per_s": (0, 100, float),
     "drv_spawn_jitter_ms": (0, 3000, int),
+    "drv_lane_change_chance": (0, 1, float),
+    "drv_lane_change_warning_ms": (300, 2000, int),
+    "drv_lane_change_duration_ms": (300, 2000, int),
     "drv_collision_penalty": (0, 50, float),
     "drv_max_collisions": (1, 20, int),
     "drv_time_weight": (0, 1, float),
     "drv_avoid_weight": (0, 1, float),
-    "session_total_games": (1, 7, int),
+    "ice_duration_ms": (5000, 60000, int),
+    "ice_spawn_interval_ms": (180, 3000, int),
+    "ice_spawn_interval_decay_per_s": (0, 80, float),
+    "ice_fall_speed_px_s": (60, 500, float),
+    "ice_speed_growth_per_s": (0, 40, float),
+    "ice_max_objects": (4, 30, int),
+    "ice_combo_window_ms": (300, 3000, int),
+    "tilt_duration_ms": (10000, 90000, int),
+    "tilt_sensitivity": (0.3, 3, float),
+    "tilt_target_speed_px_s": (60, 500, float),
+    "tilt_spawn_interval_ms": (250, 3000, int),
+    "tilt_spawn_decay_per_s": (0, 80, float),
+    "tilt_tolerance_px": (10, 100, float),
+    "tilt_max_collisions": (1, 20, int),
+    "session_total_games": (1, 10, int),
     "nickname_max_length": (1, 128, int),
     "smtp_port": (1, 65535, int),
 }
 BOOLEAN_SETTING_KEYS = frozenset({
+    "session_user_select_enabled",
     "game_rxn_enabled",
     "game_str_enabled",
     "game_prs_enabled",
     "game_bal_enabled",
     "game_mem_enabled",
     "game_rfl_enabled",
+    "game_pong_enabled",
     "game_drv_enabled",
+    "game_ice_enabled",
+    "game_tilt_enabled",
     "bal_cheat_detection_enabled",
 })
 
@@ -440,13 +498,17 @@ def ensure_schema(db=None):
         prs_score INTEGER, prs_error REAL, time_to_catch_ms REAL,
         rfl_score INTEGER, rfl_hits INTEGER, rfl_attempts INTEGER,
         rfl_best_error REAL, rfl_avg_error REAL,
+        pong_score INTEGER, pong_hits INTEGER, pong_attempts INTEGER,
+        pong_best_error REAL, pong_avg_error REAL,
         drv_score INTEGER, drv_collisions INTEGER, drv_distance REAL, drv_duration_ms INTEGER,
         bal_score INTEGER, bal_std REAL,
         mem_score REAL, mem_time_ms INTEGER, mem_errors INTEGER,
         is_cheater INTEGER DEFAULT 0,
         cheat_reason TEXT,
         cheat_details TEXT,
-        cheat_avatar_path TEXT
+        cheat_avatar_path TEXT,
+        ice_score INTEGER, ice_hits INTEGER, ice_mistakes INTEGER, ice_best_combo INTEGER, ice_elapsed_ms INTEGER, ice_accuracy REAL, ice_duration_ms INTEGER,
+        tilt_score INTEGER, tilt_catches INTEGER, tilt_collisions INTEGER, tilt_control REAL, tilt_elapsed_ms INTEGER, tilt_misses INTEGER, tilt_sensor_samples INTEGER, tilt_sensor_used INTEGER
     )''')
     db.execute('''CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
@@ -498,6 +560,16 @@ def ensure_schema(db=None):
         db.execute("ALTER TABLE scores ADD COLUMN rfl_best_error REAL")
     if "rfl_avg_error" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN rfl_avg_error REAL")
+    if "pong_score" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN pong_score INTEGER")
+    if "pong_hits" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN pong_hits INTEGER")
+    if "pong_attempts" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN pong_attempts INTEGER")
+    if "pong_best_error" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN pong_best_error REAL")
+    if "pong_avg_error" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN pong_avg_error REAL")
     if "drv_score" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN drv_score INTEGER")
     if "drv_collisions" not in score_columns:
@@ -506,6 +578,36 @@ def ensure_schema(db=None):
         db.execute("ALTER TABLE scores ADD COLUMN drv_distance REAL")
     if "drv_duration_ms" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN drv_duration_ms INTEGER")
+    if "ice_score" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN ice_score INTEGER")
+    if "ice_hits" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN ice_hits INTEGER")
+    if "ice_mistakes" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN ice_mistakes INTEGER")
+    if "ice_best_combo" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN ice_best_combo INTEGER")
+    if "ice_elapsed_ms" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN ice_elapsed_ms INTEGER")
+    if "ice_accuracy" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN ice_accuracy REAL")
+    if "ice_duration_ms" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN ice_duration_ms INTEGER")
+    if "tilt_score" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_score INTEGER")
+    if "tilt_catches" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_catches INTEGER")
+    if "tilt_collisions" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_collisions INTEGER")
+    if "tilt_control" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_control REAL")
+    if "tilt_elapsed_ms" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_elapsed_ms INTEGER")
+    if "tilt_misses" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_misses INTEGER")
+    if "tilt_sensor_samples" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_sensor_samples INTEGER")
+    if "tilt_sensor_used" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN tilt_sensor_used INTEGER")
     if "is_cheater" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN is_cheater INTEGER DEFAULT 0")
     if "cheat_reason" not in score_columns:
@@ -523,6 +625,27 @@ def ensure_schema(db=None):
 def init_db():
     db = get_db()
     ensure_schema(db)
+    # The ninth game was added after the original eight-game default. Only
+    # migrate an untouched legacy configuration; never overwrite a setting
+    # that already mentions the new game.
+    ice_setting = db.execute("SELECT 1 FROM settings WHERE key = 'game_ice_enabled'").fetchone()
+    total_setting = db.execute("SELECT value FROM settings WHERE key = 'session_total_games'").fetchone()
+    if ice_setting is None and total_setting is not None:
+        try:
+            if int(json.loads(total_setting["value"])) == 8:
+                db.execute("UPDATE settings SET value = ? WHERE key = 'session_total_games'", (json.dumps(9),))
+                db.commit()
+        except (TypeError, ValueError, json.JSONDecodeError):
+            pass
+    tilt_setting = db.execute("SELECT 1 FROM settings WHERE key = 'game_tilt_enabled'").fetchone()
+    total_setting = db.execute("SELECT value FROM settings WHERE key = 'session_total_games'").fetchone()
+    if tilt_setting is None and total_setting is not None:
+        try:
+            if int(json.loads(total_setting["value"])) == 9:
+                db.execute("UPDATE settings SET value = ? WHERE key = 'session_total_games'", (json.dumps(10),))
+                db.commit()
+        except (TypeError, ValueError, json.JSONDecodeError):
+            pass
 
 
 def consume_rate_limit(bucket: str, identity: str, limit: int, window_seconds: int) -> bool:
@@ -1029,6 +1152,10 @@ def home():
     home_stats = get_home_score_summary(db)
     return render_template("home.html", app_name=APP_NAME, home_stats=home_stats)
 
+@app.route("/select-games")
+def select_games():
+    return render_template("select_games.html", app_name=APP_NAME)
+
 @app.route("/t1")
 def t1():
     return render_template("t1.html", app_name=APP_NAME)
@@ -1056,6 +1183,18 @@ def t6():
 @app.route("/t7")
 def t7():
     return render_template("t7.html", app_name=APP_NAME)
+
+@app.route("/t8")
+def t8():
+    return render_template("t8.html", app_name=APP_NAME)
+
+@app.route("/t9")
+def t9():
+    return render_template("t9.html", app_name=APP_NAME)
+
+@app.route("/t10")
+def t10():
+    return render_template("t10.html", app_name=APP_NAME)
 
 @app.route("/results")
 def results_page():
@@ -1107,6 +1246,11 @@ latest_scores AS (
         rfl_attempts,
         rfl_best_error,
         rfl_avg_error,
+        pong_score,
+        pong_hits,
+        pong_attempts,
+        pong_best_error,
+        pong_avg_error,
         drv_score,
         drv_collisions,
         drv_distance,
@@ -1116,6 +1260,21 @@ latest_scores AS (
         mem_score,
         mem_time_ms,
         mem_errors,
+        ice_score,
+        ice_hits,
+        ice_mistakes,
+        ice_best_combo,
+        ice_elapsed_ms,
+        ice_accuracy,
+        ice_duration_ms,
+        tilt_score,
+        tilt_catches,
+        tilt_collisions,
+        tilt_control,
+        tilt_elapsed_ms,
+        tilt_misses,
+        tilt_sensor_samples,
+        tilt_sensor_used,
         user_id,
         is_cheater,
         cheat_reason,
@@ -1193,6 +1352,11 @@ LEADERBOARD_SORTS = {
         "default_order": "desc",
         "secondary": ["scores.created_at DESC", "scores.id DESC"],
     },
+    "pong_score": {
+        "expression": "scores.pong_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
     "drv_score": {
         "expression": "scores.drv_score",
         "default_order": "desc",
@@ -1205,6 +1369,16 @@ LEADERBOARD_SORTS = {
     },
     "bal_score": {
         "expression": "scores.bal_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "ice_score": {
+        "expression": "scores.ice_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "tilt_score": {
+        "expression": "scores.tilt_score",
         "default_order": "desc",
         "secondary": ["scores.created_at DESC", "scores.id DESC"],
     },
@@ -1518,6 +1692,11 @@ def api_admin_scores():
             "rfl_attempts": row["rfl_attempts"],
             "rfl_best_error": row["rfl_best_error"],
             "rfl_avg_error": row["rfl_avg_error"],
+            "pong_score": row["pong_score"],
+            "pong_hits": row["pong_hits"],
+            "pong_attempts": row["pong_attempts"],
+            "pong_best_error": row["pong_best_error"],
+            "pong_avg_error": row["pong_avg_error"],
             "drv_score": row["drv_score"],
             "drv_collisions": row["drv_collisions"],
             "drv_distance": row["drv_distance"],
@@ -1527,6 +1706,21 @@ def api_admin_scores():
             "mem_score": row["mem_score"],
             "mem_time_ms": row["mem_time_ms"],
             "mem_errors": row["mem_errors"],
+            "ice_score": row["ice_score"],
+            "ice_hits": row["ice_hits"],
+            "ice_mistakes": row["ice_mistakes"],
+            "ice_best_combo": row["ice_best_combo"],
+            "ice_elapsed_ms": row["ice_elapsed_ms"],
+            "ice_accuracy": row["ice_accuracy"],
+            "ice_duration_ms": row["ice_duration_ms"],
+            "tilt_score": row["tilt_score"],
+            "tilt_catches": row["tilt_catches"],
+            "tilt_collisions": row["tilt_collisions"],
+            "tilt_control": row["tilt_control"],
+            "tilt_elapsed_ms": row["tilt_elapsed_ms"],
+            "tilt_misses": row["tilt_misses"],
+            "tilt_sensor_samples": row["tilt_sensor_samples"],
+            "tilt_sensor_used": row["tilt_sensor_used"],
         })
     return jsonify(payload)
 
@@ -1628,7 +1822,10 @@ def submit():
         "bal": _section("bal"),
         "mem": _section("mem"),
         "rfl": _section("rfl"),
+        "pong": _section("pong"),
         "drv": _section("drv"),
+        "ice": _section("ice"),
+        "tilt": _section("tilt"),
     }
 
     def _parse_float(value):
@@ -1687,11 +1884,39 @@ def submit():
             "best_error_px": ("float", 0, 5000),
             "avg_error_px": ("float", 0, 5000),
         },
+        "pong": {
+            "score": ("float", 0, 100),
+            "hits": ("int", 0, 100),
+            "attempts": ("int", 1, 100),
+            "best_error_px": ("float", 0, 5000),
+            "avg_error_px": ("float", 0, 5000),
+        },
         "drv": {
             "score": ("float", 0, 100),
             "collisions": ("int", 0, 1000),
             "distance_m": ("float", 0, 100000),
             "elapsed_ms": ("int", 0, 600000),
+        },
+        "ice": {
+            "score": ("float", 0, 100),
+            "hits": ("int", 0, 1000),
+            "mistakes": ("int", 0, 1000),
+            "best_combo": ("int", 0, 1000),
+            "elapsed_ms": ("int", 0, 120000),
+            "misses": ("int", 0, 1000),
+            "sensor_samples": ("int", 0, 1000000),
+            "sensor_used": ("int", 0, 1),
+            "accuracy": ("float", 0, 1),
+        },
+        "tilt": {
+            "score": ("float", 0, 100),
+            "catches": ("int", 0, 1000),
+            "collisions": ("int", 0, 1000),
+            "control": ("float", 0, 1),
+            "elapsed_ms": ("int", 0, 120000),
+            "misses": ("int", 0, 1000),
+            "sensor_samples": ("int", 0, 1000000),
+            "sensor_used": ("int", 0, 1),
         },
     }
     validated_sections = {name: {} for name in sections}
@@ -1721,9 +1946,12 @@ def submit():
         "str": 0.18,
         "prs": 0.18,
         "rfl": 0.12,
+        "pong": 0.10,
         "drv": 0.12,
         "mem": 0.12,
         "bal": 0.10,
+        "ice": 0.10,
+        "tilt": 0.10,
     }
     weighted_score = 0.0
     weight_sum = 0.0
@@ -1752,6 +1980,11 @@ def submit():
         "rfl_attempts": validated_sections["rfl"].get("attempts"),
         "rfl_best_error": validated_sections["rfl"].get("best_error_px"),
         "rfl_avg_error": validated_sections["rfl"].get("avg_error_px"),
+        "pong_score": validated_sections["pong"].get("score"),
+        "pong_hits": validated_sections["pong"].get("hits"),
+        "pong_attempts": validated_sections["pong"].get("attempts"),
+        "pong_best_error": validated_sections["pong"].get("best_error_px"),
+        "pong_avg_error": validated_sections["pong"].get("avg_error_px"),
         "drv_score": validated_sections["drv"].get("score"),
         "drv_collisions": validated_sections["drv"].get("collisions"),
         "drv_distance": validated_sections["drv"].get("distance_m"),
@@ -1761,6 +1994,21 @@ def submit():
         "mem_score": validated_sections["mem"].get("score"),
         "mem_time_ms": validated_sections["mem"].get("elapsed_ms"),
         "mem_errors": validated_sections["mem"].get("mistakes"),
+        "ice_score": validated_sections["ice"].get("score"),
+        "ice_hits": validated_sections["ice"].get("hits"),
+        "ice_mistakes": validated_sections["ice"].get("mistakes"),
+        "ice_best_combo": validated_sections["ice"].get("best_combo"),
+        "ice_elapsed_ms": validated_sections["ice"].get("elapsed_ms"),
+        "ice_accuracy": validated_sections["ice"].get("accuracy"),
+        "ice_duration_ms": validated_sections["ice"].get("elapsed_ms"),
+        "tilt_score": validated_sections["tilt"].get("score"),
+        "tilt_catches": validated_sections["tilt"].get("catches"),
+        "tilt_collisions": validated_sections["tilt"].get("collisions"),
+        "tilt_control": validated_sections["tilt"].get("control"),
+        "tilt_elapsed_ms": validated_sections["tilt"].get("elapsed_ms"),
+        "tilt_misses": validated_sections["tilt"].get("misses"),
+        "tilt_sensor_samples": validated_sections["tilt"].get("sensor_samples"),
+        "tilt_sensor_used": validated_sections["tilt"].get("sensor_used"),
     }
 
     bal_section = sections["bal"]
@@ -1807,15 +2055,19 @@ def submit():
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-        "INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, drv_score, drv_collisions, drv_distance, drv_duration_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+"INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, pong_score, pong_hits, pong_attempts, pong_best_error, pong_avg_error, drv_score, drv_collisions, drv_distance, drv_duration_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, ice_score, ice_hits, ice_mistakes, ice_best_combo, ice_elapsed_ms, ice_accuracy, ice_duration_ms, tilt_score, tilt_catches, tilt_collisions, tilt_control, tilt_elapsed_ms, tilt_misses, tilt_sensor_samples, tilt_sensor_used, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
          fields['prs_score'], fields['prs_error'], fields['time_to_catch_ms'],
          fields['rfl_score'], fields['rfl_hits'], fields['rfl_attempts'], fields['rfl_best_error'], fields['rfl_avg_error'],
+         fields['pong_score'], fields['pong_hits'], fields['pong_attempts'], fields['pong_best_error'], fields['pong_avg_error'],
          fields['drv_score'], fields['drv_collisions'], fields['drv_distance'], fields['drv_duration_ms'],
          fields['bal_score'], fields['bal_std'],
          fields['mem_score'], fields['mem_time_ms'], fields['mem_errors'],
+         fields['ice_score'], fields['ice_hits'], fields['ice_mistakes'], fields['ice_best_combo'], fields['ice_elapsed_ms'], fields['ice_accuracy'], fields['ice_duration_ms'],
+         fields['tilt_score'], fields['tilt_catches'], fields['tilt_collisions'], fields['tilt_control'], fields['tilt_elapsed_ms'],
+         fields['tilt_misses'], fields['tilt_sensor_samples'], fields['tilt_sensor_used'],
          user_id,
          1 if cheat_detected else 0,
          cheat_reason,
@@ -2130,9 +2382,12 @@ def profile_view():
         "str_score",
         "prs_score",
         "rfl_score",
+        "pong_score",
         "drv_score",
         "mem_score",
         "bal_score",
+        "ice_score",
+        "tilt_score",
         "created_at",
     }
 
