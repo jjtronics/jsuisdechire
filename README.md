@@ -26,6 +26,8 @@
   - 🍸 *Barman précis (t10)* – Incline ton téléphone pour guider un verre, attraper les glaçons et éviter les éclaboussures.
 - **Parties personnalisables** : si l'option est activée dans l'admin, le joueur choisit les mini-jeux de sa partie depuis une grille mobile illustrée, ou demande un tirage aléatoire.
 - **Résultats stylés** avec résumé, détails par test et bouton de partage.
+- **Parcours fluide** : une épreuve terminée ne peut pas être rejouée accidentellement ; la partie continue vers le mini-jeu suivant ou le score final.
+- **Avis facultatifs** : après le score final, le joueur peut ouvrir un formulaire mobile pour noter chaque mini-jeu joué sur 5 étoiles et qualifier sa difficulté, avec rappel du score obtenu.
 - **Classement public** (`/leaderboard`) avec sauvegarde automatique après chaque run.
 - **Panneau admin** (`/admin`) pour configurer les paramètres ou purger la base.
 - **Mode hors-ligne léger** grâce au service worker et aux assets versionnés.
@@ -94,9 +96,16 @@ Le script exclut la base SQLite, les secrets, l’environnement virtuel et les u
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques ; aucun mot de passe par défaut n’est accepté).
-- Tu peux modifier login/mot de passe, purger les scores, ajuster les paramètres de chaque test, activer le choix des jeux par le joueur, lancer chaque mini-jeu en aperçu avec les valeurs non sauvegardées, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
+- La page des paramètres est organisée en onglets : partie & expérience, mini-jeux, compte & email, retours joueurs et édition des scores. Les mini-jeux disposent d’un second niveau de navigation pour n’afficher qu’un panneau de calibration à la fois, sans retirer aucune option.
+- Tu peux modifier login/mot de passe, purger les scores depuis l’éditeur dédié, ajuster les paramètres de chaque test, activer le choix des jeux par le joueur, lancer chaque mini-jeu en aperçu avec les valeurs non sauvegardées, valider les réglages avant sauvegarde et diagnostiquer ou tester l’envoi SMTP vers une adresse choisie.
+- Les actions globales restent en bas de page, sans barre flottante persistante sur mobile. La suppression des scores demande une modale intégrée au thème et la saisie obligatoire de « EFFACER » avant validation.
+- Le panneau admin inclut aussi les retours joueurs : synthèse par mini-jeu, moyenne d’étoiles, tendance de difficulté, recommandation d’ajustement et tableau détaillé triable/filtrable, regroupé sur une ligne par votant avec login et date.
+- Chaque vote peut être supprimé individuellement. Les cartes affichent aussi la moyenne globale du score du jeu et son taux de présence parmi toutes les parties, chacun avec sa barre de progression.
+- Toutes les confirmations sensibles de l’admin utilisent des modales cohérentes avec le thème clair/sombre ; aucune boîte de dialogue native du navigateur n’est utilisée.
+- Le réglage « Activer les évaluations joueurs » permet de masquer le formulaire et de désactiver la réception des votes.
 - Le mot de passe SMTP n’est jamais injecté dans le HTML de l’admin ; un champ vide conserve le secret existant.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.
+- Les avis sont disponibles via `/api/admin/feedback` pour les administrateurs et les votes joueurs sont reçus par `/api/feedback`.
 
 ### 🎨 Personnalisation rapide
 - Ajuste les durées, seuils et poids dans `DEFAULT_SETTINGS` (dans `app.py`).
@@ -129,7 +138,9 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
   - 🚗 *Sober driving (t7)* – Switch lanes and avoid obstacles without piling up collisions.
   - 🧠 *Memory (t5)* – Reproduce sequences while keeping mistakes and response time low.
 - **Custom sessions**: when enabled in the admin console, players can choose their games from a mobile-friendly illustrated grid or use a random draw.
+- **Optional feedback**: after the final score, players can rate every game they played from 1 to 5 stars and describe the difficulty, with their score shown on each card.
 - **Stylish results screen** with summary, per-test breakdown, and share button.
+- **Smooth flow**: once a test is finished, it cannot be accidentally replayed; the session continues to the next game or final score.
 - **Public leaderboard** (`/leaderboard`) with automatic saving after each run.
 - **Admin console** (`/admin`) to tweak settings or wipe the database.
 - **Offline-friendly** thanks to a service worker and versioned assets.
@@ -171,10 +182,16 @@ python app.py  # defaults to 0.0.0.0:9001
 
 ### 👩‍💻 Admin & scoring
 - Admin login: `/admin`; use a unique login and password.
-- Change credentials, clear scores, fine-tune each mini-game, enable player game selection, launch a live preview with unsaved values, validate settings, or test SMTP delivery to an explicit address from the dashboard.
+- The settings page is organized into tabs: session & experience, mini-games, account & email, player feedback, and score editor. Mini-games have a second navigation level so only one calibration panel is shown at a time, without removing any option.
+- Change credentials, clear scores from the dedicated score editor, fine-tune each mini-game, enable player game selection, launch a live preview with unsaved values, validate settings, or test SMTP delivery to an explicit address from the dashboard.
+- Global actions stay at the bottom of the page and are not persistently fixed on mobile. Clearing scores uses a themed modal and requires typing “DELETE” before confirmation.
+- The admin dashboard also includes sortable/filterable player feedback grouped to one row per voter, with login and vote date, per-game averages, difficulty trends, tuning recommendations, and individual vote deletion.
+- Each mini-game card shows its global average score and its share of all recorded games as progress bars. All sensitive confirmations use themed modals instead of native browser dialogs.
+- The “Enable player feedback” setting can hide the form and disable new feedback submissions.
 - The SMTP password is never injected into the admin HTML; leaving the field blank keeps the existing secret.
 - Google Analytics 4 uses Google Consent Mode v2: set `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` in production to enable regional consent handling, with consent denied by default in the EEA, United Kingdom and Switzerland and granted elsewhere. The banner lets visitors accept or refuse, and preferences remain available in the footer.
 - `/api/submit` stores total + per-test scores, timestamp, and nickname.
+- Player feedback is submitted to `/api/feedback` and available to admins through `/api/admin/feedback`.
 
 ### 🎨 Customization tips
 - Tweak thresholds and weights in `DEFAULT_SETTINGS` inside `app.py`.
@@ -208,6 +225,8 @@ MIT License (see [LICENSE](LICENSE)).
   - 🧠 *Memoria (t5)* – Ripeti le sequenze limitando errori e tempo di risposta.
 - **Partite personalizzabili**: se attivata dall'admin, la selezione dei giochi avviene da una griglia illustrata ottimizzata per smartphone, oppure tramite estrazione casuale.
 - **Schermata risultati stilosa** con riepilogo, dettagli per test e pulsante di condivisione.
+- **Flusso più semplice**: dopo la fine di un test non è possibile rigiocarlo per errore; la partita passa al gioco successivo o al punteggio finale.
+- **Feedback facoltativo**: dopo il punteggio finale, il giocatore può valutare ogni mini-gioco provato da 1 a 5 stelle e indicare la difficoltà, con il punteggio ottenuto visibile su ogni scheda.
 - **Classifica pubblica** (`/leaderboard`) che si aggiorna automaticamente dopo ogni run.
 - **Pannello admin** (`/admin`) per ritoccare i parametri o pulire il database.
 - **Modalità offline parziale** grazie al service worker e agli asset versionati.
@@ -248,10 +267,16 @@ python app.py  # espone 0.0.0.0:9001
 
 ### 👩‍💻 Admin & punteggi
 - Login admin: `/admin`; usa credenziali uniche.
-- Dal pannello puoi cambiare credenziali, cancellare i punteggi, calibrare ogni mini-gioco, avviare un’anteprima dal vivo con i valori non salvati, validare i parametri o testare l’invio SMTP verso un indirizzo esplicito.
+- La pagina impostazioni è divisa in schede per partita, mini-giochi, account/email, feedback giocatori ed edizione dei punteggi; i mini-giochi hanno una seconda navigazione per calibrare un pannello alla volta.
+- Dal pannello puoi cambiare credenziali, cancellare i punteggi nell’editor dedicato, calibrare ogni mini-gioco, avviare un’anteprima dal vivo con i valori non salvati, validare i parametri o testare l’invio SMTP verso un indirizzo esplicito.
+- Le azioni globali restano in fondo alla pagina e non sono fissate permanentemente su mobile. La cancellazione dei punteggi usa una modale coerente col tema e richiede di digitare « DELETE » prima della conferma.
+- Il pannello admin include anche i feedback: riepilogo per gioco, medie globali, tendenze di difficoltà, tabella dettagliata ordinabile e filtrabile con una riga per votante, login e data, oltre alla cancellazione individuale dei voti.
+- Ogni mini-gioco mostra la media globale del punteggio e la percentuale di partite in cui è apparso, entrambe con una barra di avanzamento. Le conferme sensibili usano modali interne, mai finestre native del browser.
+- L’impostazione « Attiva i feedback dei giocatori » permette di nascondere il modulo e disattivare l’invio di nuovi voti.
 - La password SMTP non viene mai inserita nell’HTML dell’admin; lasciare vuoto il campo conserva il segreto esistente.
 - Google Analytics 4 usa Google Consent Mode v2: imposta `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` nell’ambiente di produzione per gestire il consenso per area geografica. Il consenso è negato per impostazione predefinita nello SEE, nel Regno Unito e in Svizzera e concesso altrove; il banner e le preferenze nel footer permettono di modificarlo.
 - `/api/submit` salva punteggio totale, dettaglio per test, timestamp e nickname.
+- I feedback vengono inviati a `/api/feedback` e sono consultabili dagli admin tramite `/api/admin/feedback`.
 
 ### 🎨 Personalizzazione rapida
 - Modifica durate, soglie e pesi in `DEFAULT_SETTINGS` dentro `app.py`.

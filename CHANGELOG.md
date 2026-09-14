@@ -1,5 +1,100 @@
 # Journal des changements
 
+## 15 septembre 2026 — Finalisation de l’espace d’administration
+
+### UX, sécurité et documentation
+
+- Déplacement de la section « Identifiants d’accès » après les réglages par espace pour conserver une hiérarchie cohérente dans l’onglet « Compte & email ».
+- Remplacement de toutes les confirmations, saisies et alertes natives restantes de l’administration par des modales intégrées au thème clair/sombre.
+- Documentation du parcours complet : onglets de paramètres, éditeur de scores, actions globales en bas de page, feedbacks regroupés par votant et métriques par mini-jeu.
+
+## 15 septembre 2026 — Taux de présence des mini-jeux
+
+### Administration
+
+- Ajout du nombre de parties dans lesquelles chaque mini-jeu a été joué, rapporté au nombre total de parties enregistrées.
+- Ajout d’une barre de participation dans les cartes de synthèse des avis.
+
+## 15 septembre 2026 — Moyenne globale des mini-jeux
+
+### Administration
+
+- Chaque carte « Avis sur les mini-jeux » affiche désormais la moyenne de score du mini-jeu, calculée sur tous les scores disponibles en base.
+- La moyenne est représentée par une barre de progression et indique la note sur 100.
+
+## 15 septembre 2026 — Suppression ciblée des votes joueurs
+
+### Administration
+
+- Ajout d’un bouton de suppression sur chaque mini-jeu évalué dans le tableau des retours.
+- La suppression retire uniquement le vote du mini-jeu choisi, sans effacer les autres avis de la même partie.
+
+## 15 septembre 2026 — Suppression des scores sécurisée
+
+### Administration & UX
+
+- Déplacement de « Vider tous les scores » dans l’onglet « Édition des scores ».
+- Remplacement de la confirmation native par une modale claire avec saisie obligatoire du mot de confirmation avant validation.
+
+## 15 septembre 2026 — Édition des scores dans le menu admin
+
+### Administration & UX
+
+- Ajout d’un onglet principal « Édition des scores » qui ouvre directement le tableau des scores.
+- Suppression du bouton d’édition des scores de la barre d’actions sticky en bas de page.
+
+## 15 septembre 2026 — Accès direct aux scores et retours
+
+### Administration & UX
+
+- Les actions « Éditer les scores » et « Voir les retours » quittent la barre sticky globale et rejoignent l’onglet « Scores & retours ».
+- L’ouverture de cet onglet affiche et charge automatiquement les deux tableaux, puis positionne la page au bon endroit.
+
+## 15 septembre 2026 — Paramètres admin organisés par onglets
+
+### Administration & UX
+
+- Remplacement de la longue liste de réglages par quatre espaces : partie & expérience, mini-jeux, compte & email, scores & retours.
+- Ajout d’un sous-onglet tactile pour les mini-jeux afin d’afficher un seul panneau de calibration à la fois.
+- Toutes les options restent présentes dans le formulaire et continuent d’être sauvegardées ensemble, même lorsqu’un onglet est masqué.
+- Ajout de repères d’onglet accessibles, d’un état actif visuel et d’une navigation persistée dans l’URL pour retrouver directement un réglage.
+
+## 15 septembre 2026 — Tableau des votes enrichi
+
+### Administration
+
+- Ajout du login utilisateur dans les derniers votes, avec gestion des retours anonymes.
+- Ajout d’une date de vote explicite et filtrable.
+- Tri renforcé sur toutes les colonnes avec indicateurs visuels et indication de clic.
+- Regroupement des mini-jeux d’une même soumission sur une seule ligne par votant et par partie.
+
+## 15 septembre 2026 — Parcours sans rejouer une épreuve
+
+### UX
+
+- Suppression des boutons « Rejouer » affichés après la fin d’un mini-jeu.
+- Le jeu des gobelets, le beer pong, la conduite, la mémoire, le glaçon fou et le barman précis avancent désormais directement vers l’étape suivante ou le score final.
+- Les manches internes prévues dans un mini-jeu restent disponibles jusqu’à leur fin normale.
+
+## 14 septembre 2026 — Retours facultatifs après la partie
+
+### Fonctionnalités
+
+- Le formulaire d’avis n’apparaît qu’après le score final et reste entièrement facultatif via le bouton « Évaluer les jeux ».
+- Le joueur peut noter chaque mini-jeu joué avec 1 à 5 étoiles et qualifier la difficulté : trop facile, parfaite ou trop difficile.
+- Chaque carte rappelle le score obtenu pour le mini-jeu évalué.
+- Les retours sont enregistrés dans une table dédiée avec protection contre les doublons d’une même partie.
+- L’administration dispose d’un tableau des votes triable et filtrable, ainsi que d’une synthèse par jeu avec moyenne, répartition de difficulté et recommandation de réglage.
+- Les recommandations renvoient directement vers les paramètres du mini-jeu concerné.
+- Ajout d’un interrupteur admin pour activer ou désactiver entièrement les évaluations joueurs.
+- Traductions ajoutées en français, anglais et italien.
+
+### Vérification
+
+- 12 tests Flask passent.
+- La syntaxe de tous les fichiers JavaScript passe avec `npm run test:js`.
+- Aucun déploiement n’a été lancé pour cette évolution.
+
 ## 14 septembre 2026 — Sélection des jeux avant la partie
 
 ### Fonctionnalités

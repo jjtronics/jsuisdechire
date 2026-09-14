@@ -204,7 +204,7 @@
     options = options || {};
     const keepNickname = options.keepNickname !== false;
     invalidateSubmission();
-    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:test_sequence_v1','jsd:test_sequence_v2']
+    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:test_sequence_v1','jsd:test_sequence_v2','jsd:feedback_run_id','jsd:feedback_submitted']
       .forEach(key => localStorage.removeItem(key));
     if (!keepNickname){
       localStorage.removeItem('jsd:nick');

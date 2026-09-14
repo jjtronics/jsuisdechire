@@ -389,8 +389,7 @@
     } else {
       messageEl.textContent = translate('t7.success_message', { score: finalScore }, `Trajet terminé · Score ${finalScore}/100`);
     }
-    startBtn.textContent = translate('t7.retry_button', null, 'Rejouer');
-    startBtn.disabled = false;
+    startBtn.hidden = true;
     storeResult();
   }
 
@@ -409,6 +408,7 @@
     state.flashUntil = 0;
     startBtn.textContent = translate('t7.start_button', null, 'Démarrer');
     startBtn.disabled = false;
+    startBtn.hidden = false;
     messageEl.textContent = translate('t7.help', null, 'Reste sur la route et change de voie pour éviter les obstacles.');
     try {
       localStorage.removeItem('jsd:drv');
@@ -438,8 +438,7 @@
     updateHud();
     const finalScore = Number.isFinite(Number(payload.score)) ? clamp(Math.round(Number(payload.score)), 0, 100) : computeScore();
     messageEl.textContent = translate('t7.success_message', { score: finalScore }, `Trajet terminé · Score ${finalScore}/100`);
-    startBtn.textContent = translate('t7.retry_button', null, 'Rejouer');
-    startBtn.disabled = false;
+    startBtn.hidden = true;
     enableNextButton();
     render(performance.now());
   }

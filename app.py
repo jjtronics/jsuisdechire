@@ -283,6 +283,7 @@ DEFAULT_SETTINGS = {
     "tilt_max_collisions": 5,
     "session_total_games": 10,
     "session_user_select_enabled": False,
+    "session_feedback_enabled": True,
     "game_rxn_enabled": True,
     "game_str_enabled": True,
     "game_prs_enabled": True,
@@ -384,6 +385,7 @@ SETTING_RANGES = {
 }
 BOOLEAN_SETTING_KEYS = frozenset({
     "session_user_select_enabled",
+    "session_feedback_enabled",
     "game_rxn_enabled",
     "game_str_enabled",
     "game_prs_enabled",
@@ -473,6 +475,23 @@ PASSWORD_RESET_TOKEN_TTL = 3600
 SMTP_SECURITY_MODES = {"none", "starttls", "ssl"}
 SCORE_SUBMIT_RATE_LIMIT = 6
 SCORE_SUBMIT_RATE_WINDOW_SECONDS = 60
+FEEDBACK_SUBMIT_RATE_LIMIT = 12
+FEEDBACK_SUBMIT_RATE_WINDOW_SECONDS = 60
+
+FEEDBACK_GAME_CATALOG = (
+    {"id": "t1", "section": "rxn", "admin_group": "reaction"},
+    {"id": "t2", "section": "str", "admin_group": "stroop"},
+    {"id": "t3", "section": "prs", "admin_group": "pursuit"},
+    {"id": "t4", "section": "bal", "admin_group": "balance"},
+    {"id": "t5", "section": "mem", "admin_group": "memory"},
+    {"id": "t6", "section": "rfl", "admin_group": "reflex"},
+    {"id": "t7", "section": "drv", "admin_group": "driving"},
+    {"id": "t8", "section": "pong", "admin_group": "pong"},
+    {"id": "t9", "section": "ice", "admin_group": "ice"},
+    {"id": "t10", "section": "tilt", "admin_group": "tilt"},
+)
+FEEDBACK_GAME_BY_ID = {game["id"]: game for game in FEEDBACK_GAME_CATALOG}
+FEEDBACK_DIFFICULTIES = frozenset({"too_easy", "perfect", "too_hard"})
 
 def get_db():
     if "db" not in g:
@@ -538,6 +557,18 @@ def ensure_schema(db=None):
         window_started INTEGER NOT NULL,
         request_count INTEGER NOT NULL
     )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS game_feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at INTEGER NOT NULL,
+        run_id TEXT NOT NULL,
+        game_id TEXT NOT NULL,
+        score REAL,
+        stars INTEGER NOT NULL,
+        difficulty TEXT NOT NULL,
+        user_id INTEGER,
+        UNIQUE(run_id, game_id)
+    )''')
+    db.execute("CREATE INDEX IF NOT EXISTS idx_game_feedback_created_at ON game_feedback(created_at DESC)")
 
     # Ensure new columns exist without requiring a destructive migration
     score_columns = {row["name"] for row in db.execute("PRAGMA table_info(scores)").fetchall()}
@@ -1771,6 +1802,194 @@ def api_nickname_check():
     available = conflict is None
 
     return jsonify({"ok": True, "available": bool(available)})
+
+
+@app.post("/api/feedback")
+def api_game_feedback():
+    if not bool(get_settings().get("session_feedback_enabled", True)):
+        return jsonify({"ok": False, "error": "feedback_disabled"}), 403
+
+    client_identity = request.remote_addr or "unknown"
+    if not consume_rate_limit(
+        "game_feedback",
+        client_identity,
+        FEEDBACK_SUBMIT_RATE_LIMIT,
+        FEEDBACK_SUBMIT_RATE_WINDOW_SECONDS,
+    ):
+        response = jsonify({"ok": False, "error": "rate_limited"})
+        response.status_code = 429
+        response.headers["Retry-After"] = str(FEEDBACK_SUBMIT_RATE_WINDOW_SECONDS)
+        return response
+
+    data = request.get_json(silent=True) or {}
+    run_id = str(data.get("run_id") or "").strip()
+    entries = data.get("entries")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{8,128}", run_id) or not isinstance(entries, list) or not entries or len(entries) > len(FEEDBACK_GAME_CATALOG):
+        return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+
+    validated = []
+    seen_games = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+        game_id = str(entry.get("game_id") or "").strip()
+        if game_id not in FEEDBACK_GAME_BY_ID or game_id in seen_games:
+            return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+        seen_games.add(game_id)
+        try:
+            stars = int(entry.get("stars"))
+        except (TypeError, ValueError):
+            return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+        if stars < 1 or stars > 5:
+            return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+        difficulty = str(entry.get("difficulty") or "").strip()
+        if difficulty not in FEEDBACK_DIFFICULTIES:
+            return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+
+        score = entry.get("score")
+        if score in (None, ""):
+            score_value = None
+        else:
+            try:
+                score_value = float(score)
+            except (TypeError, ValueError):
+                return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+            if not math.isfinite(score_value) or not 0 <= score_value <= 100:
+                return jsonify({"ok": False, "error": "invalid_feedback"}), 400
+        validated.append((game_id, score_value, stars, difficulty))
+
+    current_user = get_current_user()
+    user_id = int(current_user["id"]) if current_user is not None else None
+    db = get_db()
+    created_at = int(time.time())
+    saved = 0
+    for game_id, score_value, stars, difficulty in validated:
+        cursor = db.execute(
+            "INSERT OR IGNORE INTO game_feedback(created_at, run_id, game_id, score, stars, difficulty, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (created_at, run_id, game_id, score_value, stars, difficulty, user_id),
+        )
+        saved += int(cursor.rowcount or 0)
+    db.commit()
+    return jsonify({"ok": True, "saved": saved, "already_saved": saved == 0})
+
+
+@app.get("/api/admin/feedback")
+@require_admin
+def api_admin_feedback():
+    db = get_db()
+    score_average_columns = ", ".join(
+        f'AVG({game["section"]}_score) AS {game["id"]}_average, '
+        f'COUNT({game["section"]}_score) AS {game["id"]}_count'
+        for game in FEEDBACK_GAME_CATALOG
+    )
+    score_averages = db.execute(f"SELECT COUNT(*) AS total_games, {score_average_columns} FROM scores").fetchone()
+    grouped = {
+        row["game_id"]: row
+        for row in db.execute(
+            """
+            SELECT game_id,
+                   COUNT(*) AS votes,
+                   AVG(stars) AS average_stars,
+                   SUM(CASE WHEN difficulty = 'too_easy' THEN 1 ELSE 0 END) AS too_easy,
+                   SUM(CASE WHEN difficulty = 'perfect' THEN 1 ELSE 0 END) AS perfect,
+                   SUM(CASE WHEN difficulty = 'too_hard' THEN 1 ELSE 0 END) AS too_hard
+            FROM game_feedback
+            GROUP BY game_id
+            """
+        ).fetchall()
+    }
+
+    summary = []
+    for game in FEEDBACK_GAME_CATALOG:
+        row = grouped.get(game["id"])
+        votes = int(row["votes"] or 0) if row else 0
+        too_easy = int(row["too_easy"] or 0) if row else 0
+        perfect = int(row["perfect"] or 0) if row else 0
+        too_hard = int(row["too_hard"] or 0) if row else 0
+        if votes < 3:
+            recommendation = "waiting"
+        elif too_hard > too_easy and too_hard > perfect:
+            recommendation = "lower"
+        elif too_easy > too_hard and too_easy > perfect:
+            recommendation = "increase"
+        else:
+            recommendation = "keep"
+        summary.append({
+            **game,
+            "votes": votes,
+            "average_stars": round(float(row["average_stars"]), 2) if row and row["average_stars"] is not None else None,
+            "average_score": round(float(score_averages[f'{game["id"]}_average']), 2) if score_averages[f'{game["id"]}_average'] is not None else None,
+            "score_count": int(score_averages[f'{game["id"]}_count'] or 0),
+            "total_games": int(score_averages["total_games"] or 0),
+            "too_easy": too_easy,
+            "perfect": perfect,
+            "too_hard": too_hard,
+            "recommendation": recommendation,
+        })
+
+    raw_recent = [dict(row) for row in db.execute(
+        """
+        SELECT game_feedback.id,
+               game_feedback.created_at,
+               game_feedback.run_id,
+               game_feedback.game_id,
+               game_feedback.score,
+               game_feedback.stars,
+               game_feedback.difficulty,
+               users.login AS user_login
+        FROM game_feedback
+        LEFT JOIN users ON users.id = game_feedback.user_id
+        ORDER BY game_feedback.created_at DESC, game_feedback.id DESC
+        """
+    ).fetchall()]
+    grouped_recent = {}
+    for row in raw_recent:
+        run_id = row["run_id"]
+        group = grouped_recent.setdefault(run_id, {
+            "id": row["id"],
+            "created_at": row["created_at"],
+            "run_id": run_id,
+            "user_login": row["user_login"],
+            "games": [],
+        })
+        group["id"] = max(group["id"], row["id"])
+        group["created_at"] = max(group["created_at"], row["created_at"])
+        group["games"].append({
+            "id": row["id"],
+            "game_id": row["game_id"],
+            "score": row["score"],
+            "stars": row["stars"],
+            "difficulty": row["difficulty"],
+        })
+    recent = sorted(grouped_recent.values(), key=lambda row: (row["created_at"], row["id"]), reverse=True)
+    for row in recent:
+        row["games_count"] = len(row["games"])
+    return jsonify({
+        "ok": True,
+        "total_votes": sum(item["votes"] for item in summary),
+        "summary": summary,
+        "recent": recent,
+    })
+
+
+@app.post("/api/admin/feedback/delete")
+@require_admin
+def api_admin_delete_feedback():
+    data = request.get_json(silent=True) or {}
+    try:
+        feedback_id = int(data.get("id"))
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "invalid_id"}), 400
+
+    if feedback_id <= 0:
+        return jsonify({"ok": False, "error": "invalid_id"}), 400
+
+    db = get_db()
+    cursor = db.execute("DELETE FROM game_feedback WHERE id = ?", (feedback_id,))
+    if not cursor.rowcount:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+    db.commit()
+    return jsonify({"ok": True, "deleted": feedback_id})
 
 
 @app.post("/api/submit")

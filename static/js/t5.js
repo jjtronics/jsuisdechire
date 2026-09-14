@@ -357,9 +357,7 @@
     const next = document.getElementById('next');
     if(next){ next.classList.remove('opacity-50', 'pointer-events-none'); }
     grid.classList.add('is-complete');
-    startWrap.classList.remove('is-hidden');
-    startBtn.disabled = false;
-    startBtn.textContent = translate('t5.button_retry', null, 'Rejouer');
+    startWrap.classList.add('is-hidden');
     setMessage(translate('t5.done_message', { score }, `Mémoire terminée ✔ Score ${score}/100`), 'success');
     const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t5') : '/results';
     setTimeout(() => { location.href = nextRoute; }, 900);
@@ -465,7 +463,7 @@
       state.cards.forEach(renderCard);
       state.locked = false;
       state.startedAt = performance.now();
-      startBtn.textContent = translate('t5.button_retry', null, 'Rejouer');
+      startBtn.textContent = translate('t5.game_message', null, 'En cours…');
       setMessage(translate('t5.game_message', null, 'Retourne les dessous de verre et retrouve les mêmes marques !'));
       updateStats();
       state.rafId = requestAnimationFrame(tick);

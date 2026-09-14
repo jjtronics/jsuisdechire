@@ -22,6 +22,7 @@ class JsuisDechireAppTests(unittest.TestCase):
             db = app_module.get_db()
             app_module.ensure_schema(db)
             db.execute("DELETE FROM scores")
+            db.execute("DELETE FROM game_feedback")
             db.execute("DELETE FROM settings")
             db.execute("DELETE FROM rate_limits")
             db.commit()
@@ -77,6 +78,7 @@ class JsuisDechireAppTests(unittest.TestCase):
             ("/api/admin/settings", "post"),
             ("/api/admin/users", "get"),
             ("/api/admin/scores", "get"),
+            ("/api/admin/feedback", "get"),
         )
         for path, method in protected_api_requests:
             with self.subTest(path=path):
@@ -122,6 +124,97 @@ class JsuisDechireAppTests(unittest.TestCase):
         with app_module.app.app_context():
             count = app_module.get_db().execute("SELECT COUNT(*) FROM scores").fetchone()[0]
         self.assertEqual(count, 0)
+
+    def test_feedback_is_optional_per_run_and_visible_to_admin(self):
+        with app_module.app.app_context():
+            db = app_module.get_db()
+            db.execute(
+                "INSERT INTO users(created_at, login, email, nickname, password_hash, role) VALUES (?, ?, ?, ?, ?, ?)",
+                (int(app_module.time.time()), "feedback-login", "feedback@example.test", "Feedback", None, "player"),
+            )
+            db.commit()
+            user_id = db.execute("SELECT id FROM users WHERE login = ?", ("feedback-login",)).fetchone()[0]
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.USER_SESSION_KEY] = user_id
+
+        payload = {
+            "run_id": "feedback-run-1234",
+            "entries": [
+                {"game_id": "t1", "score": 82.5, "stars": 5, "difficulty": "perfect"},
+                {"game_id": "t2", "score": 61, "stars": 3, "difficulty": "too_hard"},
+            ],
+        }
+        response = self.post_json("/api/feedback", payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"ok": True, "saved": 2, "already_saved": False})
+
+        duplicate = self.post_json("/api/feedback", payload)
+        self.assertEqual(duplicate.status_code, 200)
+        self.assertEqual(duplicate.get_json(), {"ok": True, "saved": 0, "already_saved": True})
+
+        invalid = self.post_json(
+            "/api/feedback",
+            {"run_id": "feedback-run-invalid", "entries": [{"game_id": "t1", "stars": 6, "difficulty": "perfect"}]},
+        )
+        self.assertEqual(invalid.status_code, 400)
+        self.assertEqual(invalid.get_json()["error"], "invalid_feedback")
+
+        score_response = self.post_json("/api/submit", self.valid_payload())
+        self.assertEqual(score_response.status_code, 200)
+
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.ADMIN_SESSION_KEY] = True
+        admin_feedback = self.client.get("/api/admin/feedback")
+        self.assertEqual(admin_feedback.status_code, 200)
+        data = admin_feedback.get_json()
+        self.assertEqual(data["total_votes"], 2)
+        self.assertEqual(len(data["recent"]), 1)
+        self.assertEqual(data["recent"][0]["user_login"], "feedback-login")
+        self.assertEqual(data["recent"][0]["games_count"], 2)
+        self.assertEqual({entry["game_id"] for entry in data["recent"][0]["games"]}, {"t1", "t2"})
+        t1_summary = next(item for item in data["summary"] if item["id"] == "t1")
+        self.assertEqual(t1_summary["votes"], 1)
+        self.assertEqual(t1_summary["recommendation"], "waiting")
+        self.assertEqual(t1_summary["average_score"], 80.0)
+        self.assertEqual(t1_summary["score_count"], 1)
+        self.assertEqual(t1_summary["total_games"], 1)
+
+        t1_vote_id = next(entry["id"] for entry in data["recent"][0]["games"] if entry["game_id"] == "t1")
+        deleted = self.post_json("/api/admin/feedback/delete", {"id": t1_vote_id})
+        self.assertEqual(deleted.status_code, 200)
+        self.assertEqual(deleted.get_json(), {"ok": True, "deleted": t1_vote_id})
+
+        refreshed = self.client.get("/api/admin/feedback")
+        self.assertEqual(refreshed.get_json()["total_votes"], 1)
+        self.assertEqual(refreshed.get_json()["recent"][0]["games_count"], 1)
+
+        missing = self.post_json("/api/admin/feedback/delete", {"id": t1_vote_id})
+        self.assertEqual(missing.status_code, 404)
+        self.assertEqual(missing.get_json()["error"], "not_found")
+
+    def test_feedback_can_be_disabled_from_admin_settings(self):
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.ADMIN_SESSION_KEY] = True
+        setting_response = self.client.post(
+            "/api/admin/settings",
+            json={"session_feedback_enabled": False},
+            headers={"X-CSRFToken": self.csrf_token},
+        )
+        self.assertEqual(setting_response.status_code, 200)
+        self.assertFalse(setting_response.get_json()["saved"]["session_feedback_enabled"])
+
+        with self.client.session_transaction() as browser_session:
+            browser_session.pop(app_module.ADMIN_SESSION_KEY, None)
+        self.assertFalse(self.client.get("/api/settings").get_json()["session_feedback_enabled"])
+        response = self.post_json(
+            "/api/feedback",
+            {
+                "run_id": "feedback-disabled",
+                "entries": [{"game_id": "t1", "score": 80, "stars": 5, "difficulty": "perfect"}],
+            },
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json()["error"], "feedback_disabled")
 
     def test_submit_is_rate_limited_per_client(self):
         responses = [self.post_json("/api/submit", self.valid_payload()) for _ in range(7)]

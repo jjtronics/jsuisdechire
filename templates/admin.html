@@ -21,7 +21,27 @@
     </div>
   </section>
 
-  <section class="rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
+  <section id="settingsWorkspace" class="rounded-[1.75rem] border border-white/50 bg-white/80 p-4 shadow-lg shadow-slate-900/5 backdrop-blur dark:bg-slate-900/60 dark:shadow-black/10 sm:p-6">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400" data-i18n="admin.nav.title">Organisation</p>
+        <h2 class="mt-1 text-xl font-black tracking-tight text-slate-900 dark:text-slate-100" data-i18n="admin.tabs.title">Réglages par espace</h2>
+        <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300" data-i18n="admin.tabs.description">Accède rapidement aux réglages utiles sans faire défiler toute la page.</p>
+      </div>
+      <span class="hidden rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400 sm:inline-flex">5 onglets</span>
+    </div>
+    <nav id="adminNavLinks" class="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label="Sections des paramètres"></nav>
+    <div id="gameSubnav" class="mt-5 hidden rounded-2xl border border-indigo-200/70 bg-indigo-50/70 p-3 dark:border-indigo-900/60 dark:bg-indigo-950/20">
+      <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-indigo-700 dark:text-indigo-300" data-i18n="admin.tabs.games.subnav">Réglage d'un mini-jeu</p>
+        <p class="text-xs text-indigo-700/75 dark:text-indigo-200/75" data-i18n="admin.tabs.games.subnav_description">Un seul panneau à la fois pour garder une lecture confortable.</p>
+      </div>
+      <nav id="gameSubnavLinks" class="mt-3 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Mini-jeux"></nav>
+    </div>
+  </section>
+  <div id="formWrap" class="min-w-0 space-y-6"></div>
+
+  <section data-admin-panel="account" class="admin-tab-hidden rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="space-y-1">
         <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.credentials.title">Identifiants d'accès</h2>
@@ -56,20 +76,7 @@
     </form>
   </section>
 
-  <div class="grid items-start gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
-    <aside id="adminNav" class="min-w-0 lg:sticky lg:top-24">
-      <div class="rounded-[1.5rem] border border-white/50 bg-white/80 p-4 shadow-lg shadow-slate-900/5 backdrop-blur dark:bg-slate-900/60 dark:shadow-black/10">
-        <div class="mb-3 flex items-center justify-between gap-3">
-          <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400" data-i18n="admin.nav.title">Sections</p>
-          <span class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">13</span>
-        </div>
-        <nav id="adminNavLinks" class="flex min-w-0 gap-1.5 overflow-x-auto pb-1 lg:block lg:space-y-1" aria-label="Sections des paramètres"></nav>
-      </div>
-    </aside>
-    <div id="formWrap" class="min-w-0 space-y-6"></div>
-  </div>
-
-  <section id="userManagement" class="rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
+  <section id="userManagement" data-admin-panel="account" class="admin-tab-hidden rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="space-y-1">
         <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.users.title">Gestion des utilisateurs</h2>
@@ -95,7 +102,112 @@
     </div>
   </section>
 
-  <section id="globalActions" class="sticky bottom-4 z-20 rounded-[1.75rem] border border-slate-800/80 bg-slate-950/95 p-5 text-white shadow-2xl shadow-slate-950/20 backdrop-blur-md sm:p-6">
+  <section id="toolsActions" data-admin-panel="tools" class="admin-tab-hidden rounded-[1.75rem] border border-indigo-200/70 bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 p-5 shadow-lg shadow-indigo-900/5 dark:border-indigo-900/60 dark:from-indigo-950/30 dark:via-slate-900/70 dark:to-fuchsia-950/20 sm:p-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300" data-i18n="admin.tabs.tools">Retours joueurs</p>
+        <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300" data-i18n="admin.tabs.tools_description">Consulte les scores et les avis pour ajuster le calibrage.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button id="feedbackBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-violet-300 bg-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40" data-i18n="admin.feedback.open_label" data-i18n-attr="data-open-label:admin.feedback.open_label,data-close-label:admin.feedback.close_label">Voir les retours</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="scoreEditor" data-admin-panel="scores" class="admin-tab-hidden hidden rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.scores.title">Gestion des scores</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.scores.description">Filtre, trie et sélectionne les entrées à supprimer.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="deleteSelectedBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30" data-i18n="admin.scores.delete_selected" disabled>Supprimer la sélection</button>
+        <button id="clearBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-red-400 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 dark:border-red-500 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/60" data-i18n="admin.clear_button">Vider tous les scores</button>
+        <p id="scoreMsg" class="text-sm text-gray-500"></p>
+      </div>
+    </div>
+    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200/70 dark:border-slate-800">
+      <table id="scoreTable" class="min-w-full text-sm text-left text-slate-700 dark:text-slate-200">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="clearScoresModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="clearScoresTitle" aria-describedby="clearScoresDescription">
+    <div class="w-full max-w-lg overflow-hidden rounded-[2rem] border border-red-200/80 bg-white shadow-2xl shadow-red-950/20 dark:border-red-900/70 dark:bg-slate-900">
+      <div class="border-b border-red-100 bg-gradient-to-br from-red-50 via-white to-amber-50 p-6 dark:border-red-900/60 dark:from-red-950/50 dark:via-slate-900 dark:to-amber-950/20 sm:p-7">
+        <div class="flex items-start gap-4">
+          <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-100 text-2xl text-red-600 dark:bg-red-950/70 dark:text-red-300" aria-hidden="true">!</span>
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.16em] text-red-600 dark:text-red-300" data-i18n="admin.clear_modal.kicker">Action irréversible</p>
+            <h2 id="clearScoresTitle" class="mt-1 text-xl font-black tracking-tight text-slate-900 dark:text-slate-100" data-i18n="admin.clear_modal.title">Vider tous les scores ?</h2>
+            <p id="clearScoresDescription" class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300" data-i18n="admin.clear_modal.description">Tous les scores enregistrés seront définitivement supprimés.</p>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-4 p-6 sm:p-7">
+        <p class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold leading-6 text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200" data-i18n="admin.clear_modal.instruction">Pour confirmer, écris le mot EFFACER ci-dessous.</p>
+        <label class="block space-y-2">
+          <span class="text-sm font-bold text-slate-800 dark:text-slate-200" data-i18n="admin.clear_modal.label">Mot de confirmation</span>
+          <input id="clearScoresConfirmInput" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-bold uppercase tracking-[0.18em] text-slate-900 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-500/10 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:admin.clear_modal.placeholder" placeholder="Écris EFFACER">
+        </label>
+        <p id="clearScoresModalMsg" class="min-h-5 text-sm font-semibold text-red-600 dark:text-red-300" role="status" aria-live="polite"></p>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button id="cancelClearScoresBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" data-i18n="admin.clear_modal.cancel">Annuler</button>
+          <button id="confirmClearScoresBtn" type="button" class="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:cursor-not-allowed disabled:opacity-40" data-i18n="admin.clear_modal.confirm" disabled>Vider les scores</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminDialog" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="adminDialogTitle" aria-describedby="adminDialogMessage">
+    <div class="w-full max-w-md overflow-hidden rounded-[2rem] border border-indigo-200/80 bg-white shadow-2xl shadow-indigo-950/20 dark:border-indigo-900/70 dark:bg-slate-900">
+      <div class="border-b border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 p-6 dark:border-indigo-900/60 dark:from-indigo-950/50 dark:via-slate-900 dark:to-fuchsia-950/20 sm:p-7">
+        <div class="flex items-start gap-4">
+          <span id="adminDialogIcon" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-xl font-black text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-300" aria-hidden="true">?</span>
+          <div>
+            <h2 id="adminDialogTitle" class="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100"></h2>
+            <p id="adminDialogMessage" class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300"></p>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-4 p-6 sm:p-7">
+        <label id="adminDialogInputWrap" class="hidden block space-y-2">
+          <span id="adminDialogInputLabel" class="text-sm font-bold text-slate-800 dark:text-slate-200"></span>
+          <input id="adminDialogInput" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100" autocomplete="off">
+        </label>
+        <p id="adminDialogError" class="min-h-5 text-sm font-semibold text-rose-600 dark:text-rose-300" role="status" aria-live="polite"></p>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button id="adminDialogCancel" type="button" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Annuler</button>
+          <button id="adminDialogConfirm" type="button" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-40">Valider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="feedbackEditor" data-admin-panel="tools" class="admin-tab-hidden hidden rounded-[1.75rem] border border-violet-200/70 bg-gradient-to-br from-violet-50 via-white to-rose-50 p-6 shadow-lg shadow-violet-900/5 dark:border-violet-900/60 dark:from-slate-900/70 dark:to-rose-950/20 sm:p-7">
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-violet-600 dark:text-violet-300" data-i18n="admin.feedback.kicker">Retour terrain</p>
+        <h2 class="mt-1 text-xl font-black tracking-tight text-slate-900 dark:text-slate-100" data-i18n="admin.feedback.title">Avis sur les mini-jeux</h2>
+        <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300" data-i18n="admin.feedback.description">Les tendances indiquent quels jeux méritent un réglage de difficulté. Utilise les liens pour rejoindre directement les paramètres du jeu.</p>
+      </div>
+      <p id="feedbackMsg" class="text-sm font-semibold text-slate-500 dark:text-slate-400" role="status" aria-live="polite"></p>
+    </div>
+    <div id="feedbackSummary" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
+    <div class="mt-6 overflow-x-auto rounded-2xl border border-violet-200/70 bg-white/70 dark:border-violet-900/60 dark:bg-slate-950/25">
+      <div class="border-b border-violet-200/70 px-4 py-3 dark:border-violet-900/60">
+        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100" data-i18n="admin.feedback.recent_title">Derniers votes</h3>
+      </div>
+      <table id="feedbackTable" class="min-w-full text-left text-sm text-slate-700 dark:text-slate-200">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="globalActions" class="z-20 rounded-[1.75rem] border border-slate-800/80 bg-slate-950/95 p-5 text-white shadow-2xl shadow-slate-950/20 backdrop-blur-md sm:p-6">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div class="space-y-1">
         <div class="flex flex-wrap items-center gap-2">
@@ -107,44 +219,25 @@
       <div class="flex flex-wrap items-center gap-2.5">
         <button id="saveBtn" type="button" class="inline-flex items-center justify-center rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300/60" data-i18n="admin.save_button">Enregistrer</button>
         <button id="resetSettingsBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-white/40 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40" data-i18n="admin.reset_button">Revenir aux valeurs sauvegardées</button>
-        <button id="clearBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-red-300/50 px-4 py-2.5 text-sm font-semibold text-red-200 transition hover:border-red-200 hover:bg-red-400/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60" data-i18n="admin.clear_button">Vider les scores</button>
-        <button id="editScoresBtn" type="button" class="inline-flex items-center justify-center rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-white/40 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40" data-i18n="admin.scores.open_label" data-i18n-attr="data-open-label:admin.scores.open_label,data-close-label:admin.scores.close_label,data-confirm-label:admin.scores.confirm_delete">Éditer les scores</button>
         <p id="msg" class="w-full text-xs text-slate-300 lg:w-auto"></p>
       </div>
-    </div>
-  </section>
-
-  <section id="scoreEditor" class="hidden rounded-[1.75rem] border border-white/50 bg-white/90 p-6 shadow-lg shadow-slate-900/5 dark:bg-slate-900/60 dark:shadow-black/10 sm:p-7">
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div>
-        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100" data-i18n="admin.scores.title">Gestion des scores</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-300" data-i18n="admin.scores.description">Filtre, trie et sélectionne les entrées à supprimer.</p>
-      </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <button id="deleteSelectedBtn" class="px-4 py-2 rounded-xl border border-red-400 text-red-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30" data-i18n="admin.scores.delete_selected" disabled>Supprimer la sélection</button>
-        <p id="scoreMsg" class="text-sm text-gray-500"></p>
-      </div>
-    </div>
-    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200/70 dark:border-slate-800">
-      <table id="scoreTable" class="min-w-full text-sm text-left text-slate-700 dark:text-slate-200">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
     </div>
   </section>
 </div>
 
 <style>
-  @media (max-width: 1023px) {
-    #globalActions {
-      order: 10;
-      position: static;
-    }
-
-    #scoreEditor {
-      order: 11;
-    }
+  .admin-tab-hidden {
+    display: none !important;
   }
+
+  #adminNavLinks [role="tab"][aria-selected="true"] {
+    box-shadow: 0 12px 28px -18px rgba(79, 70, 229, .65);
+  }
+
+  #gameSubnavLinks [role="tab"][aria-selected="true"] {
+    box-shadow: 0 8px 18px -14px rgba(79, 70, 229, .7);
+  }
+
 </style>
 
 <script>
@@ -179,7 +272,8 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'game_ice_enabled', label:'admin.fields.games.ice_enabled', helper:'admin.helpers.games.ice_enabled', type:'checkbox'},
         {k:'game_tilt_enabled', label:'admin.fields.games.tilt_enabled', helper:'admin.helpers.games.tilt_enabled', type:'checkbox'},
         {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'10'},
-        {k:'session_user_select_enabled', label:'admin.fields.games.user_select_enabled', helper:'admin.helpers.games.user_select_enabled', type:'checkbox'}
+        {k:'session_user_select_enabled', label:'admin.fields.games.user_select_enabled', helper:'admin.helpers.games.user_select_enabled', type:'checkbox'},
+        {k:'session_feedback_enabled', label:'admin.fields.games.feedback_enabled', helper:'admin.helpers.games.feedback_enabled', type:'checkbox'}
       ]
     },
     {
@@ -352,9 +446,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.getElementById('adminNavLinks');
   const msg = document.getElementById('msg');
   const settingsState = document.getElementById('settingsState');
+  const gameSubnav = document.getElementById('gameSubnav');
+  const gameSubnavLinks = document.getElementById('gameSubnavLinks');
   let settingsDirty = false;
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!==undefined) e.innerHTML=h; return e;};
   const GROUP_BADGES = { general: 'G', games: 'S', email: '✉', reaction: '01', stroop: '02', pursuit: '03', balance: '04', memory: '05', reflex: '06', driving: '07', pong: '08', ice: '09', tilt: '10' };
+  const GAME_GROUP_IDS = ['reaction', 'stroop', 'pursuit', 'balance', 'memory', 'reflex', 'driving', 'pong', 'ice', 'tilt'];
+  const TAB_GROUPS = [
+    {id:'session', badge:'⚙', label:'admin.tabs.session', description:'admin.tabs.session_description'},
+    {id:'games', badge:'01–10', label:'admin.tabs.games', description:'admin.tabs.games_description'},
+    {id:'account', badge:'✉', label:'admin.tabs.account', description:'admin.tabs.account_description'},
+    {id:'tools', badge:'★', label:'admin.tabs.tools', description:'admin.tabs.tools_description'},
+    {id:'scores', badge:'↗', label:'admin.tabs.scores', description:'admin.tabs.scores_description'}
+  ];
+  let activeAdminTab = 'session';
+  let activeGameGroup = 'reaction';
+  let openScoresEditor = null;
 
   function setSettingsState(state){
     if (!settingsState) return;
@@ -374,23 +481,140 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function tabForGroup(groupId){
+    if (groupId === 'general' || groupId === 'games') return 'session';
+    if (GAME_GROUP_IDS.includes(groupId)) return 'games';
+    if (groupId === 'email') return 'account';
+    return null;
+  }
+
   function renderNav(){
     if (!navLinks) return;
     navLinks.innerHTML = '';
-    GROUPS.forEach(group => {
-      const link = document.createElement('a');
-      link.href = `#admin-group-${group.id}`;
-      link.dataset.groupNav = group.id;
-      link.className = 'inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:flex lg:w-full';
+    TAB_GROUPS.forEach(tab => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.adminTab = tab.id;
+      button.setAttribute('role', 'tab');
+      button.className = 'group flex min-h-[4.5rem] items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/75 p-3 text-left transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 dark:border-slate-800 dark:bg-slate-950/25 dark:hover:border-indigo-800 dark:hover:bg-indigo-950/30';
       const badge = document.createElement('span');
-      badge.className = 'inline-flex h-6 min-w-6 items-center justify-center rounded-lg bg-slate-100 px-1.5 text-[10px] font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400';
+      badge.className = 'inline-flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 px-1.5 text-[10px] font-black text-white shadow-sm';
+      badge.textContent = tab.badge;
+      const copy = document.createElement('span');
+      copy.className = 'min-w-0';
+      const label = document.createElement('span');
+      label.className = 'block truncate text-sm font-black text-slate-800 dark:text-slate-100';
+      label.dataset.i18n = tab.label;
+      label.textContent = t(tab.label);
+      const description = document.createElement('span');
+      description.className = 'mt-0.5 block text-xs leading-4 text-slate-500 dark:text-slate-400';
+      description.dataset.i18n = tab.description;
+      description.textContent = t(tab.description);
+      copy.append(label, description);
+      button.append(badge, copy);
+      button.addEventListener('click', () => setAdminTab(tab.id));
+      navLinks.append(button);
+    });
+  }
+
+  function renderGameSubnav(){
+    if (!gameSubnavLinks) return;
+    gameSubnavLinks.innerHTML = '';
+    GROUPS.filter(group => GAME_GROUP_IDS.includes(group.id)).forEach(group => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.gameTab = group.id;
+      button.setAttribute('role', 'tab');
+      button.className = 'inline-flex shrink-0 items-center gap-2 rounded-xl border border-indigo-200/80 bg-white/70 px-3 py-2 text-xs font-bold text-indigo-900 transition hover:border-indigo-400 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 dark:border-indigo-900/70 dark:bg-slate-950/30 dark:text-indigo-100 dark:hover:border-indigo-700';
+      const badge = document.createElement('span');
+      badge.className = 'inline-flex h-6 min-w-6 items-center justify-center rounded-lg bg-indigo-100 px-1.5 text-[10px] font-black text-indigo-700 dark:bg-indigo-900/70 dark:text-indigo-200';
       badge.textContent = GROUP_BADGES[group.id] || '•';
       const label = document.createElement('span');
       label.dataset.i18n = group.title;
       label.textContent = t(group.title);
-      link.append(badge, label);
-      navLinks.append(link);
+      button.append(badge, label);
+      button.addEventListener('click', () => setGameTab(group.id));
+      gameSubnavLinks.append(button);
     });
+  }
+
+  function updateTabStates(){
+    navLinks?.querySelectorAll('[data-admin-tab]').forEach(button => {
+      const selected = button.dataset.adminTab === activeAdminTab;
+      button.setAttribute('aria-selected', selected ? 'true' : 'false');
+      button.tabIndex = selected ? 0 : -1;
+      button.className = selected
+        ? 'group flex min-h-[4.5rem] items-start gap-3 rounded-2xl border border-indigo-400 bg-gradient-to-br from-indigo-50 to-fuchsia-50 p-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 dark:border-indigo-700 dark:from-indigo-950/60 dark:to-fuchsia-950/30'
+        : 'group flex min-h-[4.5rem] items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/75 p-3 text-left transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 dark:border-slate-800 dark:bg-slate-950/25 dark:hover:border-indigo-800 dark:hover:bg-indigo-950/30';
+    });
+    gameSubnavLinks?.querySelectorAll('[data-game-tab]').forEach(button => {
+      const selected = activeGameGroup === button.dataset.gameTab;
+      button.setAttribute('aria-selected', selected ? 'true' : 'false');
+      button.tabIndex = selected ? 0 : -1;
+      if (selected) button.classList.add('border-indigo-500', 'bg-indigo-600', 'text-white', 'dark:border-indigo-400', 'dark:bg-indigo-500', 'dark:text-white');
+      else button.classList.remove('border-indigo-500', 'bg-indigo-600', 'text-white', 'dark:border-indigo-400', 'dark:bg-indigo-500', 'dark:text-white');
+    });
+  }
+
+  function applyAdminVisibility(){
+    document.querySelectorAll('[data-admin-panel]').forEach(panel => {
+      panel.classList.toggle('admin-tab-hidden', panel.dataset.adminPanel !== activeAdminTab);
+    });
+    if (wrap) wrap.classList.toggle('hidden', activeAdminTab === 'tools' || activeAdminTab === 'scores');
+    if (gameSubnav) gameSubnav.classList.toggle('hidden', activeAdminTab !== 'games');
+    wrap?.querySelectorAll('[data-group-id]').forEach(section => {
+      const groupId = section.dataset.groupId;
+      const visible = (activeAdminTab === 'session' && (groupId === 'general' || groupId === 'games'))
+        || (activeAdminTab === 'games' && groupId === activeGameGroup)
+        || (activeAdminTab === 'account' && groupId === 'email');
+      section.classList.toggle('hidden', !visible);
+    });
+    updateTabStates();
+  }
+
+  function setAdminTab(tabId, options = {}){
+    if (!TAB_GROUPS.some(tab => tab.id === tabId)) return;
+    const previousTab = activeAdminTab;
+    activeAdminTab = tabId;
+    applyAdminVisibility();
+    if (options.updateHash !== false){
+      const hash = tabId === 'games' ? `#admin-game-${activeGameGroup}` : `#admin-tab-${tabId}`;
+      window.history.replaceState(null, '', hash);
+    }
+    if (tabId === 'tools' && previousTab !== 'tools' && options.openTools !== false) openToolsPanels(true);
+    if (tabId === 'scores' && previousTab !== 'scores' && options.openTools !== false){
+      window.setTimeout(() => openScoresEditor?.(true), 0);
+    }
+  }
+
+  function setGameTab(groupId, options = {}){
+    if (!GAME_GROUP_IDS.includes(groupId)) return;
+    activeGameGroup = groupId;
+    activeAdminTab = 'games';
+    applyAdminVisibility();
+    if (options.updateHash !== false) window.history.replaceState(null, '', `#admin-game-${groupId}`);
+    const target = document.getElementById(`admin-group-${groupId}`);
+    if (options.scroll && target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function readAdminNavigation(){
+    const hash = window.location.hash.replace(/^#/, '');
+    const gameMatch = hash.match(/^admin-game-(.+)$/);
+    if (gameMatch && GAME_GROUP_IDS.includes(gameMatch[1])){
+      activeAdminTab = 'games';
+      activeGameGroup = gameMatch[1];
+      return;
+    }
+    const tabMatch = hash.match(/^admin-tab-(.+)$/);
+    if (tabMatch && TAB_GROUPS.some(tab => tab.id === tabMatch[1])) activeAdminTab = tabMatch[1];
+  }
+
+  function openToolsPanels(shouldScroll = false){
+    window.setTimeout(() => {
+      const feedbackButton = document.getElementById('feedbackBtn');
+      if (document.getElementById('feedbackEditor')?.classList.contains('hidden')) feedbackButton?.click();
+      if (shouldScroll) document.getElementById('toolsActions')?.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 0);
   }
 
   function fieldRow(f, val){
@@ -552,7 +776,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const s = await r.json();
       wrap.innerHTML='';
       GROUPS.forEach(group=>wrap.append(groupSection(group, s)));
+      readAdminNavigation();
       renderNav();
+      renderGameSubnav();
+      applyAdminVisibility();
+      if (activeAdminTab === 'tools') openToolsPanels();
+      if (activeAdminTab === 'scores') window.setTimeout(() => openScoresEditor?.(true), 0);
       if (settingsState) settingsState.dataset.state = 'clean';
       setSettingsState('clean');
     } catch (err) {
@@ -562,7 +791,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function resetSettings(){
-    if (settingsDirty && !confirm(t('admin.reset_confirm'))) return;
+    if (settingsDirty){
+      const confirmation = await openAdminDialog({
+        title: translateOrFallback('admin.reset_title', 'Revenir aux valeurs sauvegardées ?'),
+        message: t('admin.reset_confirm'),
+        confirmLabel: t('admin.reset_button'),
+        icon: '↶'
+      });
+      if (!confirmation) return;
+    }
     await load();
     msg.textContent = t('admin.reloaded');
   }
@@ -687,10 +924,143 @@ document.addEventListener('DOMContentLoaded', () => {
       if (saveBtn) saveBtn.disabled = false;
     }
   }
+  const adminDialog = document.getElementById('adminDialog');
+  const adminDialogTitle = document.getElementById('adminDialogTitle');
+  const adminDialogMessage = document.getElementById('adminDialogMessage');
+  const adminDialogIcon = document.getElementById('adminDialogIcon');
+  const adminDialogInputWrap = document.getElementById('adminDialogInputWrap');
+  const adminDialogInputLabel = document.getElementById('adminDialogInputLabel');
+  const adminDialogInput = document.getElementById('adminDialogInput');
+  const adminDialogError = document.getElementById('adminDialogError');
+  const adminDialogCancel = document.getElementById('adminDialogCancel');
+  const adminDialogConfirm = document.getElementById('adminDialogConfirm');
+  let adminDialogResolve = null;
+  let adminDialogPreviousFocus = null;
+
+  function closeAdminDialog(result = false){
+    if (!adminDialog) return;
+    adminDialog.classList.add('hidden');
+    adminDialog.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+    const resolve = adminDialogResolve;
+    adminDialogResolve = null;
+    adminDialogPreviousFocus?.focus?.();
+    adminDialogPreviousFocus = null;
+    if (resolve) resolve(result);
+  }
+
+  function openAdminDialog(options = {}){
+    if (!adminDialog) return Promise.resolve(false);
+    return new Promise(resolve => {
+      adminDialogResolve = resolve;
+      adminDialogPreviousFocus = document.activeElement;
+      adminDialogTitle.textContent = options.title || '';
+      adminDialogMessage.textContent = options.message || '';
+      adminDialogIcon.textContent = options.icon || '?';
+      adminDialogCancel.textContent = options.cancelLabel || translateOrFallback('admin.dialog.cancel', 'Annuler');
+      adminDialogConfirm.textContent = options.confirmLabel || translateOrFallback('admin.dialog.confirm', 'Valider');
+      adminDialogError.textContent = '';
+      const inputOptions = options.input;
+      const hasInput = Boolean(inputOptions);
+      adminDialogInputWrap.classList.toggle('hidden', !hasInput);
+      adminDialogInput.value = '';
+      adminDialogInput.type = inputOptions?.type || 'text';
+      adminDialogInput.placeholder = inputOptions?.placeholder || '';
+      adminDialogInput.autocomplete = inputOptions?.autocomplete || 'off';
+      adminDialogInputLabel.textContent = inputOptions?.label || '';
+      const isValid = () => {
+        if (!hasInput) return true;
+        const value = adminDialogInput.value;
+        if (inputOptions.required !== false && !value.trim()) return false;
+        return typeof options.validate === 'function' ? options.validate(value) === true : true;
+      };
+      const updateInputState = () => {
+        const valid = isValid();
+        adminDialogConfirm.disabled = !valid;
+        if (hasInput && adminDialogInput.value.trim() && !valid){
+          const validation = typeof options.validate === 'function' ? options.validate(adminDialogInput.value) : null;
+          adminDialogError.textContent = typeof validation === 'string' ? validation : '';
+        } else {
+          adminDialogError.textContent = '';
+        }
+      };
+      adminDialogInput.oninput = updateInputState;
+      adminDialogCancel.onclick = () => closeAdminDialog(false);
+      adminDialogConfirm.onclick = () => {
+        if (!isValid()){
+          updateInputState();
+          return;
+        }
+        closeAdminDialog({confirmed: true, value: adminDialogInput.value});
+      };
+      adminDialog.onclick = event => {
+        if (event.target === adminDialog) closeAdminDialog(false);
+      };
+      adminDialog.classList.remove('hidden');
+      adminDialog.classList.add('flex');
+      document.body.classList.add('overflow-hidden');
+      window.setTimeout(() => (hasInput ? adminDialogInput : adminDialogCancel).focus(), 0);
+    });
+  }
+
+  const clearScoresModal = document.getElementById('clearScoresModal');
+  const clearScoresInput = document.getElementById('clearScoresConfirmInput');
+  const clearScoresConfirmBtn = document.getElementById('confirmClearScoresBtn');
+  const clearScoresCancelBtn = document.getElementById('cancelClearScoresBtn');
+  const clearScoresModalMsg = document.getElementById('clearScoresModalMsg');
+
+  function clearScoresWord(){
+    return translateOrFallback('admin.clear_modal.keyword', 'EFFACER').trim().toLocaleLowerCase();
+  }
+
+  function updateClearScoresConfirmation(){
+    if (!clearScoresInput || !clearScoresConfirmBtn) return;
+    const valid = clearScoresInput.value.trim().toLocaleLowerCase() === clearScoresWord();
+    clearScoresConfirmBtn.disabled = !valid;
+    if (clearScoresModalMsg && clearScoresInput.value.trim()){
+      clearScoresModalMsg.textContent = valid ? '' : translateOrFallback('admin.clear_modal.invalid', 'Le mot de confirmation ne correspond pas.');
+    }
+  }
+
+  function closeClearScoresModal(){
+    if (!clearScoresModal) return;
+    clearScoresModal.classList.add('hidden');
+    clearScoresModal.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+    if (clearScoresInput) clearScoresInput.value = '';
+    if (clearScoresConfirmBtn) clearScoresConfirmBtn.disabled = true;
+    if (clearScoresModalMsg) clearScoresModalMsg.textContent = '';
+  }
+
+  function openClearScoresModal(){
+    if (!clearScoresModal) return;
+    clearScoresModal.classList.remove('hidden');
+    clearScoresModal.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+    window.setTimeout(() => clearScoresInput?.focus(), 0);
+  }
+
   async function clearScores(){
-    if (!confirm(t('admin.confirm_clear'))) return;
-    const r = await fetch('/api/admin/clear',{method:'POST'}); const j=await r.json();
-    msg.textContent = j.ok ? t('admin.cleared') : t('common.error');
+    if (!clearScoresInput || clearScoresInput.value.trim().toLocaleLowerCase() !== clearScoresWord()) return;
+    if (clearScoresConfirmBtn) clearScoresConfirmBtn.disabled = true;
+    if (clearScoresModalMsg) clearScoresModalMsg.textContent = translateOrFallback('admin.clear_modal.loading', 'Suppression en cours…');
+    try {
+      const response = await fetch('/api/admin/clear',{method:'POST'});
+      const result = await response.json();
+      const scoreMessage = document.getElementById('scoreMsg');
+      if (result.ok){
+        if (scoreMessage) scoreMessage.textContent = t('admin.cleared');
+        msg.textContent = t('admin.cleared');
+        closeClearScoresModal();
+      } else {
+        if (clearScoresModalMsg) clearScoresModalMsg.textContent = t('common.error');
+        if (clearScoresConfirmBtn) clearScoresConfirmBtn.disabled = false;
+      }
+    } catch (err) {
+      console.error('clear_scores', err);
+      if (clearScoresModalMsg) clearScoresModalMsg.textContent = t('common.error');
+      if (clearScoresConfirmBtn) clearScoresConfirmBtn.disabled = false;
+    }
   }
 
   function smtpFormData(){
@@ -772,7 +1142,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('saveBtn').addEventListener('click', save);
   document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
-  document.getElementById('clearBtn').addEventListener('click', clearScores);
+  document.getElementById('clearBtn').addEventListener('click', openClearScoresModal);
+  clearScoresInput?.addEventListener('input', updateClearScoresConfirmation);
+  clearScoresConfirmBtn?.addEventListener('click', clearScores);
+  clearScoresCancelBtn?.addEventListener('click', closeClearScoresModal);
+  clearScoresModal?.addEventListener('click', event => {
+    if (event.target === clearScoresModal) closeClearScoresModal();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && clearScoresModal && !clearScoresModal.classList.contains('hidden')) closeClearScoresModal();
+    if (event.key === 'Escape' && adminDialog && !adminDialog.classList.contains('hidden')) closeAdminDialog(false);
+  });
   wrap.addEventListener('click', event => {
     if (event.target.closest('#smtpTestBtn')) testSmtp();
     if (event.target.closest('#smtpEmailTestBtn')) sendSmtpTestEmail();
@@ -786,11 +1166,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (event.target.matches('[data-key]')) markSettingsDirty();
   });
   setSettingsState('clean');
-  window.addEventListener('beforeunload', event => {
-    if (!settingsDirty) return;
-    event.preventDefault();
-    event.returnValue = '';
-  });
   load();
 
   const userTable = document.getElementById('userTable');
@@ -905,12 +1280,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!userId) return;
 
       if (btn.dataset.action === 'reset'){
-        const password = prompt(translateOrFallback('admin.users.prompt_new_password', 'Nouveau mot de passe (8 caractères minimum) :'));
-        if (password === null) return;
-        if ((password || '').trim().length < 8){
-          alert(translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.'));
-          return;
-        }
+        const passwordDialog = await openAdminDialog({
+          title: translateOrFallback('admin.users.reset_password', 'Réinitialiser le mot de passe'),
+          message: translateOrFallback('admin.users.prompt_new_password', 'Nouveau mot de passe (8 caractères minimum) :'),
+          confirmLabel: translateOrFallback('admin.users.reset_password', 'Réinitialiser'),
+          icon: '🔐',
+          input: {
+            type: 'password',
+            label: translateOrFallback('admin.credentials.new_password_label', 'Nouveau mot de passe'),
+            placeholder: translateOrFallback('admin.credentials.new_password_placeholder', '8 caractères minimum'),
+            autocomplete: 'new-password'
+          },
+          validate: value => value.trim().length >= 8 || translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.')
+        });
+        if (!passwordDialog || !passwordDialog.confirmed) return;
+        const password = passwordDialog.value;
         setUserMessage(translateOrFallback('admin.users.reset_in_progress', 'Réinitialisation en cours…'));
         try {
           const resp = await fetch(`/api/admin/users/${userId}/reset-password`, {
@@ -921,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!resp.ok){
             const data = await resp.json().catch(()=>({}));
             if (data && data.error === 'password_too_short'){
-              alert(translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.'));
+              setUserMessage(translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.'));
             }
             throw new Error('reset_failed');
           }
@@ -935,9 +1319,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (btn.dataset.action === 'delete'){
-        if (!confirm(translateOrFallback('admin.users.confirm_delete', 'Supprimer ce compte ? Cette action est irréversible.'))){
-          return;
-        }
+        const confirmation = await openAdminDialog({
+          title: translateOrFallback('admin.users.delete', 'Supprimer le compte'),
+          message: translateOrFallback('admin.users.confirm_delete', 'Supprimer ce compte ? Cette action est irréversible.'),
+          confirmLabel: translateOrFallback('admin.users.delete', 'Supprimer'),
+          icon: '!'
+        });
+        if (!confirmation) return;
         setUserMessage(translateOrFallback('admin.users.delete_in_progress', 'Suppression en cours…'));
         try {
           const resp = await fetch(`/api/admin/users/${userId}/delete`, { method: 'POST' });
@@ -1031,11 +1419,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const scoreTable = document.getElementById('scoreTable');
   const scoreHead = scoreTable ? scoreTable.querySelector('thead') : null;
   const scoreBody = scoreTable ? scoreTable.querySelector('tbody') : null;
-  const editBtn = document.getElementById('editScoresBtn');
   const deleteBtn = document.getElementById('deleteSelectedBtn');
   const scoreMsg = document.getElementById('scoreMsg');
 
-  if (scoreSection && scoreTable && scoreHead && scoreBody && editBtn && deleteBtn && scoreMsg) {
+  if (scoreSection && scoreTable && scoreHead && scoreBody && deleteBtn && scoreMsg) {
     const SCORE_COLUMNS = [
       {key:'created_at', label:'admin.scores.created_at', type:'datetime'},
       {key:'nickname', label:'admin.scores.nickname', type:'text'},
@@ -1334,26 +1721,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    async function toggleScoreEditor() {
-      const isHidden = scoreSection.classList.contains('hidden');
-      if (isHidden) {
-        scoreSection.classList.remove('hidden');
-        editBtn.textContent = editBtn.dataset.closeLabel || translateOrFallback('admin.scores.close_label', "Fermer l'éditeur");
-        if (!scoreState.loaded) {
-          await loadScores();
-        } else {
-          renderRows();
-        }
-      } else {
-        scoreSection.classList.add('hidden');
-        editBtn.textContent = editBtn.dataset.openLabel || translateOrFallback('admin.scores.open_label', 'Éditer les scores');
-      }
-    }
+    openScoresEditor = async (shouldScroll = false) => {
+      scoreSection.classList.remove('hidden');
+      if (!scoreState.loaded) await loadScores();
+      else renderRows();
+      if (shouldScroll) scoreSection.scrollIntoView({behavior:'smooth', block:'start'});
+    };
 
     async function deleteSelected() {
       if (!scoreState.selected.size) return;
-      const confirmMessage = editBtn.dataset.confirmLabel || translateOrFallback('admin.scores.confirm_delete', 'Supprimer les scores sélectionnés ?');
-      if (!confirm(confirmMessage)) return;
+      const confirmMessage = translateOrFallback('admin.scores.confirm_delete', 'Supprimer les scores sélectionnés ?');
+      const confirmation = await openAdminDialog({
+        title: translateOrFallback('admin.scores.delete_title', 'Supprimer les scores sélectionnés'),
+        message: confirmMessage,
+        confirmLabel: translateOrFallback('admin.scores.delete_selected', 'Supprimer la sélection'),
+        icon: '!'
+      });
+      if (!confirmation) return;
       const ids = Array.from(scoreState.selected);
       try {
         deleteBtn.disabled = true;
@@ -1380,10 +1764,373 @@ document.addEventListener('DOMContentLoaded', () => {
     deleteBtn.dataset.baseLabel = deleteBtn.textContent.trim();
     updateDeleteButton();
     deleteBtn.addEventListener('click', deleteSelected);
-    if (editBtn.dataset.openLabel) {
-      editBtn.textContent = editBtn.dataset.openLabel;
-    }
-    editBtn.addEventListener('click', () => { toggleScoreEditor(); });
+    if (activeAdminTab === 'scores') openScoresEditor(true);
+  }
+
+  const feedbackSection = document.getElementById('feedbackEditor');
+  const feedbackTable = document.getElementById('feedbackTable');
+  const feedbackHead = feedbackTable ? feedbackTable.querySelector('thead') : null;
+  const feedbackBody = feedbackTable ? feedbackTable.querySelector('tbody') : null;
+  const feedbackBtn = document.getElementById('feedbackBtn');
+  const feedbackMsg = document.getElementById('feedbackMsg');
+  const feedbackSummary = document.getElementById('feedbackSummary');
+
+  if (feedbackSection && feedbackTable && feedbackHead && feedbackBody && feedbackBtn && feedbackMsg && feedbackSummary) {
+    const FEEDBACK_GAME_META = {
+      t1: {title:'selection.game.t1.title', group:'reaction'},
+      t2: {title:'selection.game.t2.title', group:'stroop'},
+      t3: {title:'selection.game.t3.title', group:'pursuit'},
+      t4: {title:'selection.game.t4.title', group:'balance'},
+      t5: {title:'selection.game.t5.title', group:'memory'},
+      t6: {title:'selection.game.t6.title', group:'reflex'},
+      t7: {title:'selection.game.t7.title', group:'driving'},
+      t8: {title:'selection.game.t8.title', group:'pong'},
+      t9: {title:'selection.game.t9.title', group:'ice'},
+      t10: {title:'selection.game.t10.title', group:'tilt'}
+    };
+    const feedbackColumns = [
+      {key:'created_at', label:'admin.feedback.table.created_at', type:'datetime'},
+      {key:'user_login', label:'admin.feedback.table.login', type:'text'},
+      {key:'games_count', label:'admin.feedback.table.games', type:'number'},
+      {key:'details', label:'admin.feedback.table.details', type:'text'}
+    ];
+    const feedbackState = {
+      rows: [],
+      filtered: [],
+      summary: [],
+      sortKey: 'created_at',
+      sortDir: 'desc',
+      filters: {},
+      loaded: false,
+      loading: false
+    };
+    const feedbackIndicators = new Map();
+
+    const feedbackGameTitle = (gameId) => {
+      const meta = FEEDBACK_GAME_META[gameId];
+      return meta ? translateOrFallback(meta.title, gameId) : gameId;
+    };
+    const formatFeedbackDate = (value) => {
+      const date = new Date(Number(value) * 1000);
+      return Number.isNaN(date.getTime()) ? String(value ?? '') : date.toLocaleString();
+    };
+    const feedbackDifficultyLabel = (value) => translateOrFallback(`admin.feedback.difficulty.${value}`, value || '—');
+    const formatFeedbackValue = (column, row) => {
+      if (column.key === 'created_at') return formatFeedbackDate(row.created_at);
+      if (column.key === 'user_login') return row.user_login || '—';
+      if (column.key === 'games_count') return `${row.games_count || 0}`;
+      if (column.key === 'details') return row.games.map(game => {
+        const score = game.score === null || game.score === undefined ? '—' : `${Number(game.score).toFixed(1)}/100`;
+        const stars = `${'★'.repeat(Math.max(0, Math.min(5, Number(game.stars) || 0)))}${'☆'.repeat(Math.max(0, 5 - (Number(game.stars) || 0)))}`;
+        return `${feedbackGameTitle(game.game_id)} · ${stars} · ${feedbackDifficultyLabel(game.difficulty)} · ${score}`;
+      }).join('\n');
+      return row[column.key] === null || row[column.key] === undefined ? '' : String(row[column.key]);
+    };
+    const feedbackRawValue = (column, row) => {
+      if (column.key === 'details') return formatFeedbackValue(column, row);
+      return row[column.key];
+    };
+    const compareFeedbackValues = (a, b, column) => {
+      const av = feedbackRawValue(column, a);
+      const bv = feedbackRawValue(column, b);
+      if (av === null || av === undefined) return bv === null || bv === undefined ? 0 : -1;
+      if (bv === null || bv === undefined) return 1;
+      if (column.type === 'number' || column.type === 'datetime') {
+        const result = Number(av) - Number(bv);
+        if (Number.isFinite(result)) return result;
+      }
+      return String(av).localeCompare(String(bv), undefined, {numeric:true, sensitivity:'base'});
+    };
+    const applyFeedbackFilters = () => {
+      let rows = feedbackState.rows.slice();
+      Object.entries(feedbackState.filters).forEach(([key, term]) => {
+        const normalized = String(term || '').trim().toLowerCase();
+        if (!normalized) return;
+        const column = feedbackColumns.find(item => item.key === key);
+        rows = rows.filter(row => formatFeedbackValue(column, row).toLowerCase().includes(normalized));
+      });
+      const column = feedbackColumns.find(item => item.key === feedbackState.sortKey) || feedbackColumns[0];
+      rows.sort((a, b) => {
+        const result = compareFeedbackValues(a, b, column);
+        return feedbackState.sortDir === 'desc' ? -result : result;
+      });
+      feedbackState.filtered = rows;
+      return rows;
+    };
+    const updateFeedbackSortIndicators = () => {
+      feedbackIndicators.forEach((indicator, key) => {
+        if (feedbackState.sortKey === key) {
+          indicator.textContent = feedbackState.sortDir === 'asc' ? '▲' : '▼';
+          indicator.style.opacity = '1';
+        } else {
+          indicator.textContent = '↕';
+          indicator.style.opacity = '0.4';
+        }
+      });
+    };
+    const renderFeedbackRows = () => {
+      const rows = applyFeedbackFilters();
+      feedbackBody.innerHTML = '';
+      if (!rows.length) {
+        const emptyRow = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = feedbackColumns.length;
+        cell.className = 'px-4 py-7 text-center text-slate-400 dark:text-slate-500';
+        cell.textContent = translateOrFallback('admin.feedback.empty', 'Aucun retour à afficher.');
+        emptyRow.append(cell);
+        feedbackBody.append(emptyRow);
+        return;
+      }
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-violet-100 dark:border-violet-950/50';
+        feedbackColumns.forEach(column => {
+          const cell = document.createElement('td');
+          cell.className = column.key === 'details'
+            ? 'min-w-[22rem] whitespace-pre-line px-4 py-3 align-middle leading-6'
+            : 'whitespace-nowrap px-4 py-3 align-middle';
+          if (column.key === 'details'){
+            const details = document.createElement('div');
+            details.className = 'space-y-2';
+            row.games.forEach(game => {
+              const detail = document.createElement('div');
+              detail.className = 'flex items-center justify-between gap-3 rounded-xl border border-violet-100 bg-white/70 px-3 py-2 dark:border-violet-900/60 dark:bg-slate-950/35';
+              const detailText = document.createElement('span');
+              detailText.className = 'min-w-0 whitespace-pre-line';
+              const score = game.score === null || game.score === undefined ? '—' : `${Number(game.score).toFixed(1)}/100`;
+              const stars = `${'★'.repeat(Math.max(0, Math.min(5, Number(game.stars) || 0)))}${'☆'.repeat(Math.max(0, 5 - (Number(game.stars) || 0)))}`;
+              detailText.textContent = `${feedbackGameTitle(game.game_id)} · ${stars} · ${feedbackDifficultyLabel(game.difficulty)} · ${score}`;
+              const deleteButton = document.createElement('button');
+              deleteButton.type = 'button';
+              deleteButton.dataset.feedbackDeleteId = String(game.id);
+              deleteButton.className = 'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-red-200 text-sm font-black text-red-600 transition hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/50';
+              deleteButton.setAttribute('aria-label', translateOrFallback('admin.feedback.delete_vote', 'Supprimer ce vote'));
+              deleteButton.title = translateOrFallback('admin.feedback.delete_vote', 'Supprimer ce vote');
+              deleteButton.textContent = '×';
+              detail.append(detailText, deleteButton);
+              details.append(detail);
+            });
+            cell.append(details);
+          } else {
+            cell.textContent = formatFeedbackValue(column, row);
+          }
+          tr.append(cell);
+        });
+        feedbackBody.append(tr);
+      });
+    };
+    const buildFeedbackTable = () => {
+      feedbackHead.innerHTML = '';
+      feedbackIndicators.clear();
+      const headerRow = document.createElement('tr');
+      headerRow.className = 'border-b border-violet-200/70 dark:border-violet-900/60';
+      feedbackColumns.forEach(column => {
+        const th = document.createElement('th');
+        th.className = 'px-4 py-3 align-middle text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-300';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'flex cursor-pointer select-none items-center gap-1 text-slate-700 transition hover:text-violet-700 dark:text-slate-100 dark:hover:text-violet-300';
+        const label = document.createElement('span');
+        label.textContent = translateOrFallback(column.label, column.label);
+        const indicator = document.createElement('span');
+        indicator.className = 'text-xs';
+        indicator.textContent = '↕';
+        indicator.style.opacity = '0.4';
+        feedbackIndicators.set(column.key, indicator);
+        button.append(label, indicator);
+        button.title = translateOrFallback('admin.feedback.table.sort_hint', 'Cliquer pour trier');
+        button.addEventListener('click', () => {
+          if (feedbackState.sortKey === column.key) {
+            feedbackState.sortDir = feedbackState.sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            feedbackState.sortKey = column.key;
+            feedbackState.sortDir = column.type === 'datetime' ? 'desc' : 'asc';
+          }
+          updateFeedbackSortIndicators();
+          renderFeedbackRows();
+        });
+        th.append(button);
+        headerRow.append(th);
+      });
+      feedbackHead.append(headerRow);
+      const filterRow = document.createElement('tr');
+      filterRow.className = 'border-b border-violet-200/60 bg-violet-50/50 dark:border-violet-900/50 dark:bg-violet-950/20';
+      feedbackColumns.forEach(column => {
+        const th = document.createElement('th');
+        th.className = 'px-4 py-2 align-middle';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = translateOrFallback('admin.feedback.table.filter', 'Filtrer');
+        input.className = 'w-full min-w-24 rounded-lg border border-violet-200 bg-white/80 px-2 py-1 text-sm dark:border-violet-900/70 dark:bg-slate-950/40';
+        input.addEventListener('input', () => {
+          feedbackState.filters[column.key] = input.value || '';
+          renderFeedbackRows();
+        });
+        feedbackState.filters[column.key] = '';
+        th.append(input);
+        filterRow.append(th);
+      });
+      feedbackHead.append(filterRow);
+      updateFeedbackSortIndicators();
+    };
+    feedbackBody.addEventListener('click', async event => {
+      const button = event.target.closest('[data-feedback-delete-id]');
+      if (!button) return;
+      const feedbackId = Number(button.dataset.feedbackDeleteId);
+      if (!feedbackId) return;
+      const confirmation = translateOrFallback('admin.feedback.confirm_delete', 'Supprimer le vote de ce jeu ?');
+      const deleteDialog = await openAdminDialog({
+        title: translateOrFallback('admin.feedback.delete_vote', 'Supprimer ce vote'),
+        message: confirmation,
+        confirmLabel: translateOrFallback('admin.feedback.delete_vote', 'Supprimer ce vote'),
+        icon: '×'
+      });
+      if (!deleteDialog) return;
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/admin/feedback/delete', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({id: feedbackId})
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error('feedback_delete_error');
+        await loadFeedback();
+        feedbackMsg.textContent = translateOrFallback('admin.feedback.deleted', 'Vote supprimé.');
+      } catch (error) {
+        console.error('feedback_delete', error);
+        button.disabled = false;
+        feedbackMsg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
+      }
+    });
+    const renderFeedbackSummary = () => {
+      feedbackSummary.innerHTML = '';
+      feedbackState.summary.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-950/35';
+        const heading = document.createElement('div');
+        heading.className = 'flex items-start justify-between gap-3';
+        const title = document.createElement('h3');
+        title.className = 'font-black text-slate-900 dark:text-slate-100';
+        title.textContent = feedbackGameTitle(item.id);
+        const average = document.createElement('span');
+        average.className = 'shrink-0 rounded-xl bg-amber-100 px-2.5 py-1 text-sm font-black text-amber-700 dark:bg-amber-500/15 dark:text-amber-300';
+        average.textContent = item.average_stars === null ? '—' : `★ ${Number(item.average_stars).toFixed(1)}`;
+        heading.append(title, average);
+        const meta = document.createElement('p');
+        meta.className = 'mt-1 text-xs font-bold text-slate-500 dark:text-slate-400';
+        meta.textContent = `${item.votes} ${translateOrFallback('admin.feedback.votes', 'votes')} · ${translateOrFallback('admin.feedback.recommendation', 'Tendance')}: ${translateOrFallback(`admin.feedback.${item.recommendation}`, item.recommendation)}`;
+        const scoreAverage = document.createElement('div');
+        scoreAverage.className = 'mt-4 space-y-2';
+        const scoreLine = document.createElement('div');
+        scoreLine.className = 'flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400';
+        const scoreLabel = document.createElement('span');
+        scoreLabel.className = 'w-24 shrink-0';
+        scoreLabel.textContent = translateOrFallback('admin.feedback.global_score', 'Score moyen global');
+        const scoreTrack = document.createElement('span');
+        scoreTrack.className = 'h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800';
+        const scoreFill = document.createElement('span');
+        scoreFill.className = 'block h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400';
+        const averageScore = item.average_score === null || item.average_score === undefined ? null : Number(item.average_score);
+        scoreFill.style.width = averageScore === null ? '0%' : `${Math.max(0, Math.min(100, averageScore))}%`;
+        const scoreValue = document.createElement('span');
+        scoreValue.className = 'w-16 text-right';
+        scoreValue.textContent = averageScore === null
+          ? translateOrFallback('admin.feedback.no_score', '—')
+          : `${averageScore.toFixed(1)}/100`;
+        scoreTrack.append(scoreFill);
+        scoreLine.append(scoreLabel, scoreTrack, scoreValue);
+        scoreAverage.append(scoreLine);
+        const participation = document.createElement('div');
+        participation.className = 'mt-3 space-y-2';
+        const participationLine = document.createElement('div');
+        participationLine.className = 'flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400';
+        const participationLabel = document.createElement('span');
+        participationLabel.className = 'w-24 shrink-0';
+        participationLabel.textContent = translateOrFallback('admin.feedback.play_rate', 'Parties jouées');
+        const participationTrack = document.createElement('span');
+        participationTrack.className = 'h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800';
+        const participationFill = document.createElement('span');
+        participationFill.className = 'block h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400';
+        const totalGames = Number(item.total_games) || 0;
+        const playedGames = Number(item.score_count) || 0;
+        const participationRate = totalGames ? Math.max(0, Math.min(100, (playedGames / totalGames) * 100)) : 0;
+        participationFill.style.width = `${participationRate}%`;
+        const participationValue = document.createElement('span');
+        participationValue.className = 'w-16 text-right';
+        participationValue.textContent = `${playedGames} / ${totalGames}`;
+        participationTrack.append(participationFill);
+        participationLine.append(participationLabel, participationTrack, participationValue);
+        participation.append(participationLine);
+        const difficulty = document.createElement('div');
+        difficulty.className = 'mt-3 space-y-2';
+        [['too_easy','admin.feedback.too_easy','bg-amber-400'],['perfect','admin.feedback.perfect','bg-emerald-400'],['too_hard','admin.feedback.too_hard','bg-rose-400']].forEach(([key,label,color]) => {
+          const line = document.createElement('div');
+          line.className = 'flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400';
+          const labelNode = document.createElement('span');
+          labelNode.className = 'w-24 shrink-0';
+          labelNode.textContent = translateOrFallback(label, label);
+          const track = document.createElement('span');
+          track.className = 'h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800';
+          const fill = document.createElement('span');
+          fill.className = `block h-full rounded-full ${color}`;
+          fill.style.width = item.votes ? `${Math.round((Number(item[key]) / Number(item.votes)) * 100)}%` : '0%';
+          const count = document.createElement('span');
+          count.className = 'w-5 text-right';
+          count.textContent = String(item[key] || 0);
+          track.append(fill);
+          line.append(labelNode, track, count);
+          difficulty.append(line);
+        });
+        const link = document.createElement('a');
+        link.className = 'mt-4 inline-flex text-xs font-black text-violet-700 hover:underline dark:text-violet-300';
+        link.href = `#admin-group-${item.admin_group}`;
+        link.textContent = `↗ ${translateOrFallback('admin.feedback.adjust', 'Régler le jeu')}`;
+        link.addEventListener('click', event => {
+          event.preventDefault();
+          setGameTab(item.admin_group, {scroll: true});
+        });
+        card.append(heading, meta, scoreAverage, participation, difficulty, link);
+        feedbackSummary.append(card);
+      });
+    };
+    const loadFeedback = async () => {
+      if (feedbackState.loading) return;
+      feedbackState.loading = true;
+      feedbackMsg.textContent = translateOrFallback('common.loading', 'Chargement…');
+      try {
+        const response = await fetch('/api/admin/feedback');
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error('feedback_load_error');
+        feedbackState.rows = Array.isArray(data.recent) ? data.recent : [];
+        feedbackState.summary = Array.isArray(data.summary) ? data.summary : [];
+        feedbackState.filters = {};
+        renderFeedbackSummary();
+        buildFeedbackTable();
+        renderFeedbackRows();
+        feedbackState.loaded = true;
+        feedbackMsg.textContent = `${data.total_votes || 0} ${translateOrFallback('admin.feedback.votes', 'votes')}`;
+      } catch (error) {
+        console.error(error);
+        feedbackMsg.textContent = translateOrFallback('common.error', 'Une erreur est survenue.');
+      } finally {
+        feedbackState.loading = false;
+      }
+    };
+    const toggleFeedbackEditor = async () => {
+      setAdminTab('tools');
+      const isHidden = feedbackSection.classList.contains('hidden');
+      if (isHidden) {
+        feedbackSection.classList.remove('hidden');
+        feedbackBtn.textContent = feedbackBtn.dataset.closeLabel || translateOrFallback('admin.feedback.close_label', 'Masquer les retours');
+        if (!feedbackState.loaded) await loadFeedback();
+      } else {
+        feedbackSection.classList.add('hidden');
+        feedbackBtn.textContent = feedbackBtn.dataset.openLabel || translateOrFallback('admin.feedback.open_label', 'Voir les retours');
+      }
+    };
+    feedbackBtn.textContent = feedbackBtn.dataset.openLabel || translateOrFallback('admin.feedback.open_label', 'Voir les retours');
+    feedbackBtn.addEventListener('click', toggleFeedbackEditor);
   }
 });
 </script>

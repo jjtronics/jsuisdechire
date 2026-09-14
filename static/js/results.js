@@ -232,6 +232,152 @@
   if(!bal && localStorage.getItem("jsd:skip:t4")==="1") details.append(el("div","text-amber-700",t("results.balance_skipped")));
   box.append(details);
 
+  const feedbackCatalog = [
+    {id:'t1', section:'rxn', title:'selection.game.t1.title', caption:'selection.game.t1.caption'},
+    {id:'t2', section:'str', title:'selection.game.t2.title', caption:'selection.game.t2.caption'},
+    {id:'t3', section:'prs', title:'selection.game.t3.title', caption:'selection.game.t3.caption'},
+    {id:'t4', section:'bal', title:'selection.game.t4.title', caption:'selection.game.t4.caption'},
+    {id:'t5', section:'mem', title:'selection.game.t5.title', caption:'selection.game.t5.caption'},
+    {id:'t6', section:'rfl', title:'selection.game.t6.title', caption:'selection.game.t6.caption'},
+    {id:'t7', section:'drv', title:'selection.game.t7.title', caption:'selection.game.t7.caption'},
+    {id:'t8', section:'pong', title:'selection.game.t8.title', caption:'selection.game.t8.caption'},
+    {id:'t9', section:'ice', title:'selection.game.t9.title', caption:'selection.game.t9.caption'},
+    {id:'t10', section:'tilt', title:'selection.game.t10.title', caption:'selection.game.t10.caption'}
+  ];
+  const scoreBySection = {rxn, str, prs, bal, mem, rfl, pong, drv, ice, tilt};
+  let playedIds = [];
+  try {
+    const sequence = window.jsdFlow && typeof window.jsdFlow.getSequence === 'function' ? window.jsdFlow.getSequence() : [];
+    playedIds = Array.isArray(sequence) ? sequence.filter(id => feedbackCatalog.some(game => game.id === id)) : [];
+  } catch (err) {}
+  if (!playedIds.length){
+    playedIds = feedbackCatalog.filter(game => scoreBySection[game.section]).map(game => game.id);
+  }
+
+  const feedbackEnabled = !(window.jsdConfig && window.jsdConfig.settings && window.jsdConfig.settings.session_feedback_enabled === false);
+  let feedbackPanel = null;
+  if (feedbackEnabled && playedIds.length){
+    feedbackPanel = el('section','mt-6 overflow-hidden rounded-[1.75rem] border border-violet-200/70 bg-gradient-to-br from-violet-50 via-white to-rose-50 p-4 shadow-lg shadow-violet-900/5 dark:border-violet-900/60 dark:from-violet-950/30 dark:via-slate-900/70 dark:to-rose-950/20 sm:p-6');
+    feedbackPanel.classList.add('hidden');
+    const feedbackHeader = el('div','flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between');
+    const feedbackCopy = el('div','space-y-1');
+    const feedbackKicker = el('p','text-xs font-black uppercase tracking-[0.16em] text-violet-600 dark:text-violet-300',t('results.feedback.kicker'));
+    const feedbackTitle = el('h3','text-xl font-black tracking-tight text-slate-900 dark:text-white',t('results.feedback.title'));
+    const feedbackSubtitle = el('p','max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300',t('results.feedback.subtitle'));
+    feedbackCopy.append(feedbackKicker, feedbackTitle, feedbackSubtitle);
+    const feedbackProgress = el('div','shrink-0 rounded-2xl border border-violet-200 bg-white/80 px-3 py-2 text-sm font-black text-violet-700 shadow-sm dark:border-violet-900/70 dark:bg-slate-900/70 dark:text-violet-200');
+    feedbackHeader.append(feedbackCopy, feedbackProgress);
+    feedbackPanel.append(feedbackHeader);
+
+    const feedbackGrid = el('div','mt-5 grid gap-3 lg:grid-cols-2');
+    const feedbackState = {};
+    const feedbackRows = [];
+    const scoreForGame = (game) => {
+      const section = scoreBySection[game.section];
+      const value = section && Number(section.score);
+      return Number.isFinite(value) ? value : null;
+    };
+    const updateFeedbackUi = () => {
+      const completed = feedbackRows.filter(row => feedbackState[row.game.id].stars && feedbackState[row.game.id].difficulty).length;
+      feedbackProgress.textContent = t('results.feedback.progress',{done:completed,total:feedbackRows.length});
+      feedbackRows.forEach(row => {
+        const state = feedbackState[row.game.id];
+        row.stars.forEach(button => {
+          const active = Number(button.dataset.stars) <= Number(state.stars || 0);
+          button.textContent = active ? '★' : '☆';
+          button.className = active
+            ? 'h-9 w-9 rounded-xl text-2xl leading-none text-amber-400 transition hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60'
+            : 'h-9 w-9 rounded-xl text-2xl leading-none text-slate-300 transition hover:scale-110 hover:text-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 dark:text-slate-600';
+        });
+        row.difficulties.forEach(button => {
+          const active = button.dataset.difficulty === state.difficulty;
+          button.className = active
+            ? 'rounded-xl border border-violet-500 bg-violet-600 px-3 py-2 text-xs font-black text-white shadow-sm transition dark:bg-violet-500'
+            : 'rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-violet-300 hover:bg-violet-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-violet-700';
+        });
+      });
+      if (feedbackSubmit){
+        feedbackSubmit.disabled = submitted || completed !== feedbackRows.length;
+      }
+    };
+
+    feedbackCatalog.filter(game => playedIds.includes(game.id)).forEach((game, index) => {
+      feedbackState[game.id] = {stars:null, difficulty:null};
+      const card = el('article','rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-950/35');
+      const cardHead = el('div','flex items-center justify-between gap-3');
+      const titleWrap = el('div','min-w-0');
+      const gameNumber = el('span','mr-2 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400',String(index + 1).padStart(2,'0'));
+      const title = el('span','font-black text-slate-900 dark:text-slate-100',t(game.title));
+      const caption = el('span','mt-1 block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400',t(game.caption));
+      titleWrap.append(el('div','',`${gameNumber.outerHTML}${title.outerHTML}`),caption);
+      const scoreValue = scoreForGame(game);
+      const scoreChip = el('span','shrink-0 rounded-xl bg-emerald-100 px-3 py-2 text-sm font-black text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',scoreValue == null ? t('results.feedback.not_measured') : `${formatScore(scoreValue)}/100`);
+      cardHead.append(titleWrap,scoreChip);
+      const starsLabel = el('p','mt-4 text-xs font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400',t('results.feedback.stars_label'));
+      const stars = [];
+      const starsWrap = el('div','mt-1 flex items-center gap-0.5');
+      for(let value=1; value<=5; value += 1){
+        const button = el('button','h-9 w-9 rounded-xl text-2xl leading-none text-slate-300 transition hover:scale-110 hover:text-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60','☆');
+        button.type = 'button';
+        button.dataset.stars = String(value);
+        button.setAttribute('aria-label',t('results.feedback.star_aria',{value}));
+        button.addEventListener('click',()=>{ feedbackState[game.id].stars = value; updateFeedbackUi(); });
+        stars.push(button); starsWrap.append(button);
+      }
+      const difficultyLabel = el('p','mt-3 text-xs font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400',t('results.feedback.difficulty_label'));
+      const difficulties = [];
+      const difficultyWrap = el('div','mt-1 flex flex-wrap gap-2');
+      [['too_easy','results.feedback.difficulty_easy'],['perfect','results.feedback.difficulty_perfect'],['too_hard','results.feedback.difficulty_hard']].forEach(([value,key])=>{
+        const button = el('button','rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-violet-300 hover:bg-violet-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-violet-700',t(key));
+        button.type = 'button'; button.dataset.difficulty = value;
+        button.addEventListener('click',()=>{ feedbackState[game.id].difficulty = value; updateFeedbackUi(); });
+        difficulties.push(button); difficultyWrap.append(button);
+      });
+      card.append(cardHead,starsLabel,starsWrap,difficultyLabel,difficultyWrap);
+      feedbackGrid.append(card);
+      feedbackRows.push({game,stars,difficulties});
+    });
+    feedbackPanel.append(feedbackGrid);
+    const feedbackActions = el('div','mt-5 flex flex-col gap-3 border-t border-violet-200/70 pt-4 dark:border-violet-900/60 sm:flex-row sm:items-center sm:justify-between');
+    const feedbackMessage = el('p','text-sm font-semibold text-slate-500 dark:text-slate-400','');
+    const feedbackSubmit = el('button','inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-violet-900/20 transition hover:-translate-y-0.5 hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-40',t('results.feedback.submit'));
+    feedbackSubmit.type = 'button';
+    const submitted = localStorage.getItem('jsd:feedback_submitted') === '1';
+    let runId = localStorage.getItem('jsd:feedback_run_id');
+    if (!runId){
+      runId = (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : `run-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem('jsd:feedback_run_id',runId);
+    }
+    const setFeedbackMessage = (key) => { feedbackMessage.textContent = t(key); };
+    if (submitted){
+      setFeedbackMessage('results.feedback.already_sent');
+    }
+    feedbackSubmit.addEventListener('click',async()=>{
+      const entries = feedbackRows.map(row=>({game_id:row.game.id,score:scoreForGame(row.game),stars:feedbackState[row.game.id].stars,difficulty:feedbackState[row.game.id].difficulty}));
+      feedbackSubmit.disabled = true;
+      feedbackSubmit.setAttribute('aria-busy','true');
+      setFeedbackMessage('results.feedback.sending');
+      try {
+        const response = await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_id:runId,entries})});
+        const payload = await response.json().catch(()=>({}));
+        if (!response.ok || !payload.ok) throw new Error(payload.error || 'feedback_failed');
+        localStorage.setItem('jsd:feedback_submitted','1');
+        setFeedbackMessage('results.feedback.success');
+        feedbackSubmit.textContent = t('results.feedback.sent');
+      } catch (err){
+        console.error(err);
+        setFeedbackMessage('results.feedback.error');
+      } finally {
+        feedbackSubmit.removeAttribute('aria-busy');
+        updateFeedbackUi();
+      }
+    });
+    feedbackActions.append(feedbackMessage,feedbackSubmit);
+    feedbackPanel.append(feedbackActions);
+    box.append(feedbackPanel);
+    updateFeedbackUi();
+  }
+
   const actions=el('div','flex flex-wrap gap-2 mt-4 items-center');
   const nickname=sanitizeNickname(localStorage.getItem('jsd:nick'));
   const stateBadge=el('div','');
@@ -270,6 +416,17 @@
   const share=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.share_button'));
   const restart=el('button','px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400',t('results.restart_button'));
   const leaderboard=el('button','text-sm px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700',t('results.scores_button'));
+  if (feedbackPanel){
+    const feedbackLauncher = el('button','px-4 py-2 rounded-xl border border-violet-400 bg-violet-50 text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-violet-100 dark:border-violet-500/70 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:bg-violet-500/20',t('results.feedback.open'));
+    feedbackLauncher.type = 'button';
+    feedbackLauncher.addEventListener('click',()=>{
+      feedbackPanel.classList.toggle('hidden');
+      if (!feedbackPanel.classList.contains('hidden')){
+        feedbackPanel.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    });
+    actions.append(feedbackLauncher);
+  }
   actions.append(stateBadge, share, restart, leaderboard); box.append(actions);
 
   if(session && typeof session.submitScore==='function'){
@@ -349,7 +506,7 @@
       if(session && typeof session.resetProgress==='function'){
         session.resetProgress({keepNickname:true});
       } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:score_submitted','jsd:last_submission']
+        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:score_submitted','jsd:last_submission','jsd:feedback_run_id','jsd:feedback_submitted']
           .forEach(key=>localStorage.removeItem(key));
       }
     }catch(err){
