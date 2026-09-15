@@ -101,6 +101,12 @@ Le script exclut la base SQLite, les secrets, l’environnement virtuel et les u
 
 Copier `app.py` et les templates sur le serveur ne suffit pas : Gunicorn conserve le code en mémoire jusqu’à son redémarrage. Un déploiement n’est valide que si `systemctl daemon-reload`, puis `systemctl restart jsuisdechire`, ont réellement remplacé le PID principal. `deploy.sh` contrôle désormais ce remplacement et échoue si le PID est identique. Vérifie aussi que `https://jsuisdechire.com/sw.js` contient la nouvelle version avant de conclure à un défaut de navigateur/PWA ; une ancienne version du worker pouvait réafficher une page anonyme après connexion.
 
+### Règle impérative — Beer Pong (t8)
+
+Le Beer Pong est composé de deux éléments **indépendants et validés ensemble** : `static/js/t8.js` contient le jeu et le gobelet rouge ; `static/js/t8-aim.js` contient exclusivement le lanceur circulaire, la barre de visée et le geste de lance-pierre. `templates/t8.html` doit charger les deux scripts, dans cet ordre : `t8.js`, puis `t8-aim.js`.
+
+Ne jamais recopier le gobelet depuis un autre mini-jeu, ne jamais réécrire la physique du lanceur « à l’œil », et ne jamais retirer `t8-aim.js` pour une modification visuelle. Si une régression est signalée, restaurer le composant concerné depuis Git, sans toucher à l’autre composant. Avant tout déploiement t8, vérifier la syntaxe avec `npm run test:js`, puis vérifier manuellement sur ordinateur et mobile : le grand cercle est centré sur la balle, la barre de visée est visible, le glissement lance la balle dans le bon sens et le gobelet rouge reste inchangé.
+
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques ; aucun mot de passe par défaut n’est accepté).
 - La page des paramètres est organisée en onglets : partie & expérience, mini-jeux, compte & email, retours joueurs et édition des scores. Dans « Sélection des jeux », les mini-jeux se gèrent avec la même grille de cartes cartoon que côté joueur : clic pour activer/désactiver, coche verte et compteur des jeux actifs. Les mini-jeux disposent aussi d’un second niveau de navigation pour n’afficher qu’un panneau de calibration à la fois, sans retirer aucune option.
