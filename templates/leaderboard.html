@@ -434,7 +434,7 @@
         {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
         <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
           <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
-            <span data-i18n="leaderboard.pong">Beer pong</span>
+            <span data-i18n="leaderboard.pong">Tir gobelet</span>
             <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
           </a>
         </th>
@@ -446,6 +446,28 @@
         <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
           <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
             <span data-i18n="driving">Conduite</span>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
+        </th>
+        {% set key = 'ice_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
+            <span data-i18n="leaderboard.ice">Glaçon fou</span>
+            <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
+          </a>
+        </th>
+        {% set key = 'tilt_score' %}
+        {% set default_order = sort_defaults.get(key, 'desc') %}
+        {% set is_active = active_sort_key == key %}
+        {% set current_order = active_sort_order if is_active else '' %}
+        {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+        <th scope="col" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}">
+          <a href="{{ url_for('leaderboard', page=1, sort=key, order=next_order) }}" class="sort-button">
+            <span data-i18n="leaderboard.tilt">Barman précis</span>
             <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
           </a>
         </th>
@@ -492,7 +514,10 @@
         <td data-sort-value="{{ r['bal_score'] if r['bal_score'] is not none else '' }}">{{ r['bal_score']|round(1) if r['bal_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['mem_score'] if r['mem_score'] is not none else '' }}">{{ r['mem_score']|round(1) if r['mem_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['rfl_score'] if r['rfl_score'] is not none else '' }}">{{ r['rfl_score']|round(1) if r['rfl_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['pong_score'] if r['pong_score'] is not none else '' }}">{{ r['pong_score']|round(1) if r['pong_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['drv_score'] if r['drv_score'] is not none else '' }}">{{ r['drv_score']|round(1) if r['drv_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['ice_score'] if r['ice_score'] is not none else '' }}">{{ r['ice_score']|round(1) if r['ice_score'] is not none else '—' }}</td>
+        <td data-sort-value="{{ r['tilt_score'] if r['tilt_score'] is not none else '' }}">{{ r['tilt_score']|round(1) if r['tilt_score'] is not none else '—' }}</td>
         <td data-sort-value="{{ r['created_at'] }}">
           <time
             class="js-local-time"
@@ -502,7 +527,7 @@
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="11" class="py-4 text-center text-gray-500" data-i18n="leaderboard.empty">Aucun score pour l'instant.</td></tr>
+      <tr><td colspan="14" class="py-4 text-center text-gray-500" data-i18n="leaderboard.empty">Aucun score pour l'instant.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -533,7 +558,10 @@
         <div><span class="block text-xs text-slate-500 dark:text-slate-400">Équilibre</span><strong>{{ r['bal_score']|round(1) if r['bal_score'] is not none else '—' }}</strong></div>
         <div><span class="block text-xs text-slate-500 dark:text-slate-400">Mémoire</span><strong>{{ r['mem_score']|round(1) if r['mem_score'] is not none else '—' }}</strong></div>
         <div><span class="block text-xs text-slate-500 dark:text-slate-400">Réflexe</span><strong>{{ r['rfl_score']|round(1) if r['rfl_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400" data-i18n="leaderboard.pong">Tir gobelet</span><strong>{{ r['pong_score']|round(1) if r['pong_score'] is not none else '—' }}</strong></div>
         <div><span class="block text-xs text-slate-500 dark:text-slate-400">Conduite</span><strong>{{ r['drv_score']|round(1) if r['drv_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400" data-i18n="leaderboard.ice">Glaçon fou</span><strong>{{ r['ice_score']|round(1) if r['ice_score'] is not none else '—' }}</strong></div>
+        <div><span class="block text-xs text-slate-500 dark:text-slate-400" data-i18n="leaderboard.tilt">Barman précis</span><strong>{{ r['tilt_score']|round(1) if r['tilt_score'] is not none else '—' }}</strong></div>
         <div class="col-span-2 border-t border-rose-100/70 pt-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">{{ r['created_at'] | int | datetime }}</div>
       </div>
     </details>

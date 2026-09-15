@@ -69,6 +69,16 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertIn("jsd-cache-v", service_worker.get_data(as_text=True))
         self.assertIn("Cache-Control", service_worker.headers)
 
+    def test_leaderboard_lists_every_current_mini_game(self):
+        page = self.client.get("/leaderboard?sort=tilt_score&order=desc")
+        self.assertEqual(page.status_code, 200)
+        html = page.get_data(as_text=True)
+        self.assertIn("leaderboard.pong", html)
+        self.assertIn("leaderboard.ice", html)
+        self.assertIn("leaderboard.tilt", html)
+        self.assertIn("sort=ice_score", html)
+        self.assertIn("sort=tilt_score", html)
+
     def test_admin_routes_require_authentication(self):
         admin_page = self.client.get("/admin")
         self.assertEqual(admin_page.status_code, 302)
