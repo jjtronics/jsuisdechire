@@ -1,5 +1,21 @@
 # Journal des changements
 
+## 16 septembre 2026 — Dino Dash, entraînement et gestion du dernier score
+
+### Expérience joueur
+
+- Ajout de Dino Dash (t11), un jeu de course où le téléphone détecte les vrais sauts ; les sauts courts et longs sont distingués selon la durée du mouvement ou de l'appui tactile de secours.
+- Ajout de la page `/training`, accessible depuis l'accueil, qui permet de tester tous les mini-jeux. Les jeux désactivés dans l'administration restent visibles avec un badge bêta et ne sont pas ajoutés aux parties officielles.
+- Remplacement du bouton « Me surprendre » par une carte cartoon de tirage aléatoire, numérotée 01 ; les jeux commencent à la carte 02.
+- Les obstacles de Dino Dash sont désormais illustrés (bières et personnages) et suivent une génération moins prévisible, avec une notation qui pénalise réellement les cactus touchés au fil de la partie.
+- Les joueurs connectés peuvent supprimer leur dernier score depuis les résultats ou leur profil. La limite est de 3 suppressions par jour par défaut, configurable dans l'administration ; `0` désactive la fonctionnalité.
+- Le profil affiche désormais les 11 mini-jeux dans son historique, et les tableaux global et personnel utilisent des en-têtes de jeux verticaux pour gagner de la largeur sans sacrifier la lisibilité.
+
+### Technique
+
+- La suppression est limitée au dernier score appartenant au compte connecté, journalisée côté serveur et protégée par une transaction SQLite avec quota quotidien.
+- Ajout des traductions FR/EN/IT, des tests backend/JavaScript et des assets de marque nécessaires à Dino Dash et à l'entraînement.
+
 ## 15 septembre 2026 — Renforcement comptes, sessions et administration
 
 - Limitation des tentatives de connexion joueur/admin, d'inscription et de récupération de mot de passe, avec réponses qui ne divulguent plus si un compte existe ou s'il utilise Google.
@@ -182,3 +198,11 @@
 - Audit technique et UX détaillé dans [`AUDIT.md`](AUDIT.md).
 - README mis à jour pour les sept tests, le JJ HUB, le branding et le nouveau workflow de déploiement.
 - Consent Mode Google v2 régionalisé pour GA4 : refus par défaut dans l’EEE, au Royaume-Uni et en Suisse, autorisation ailleurs, avec acceptation/refus complets depuis la bannière.
+
+## 15 septembre 2026 — Dino Dash, saut réel
+
+- Ajout du mini-jeu t11 : une course type endless runner où le joueur saute réellement avec son téléphone en main pour faire bondir le dino.
+- Détection via DeviceMotionEvent avec activation explicite, mode tactile/clavier de secours, difficulté progressive, collisions, score distance/précision et détails enregistrés.
+- Ajout du logo cartoon Dino Dash dans les cartes de sélection ; le jeu est désactivé par défaut dans l’administration.
+- Refonte du saut avec une trajectoire physique naturelle, dino orienté dans le sens de la course et obstacles générés en patterns variés (tailles, doubles cactus, intervalles imprévisibles).
+- Ajout d’un mode entraînement accessible depuis l’accueil, avec uniquement les jeux actifs dans l’administration et un stockage isolé pour que les essais ne modifient pas la vraie partie.

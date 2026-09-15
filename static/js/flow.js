@@ -2,6 +2,7 @@
   const STORAGE_KEY = 'jsd:test_sequence_v2';
   const HOME_ROUTE = '/';
   const SELECT_ROUTE = '/select-games';
+  const TRAINING_ROUTE = '/training';
   const RESULTS_ROUTE = '/results';
   const TESTS = [
     { id: 't1', route: '/t1', settingKey: 'game_rxn_enabled', doneKey: 'jsd:done:t1' },
@@ -14,7 +15,12 @@
     { id: 't8', route: '/t8', settingKey: 'game_pong_enabled', doneKey: 'jsd:done:t8' },
     { id: 't9', route: '/t9', settingKey: 'game_ice_enabled', doneKey: 'jsd:done:t9' },
     { id: 't10', route: '/t10', settingKey: 'game_tilt_enabled', doneKey: 'jsd:done:t10' },
+    { id: 't11', route: '/t11', settingKey: 'game_dino_enabled', doneKey: 'jsd:done:t11' },
   ];
+
+  function isTrainingMode(){
+    return !!(window.jsdConfig && window.jsdConfig.training);
+  }
 
   function safeParseInt(value){
     const num = Number(value);
@@ -188,6 +194,7 @@
   }
 
   function nextRoute(testId){
+    if (isTrainingMode()) return TRAINING_ROUTE;
     const sequence = getSequence();
     if (!sequence.length){
       return RESULTS_ROUTE;
@@ -201,6 +208,7 @@
   }
 
   function previousRoute(testId){
+    if (isTrainingMode()) return TRAINING_ROUTE;
     const sequence = getSequence();
     if (!sequence.length){
       return HOME_ROUTE;
@@ -213,7 +221,7 @@
   }
 
   function isActive(testId){
-    if (window.jsdConfig && window.jsdConfig.preview){
+    if (isTrainingMode() || (window.jsdConfig && window.jsdConfig.preview)){
       return true;
     }
     return getSequence().includes(testId);
@@ -233,6 +241,22 @@
 
   function setupPage(testId, options){
     options = options || {};
+    if (isTrainingMode()){
+      const nextEl = options.nextSelector ? document.querySelector(options.nextSelector) : null;
+      if (nextEl){
+        nextEl.setAttribute('href', TRAINING_ROUTE);
+        nextEl.classList.remove('pointer-events-none', 'opacity-50');
+      }
+      const backEl = options.backSelector ? document.querySelector(options.backSelector) : null;
+      if (backEl){
+        backEl.setAttribute('href', TRAINING_ROUTE);
+        backEl.classList.remove('hidden');
+      }
+      if (typeof options.onReady === 'function'){
+        options.onReady({ sequence: [testId], index: 0, nextRoute: TRAINING_ROUTE, prevRoute: TRAINING_ROUTE });
+      }
+      return { sequence: [testId], index: 0, nextRoute: TRAINING_ROUTE, prevRoute: TRAINING_ROUTE };
+    }
     if (window.jsdConfig && window.jsdConfig.preview){
       const nextEl = options.nextSelector ? document.querySelector(options.nextSelector) : null;
       if (nextEl){

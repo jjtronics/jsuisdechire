@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="t11-page rounded-[2rem] border border-white/60 bg-white/90 p-4 shadow-2xl shadow-violet-950/10 dark:border-slate-700/70 dark:bg-slate-900/75 sm:p-7">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-xs font-black uppercase tracking-[0.2em] text-violet-600 dark:text-violet-300" data-i18n="t11.kicker">Mini-jeu 11 · Capteurs</p>
+      <h2 class="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl" data-i18n="t11.heading">Dino Dash · Le saut réel</h2>
+    </div>
+    <div class="t11-mark" aria-hidden="true">🦖</div>
+  </div>
+  <p id="t11Notice" class="mt-4 rounded-2xl border border-violet-200/80 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-cyan-50 px-4 py-3 text-sm font-bold leading-relaxed text-violet-950 shadow-sm dark:border-violet-500/35 dark:from-violet-500/15 dark:via-fuchsia-500/10 dark:to-cyan-500/10 dark:text-violet-100" data-i18n="t11.notice" data-i18n-param-duration="{{ (app_settings.dino_duration_ms or 30000)|int // 1000 }}">
+    Tiens ton téléphone en main et saute vraiment pour faire bondir le dino. Évite les obstacles pendant {{ (app_settings.dino_duration_ms or 30000)|int // 1000 }} secondes.
+  </p>
+  <div id="t11" class="mt-5"></div>
+  <div class="mt-5 flex justify-between gap-3">
+    <a href="/t10" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 dark:border-slate-700 dark:text-slate-300" data-i18n="common.back" data-flow-back="1">Retour</a>
+    <a id="next" href="/results" class="pointer-events-none rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white opacity-50" data-i18n="common.next" data-default-i18n="common.next" data-results-i18n="common.view_results">Suivant</a>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const notice = document.getElementById('t11Notice');
+    const settings = (window.jsdConfig && window.jsdConfig.settings) || {};
+    const fallback = {{ (app_settings.dino_duration_ms or 30000)|int }};
+    const raw = Number(settings.dino_duration_ms);
+    const seconds = Number.isFinite(raw) && raw > 0 ? Math.round(raw / 1000) : Math.round(fallback / 1000);
+    if (notice && window.i18n) {
+      notice.setAttribute('data-i18n-param-duration', seconds);
+      notice.textContent = window.i18n('t11.notice', { duration: seconds });
+    }
+    if (window.jsdFlow && typeof window.jsdFlow.setupPage === 'function') {
+      window.jsdFlow.setupPage('t11', { nextSelector: '#next', backSelector: '[data-flow-back]', hideBackIfFirst: true });
+    }
+  });
+</script>
+<script defer src="{{ asset_url('js/t11.js') }}"></script>
+{% endblock %}

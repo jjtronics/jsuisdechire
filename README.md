@@ -11,10 +11,10 @@
 ## 🇫🇷 Français
 
 ### 🍸 Aperçu
-**jsuisdechire** est une web app Flask pleine de paillettes pour vérifier ton état après l'apéro. Tu enchaînes jusqu'à dix mini-jeux (réaction, couleurs, poursuite, équilibre, mémoire, où est la balle ?, conduite, tir au gobelet, glaçon fou et barman précis), tu obtiens un score façon "soirée entre potes", et tu peux grimper sur le leaderboard si tu assures. Fun garanti, mais rappel : ce n'est PAS un dispositif médical.
+**jsuisdechire** est une web app Flask pleine de paillettes pour vérifier ton état après l'apéro. Tu enchaînes jusqu'à onze mini-jeux (réaction, couleurs, poursuite, équilibre, mémoire, où est la balle ?, conduite, tir au gobelet, glaçon fou, barman précis et Dino Dash), tu obtiens un score façon "soirée entre potes", et tu peux grimper sur le leaderboard si tu assures. Fun garanti, mais rappel : ce n'est PAS un dispositif médical.
 
 ### ✨ Fonctionnalités
-- **10 tests rapides** :
+- **11 tests rapides** :
   - 🟢 *Réaction (t1)* – Tape dès que ça passe au vert, ton temps médian devient ton score.
   - 🌈 *Couleurs (t2)* – Version Stroop : clique la vraie couleur, pas le mot, vitesse + précision.
   - 🎯 *Poursuite (t3)* – Attrape une cible qui virevolte; précision ou temps de capture.
@@ -24,7 +24,11 @@
   - 🧠 *Mémoire (t5)* – Retrouve les séquences en limitant les erreurs et le temps de réponse.
   - 🧊 *Glaçon fou (t9)* – Attrape les glaçons qui tombent et évite les fruits/pièges en gardant ton combo.
   - 🍸 *Barman précis (t10)* – Incline ton téléphone pour guider un verre, attraper les glaçons et éviter les éclaboussures.
-- **Parties personnalisables** : si l'option est activée dans l'admin, le joueur choisit les mini-jeux de sa partie depuis une grille mobile illustrée, ou demande un tirage aléatoire.
+  - 🦖 *Dino Dash (t11)* – Tiens ton téléphone en main et saute réellement pour faire bondir le dino au-dessus des cactus.
+- **Parties personnalisables** : si l'option est activée dans l'admin, le joueur choisit les mini-jeux de sa partie depuis une grille mobile illustrée ; la carte cartoon aléatoire est identifiée comme carte 01.
+- **Mode entraînement** (`/training`) : le joueur peut tester n'importe quel mini-jeu avant une vraie partie. Les jeux désactivés restent accessibles avec un badge « bêta » et ne sont pas proposés dans les parties officielles.
+- **Dernier score supprimable** : les joueurs connectés peuvent retirer leur dernier score enregistré depuis les résultats ou leur profil, dans la limite quotidienne configurable par l'administration (3 suppressions par défaut).
+- **Tableaux compacts** : le classement global et l'historique du profil affichent les 11 mini-jeux avec des en-têtes verticaux pour conserver une largeur lisible.
 - **Résultats stylés** avec résumé, détails par test et bouton de partage.
 - **Parcours fluide** : une épreuve terminée ne peut pas être rejouée accidentellement ; la partie continue vers le mini-jeu suivant ou le score final.
 - **Avis facultatifs** : après le score final, le joueur peut ouvrir un formulaire mobile pour noter chaque mini-jeu joué sur 5 étoiles et qualifier sa difficulté, avec rappel du score obtenu.
@@ -44,7 +48,7 @@
 ```
 📁 jsuisdechire/
 ├── app.py              # Routes Flask + API + admin + scoring
-├── templates/          # Pages (home, sélection, t1..t10, leaderboard, admin, JJ HUB, etc.)
+├── templates/          # Pages (home, sélection, t1..t11, leaderboard, admin, JJ HUB, etc.)
 ├── static/js/          # Logique front (tests, session, i18n, résultats)
 ├── static/css/         # Feuille Tailwind compilée et source
 ├── static/branding/    # Logos, pictogrammes et visuels de sélection des jeux
@@ -118,6 +122,7 @@ Ne jamais recopier le gobelet depuis un autre mini-jeu, ne jamais réécrire la 
 - Le réglage « Activer les évaluations joueurs » permet de masquer le formulaire et de désactiver la réception des votes.
 - Le mot de passe SMTP n’est jamais injecté dans le HTML de l’admin ; un champ vide conserve le secret existant.
 - Les résultats envoyés via `/api/submit` stockent : score total, détails par épreuve, timestamp et pseudo.
+- Le réglage `player_score_deletions_per_day` contrôle le nombre de suppressions du dernier score autorisées par compte et par jour ; la valeur `0` désactive la fonctionnalité.
 - Les avis sont disponibles via `/api/admin/feedback` pour les administrateurs et les votes joueurs sont reçus par `/api/feedback`.
 
 ### 🎨 Personnalisation rapide
@@ -139,10 +144,10 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 ## 🇬🇧 English
 
 ### 🍸 Overview
-**jsuisdechire** is a glittery Flask web app to check your post-party vibes. Blaze through up to eight mini-games (reaction, colors, pursuit, balance, memory, where is the ball?, driving and cup shot), earn a "party mode" score, and climb the leaderboard if you nail it. It's goofy fun, but remember: this is **not** a medical tool.
+**jsuisdechire** is a glittery Flask web app to check your post-party vibes. Blaze through up to eleven mini-games (reaction, colors, pursuit, balance, memory, cup shot, driving, ice cube, bartender, and Dino Dash), earn a "party mode" score, and climb the leaderboard if you nail it. It's goofy fun, but remember: this is **not** a medical tool.
 
 ### ✨ Features
-- **7 bite-sized tests**:
+- **11 bite-sized tests**:
   - 🟢 *Reaction (t1)* – Tap when the tile goes green; your median time drives the score.
   - 🌈 *Color chaos (t2)* – Stroop-like challenge mixing accuracy and speed.
   - 🎯 *Target chase (t3)* – Catch the jittery target; precision or time gets recorded.
@@ -150,7 +155,13 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
   - 🥤 *Cup reflex (t6)* – Adjust angle and power to land the ball in the cup.
   - 🚗 *Sober driving (t7)* – Switch lanes and avoid obstacles without piling up collisions.
   - 🧠 *Memory (t5)* – Reproduce sequences while keeping mistakes and response time low.
-- **Custom sessions**: when enabled in the admin console, players can choose their games from a mobile-friendly illustrated grid or use a random draw.
+  - 🧊 *Crazy ice (t9)* – Catch falling ice cubes while avoiding traps and keeping your combo.
+  - 🍸 *Precise bartender (t10)* – Tilt your phone to guide a glass, catch ice cubes, and avoid spills.
+  - 🦖 *Dino Dash (t11)* – Hold your phone and jump in real life to make the dino leap over obstacles.
+- **Custom sessions**: when enabled in the admin console, players can choose their games from a mobile-friendly illustrated grid; the random cartoon card is numbered 01.
+- **Training mode** (`/training`): try every mini-game before starting an official run. Disabled games remain available with a beta badge and stay excluded from official sessions.
+- **Latest-score deletion**: signed-in players can remove their latest saved score from the results screen or profile, subject to the configurable daily limit (3 by default).
+- **Compact score tables**: the global leaderboard and profile history include all 11 games with clean vertical game headers.
 - **Optional feedback**: after the final score, players can rate every game they played from 1 to 5 stars and describe the difficulty, with their score shown on each card.
 - **Stylish results screen** with summary, per-test breakdown, and share button.
 - **Smooth flow**: once a test is finished, it cannot be accidentally replayed; the session continues to the next game or final score.
@@ -170,7 +181,7 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 ```
 📁 jsuisdechire/
 ├── app.py              # Flask routes, API, admin, scoring pipeline
-├── templates/          # Pages (home, selection, t1..t10, leaderboard, admin, JJ HUB, ...)
+├── templates/          # Pages (home, selection, training, t1..t11, leaderboard, admin, JJ HUB, ...)
 ├── static/js/          # Front logic (tests, session, i18n, results)
 ├── static/branding/    # Logos, brand marks, and game-selection visuals
 ├── static/icons/       # PWA icons & manifest
@@ -197,6 +208,7 @@ python app.py  # defaults to 0.0.0.0:9001
 ### 👩‍💻 Admin & scoring
 - Admin login: `/admin`; use a unique login and password.
 - The settings page is organized into tabs: session & experience, mini-games, account & email, player feedback, and score editor. The “Game selection” panel reuses the cartoon card grid from the player flow: click a card to enable/disable a game, with a green check and active-game counter. Mini-games also have a second navigation level so only one calibration panel is shown at a time, without removing any option.
+- The admin console also controls the daily latest-score deletion limit; setting it to `0` disables player deletion.
 - Change credentials, clear scores from the dedicated score editor, fine-tune each mini-game, enable player game selection, launch a live preview with unsaved values, validate settings, or test SMTP delivery to an explicit address from the dashboard.
 - Global actions stay at the bottom of the page and are not persistently fixed on mobile. Clearing scores uses a themed modal and requires typing “DELETE” before confirmation.
 - The admin dashboard also includes sortable/filterable player feedback grouped to one row per voter, with login and vote date, per-game averages, difficulty trends, tuning recommendations, and individual vote deletion.
@@ -205,6 +217,7 @@ python app.py  # defaults to 0.0.0.0:9001
 - The SMTP password is never injected into the admin HTML; leaving the field blank keeps the existing secret.
 - Google Analytics 4 uses Google Consent Mode v2: set `GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX` in production to enable regional consent handling, with consent denied by default in the EEA, United Kingdom and Switzerland and granted elsewhere. The banner lets visitors accept or refuse, and preferences remain available in the footer.
 - `/api/submit` stores total + per-test scores, timestamp, and nickname.
+- Signed-in players can delete only their latest account-owned score through `/api/scores/last/delete`; the server enforces the daily quota. The profile exposes the action and lists every game, while global and profile tables use vertical game headers to save horizontal space.
 - Player feedback is submitted to `/api/feedback` and available to admins through `/api/admin/feedback`.
 
 ### 🎨 Customization tips

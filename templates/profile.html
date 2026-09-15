@@ -183,6 +183,41 @@
         line-height: 1.35;
       }
 
+      .profile-score-table {
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      .profile-score-table thead th:nth-child(n+3):nth-child(-n+13) {
+        min-width: 2.7rem;
+        height: 8.5rem;
+        padding-inline: 0.25rem;
+        text-align: center;
+        vertical-align: bottom;
+      }
+
+      .profile-score-table thead th:nth-child(n+3):nth-child(-n+13) .sort-button {
+        min-height: 7.8rem;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        text-align: center;
+      }
+
+      .profile-score-table thead th:nth-child(n+3):nth-child(-n+13) .sort-button > span:first-child {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        white-space: nowrap;
+        font-size: 0.72rem;
+        letter-spacing: 0.02em;
+      }
+
+      .profile-score-table thead th:nth-child(n+3):nth-child(-n+13) .sort-indicator {
+        font-size: 0.58rem;
+        line-height: 1;
+        transform: none;
+      }
+
       @media (max-width: 480px) {
         .score-table th,
         .score-table td {
@@ -207,13 +242,19 @@
         }
       }
     </style>
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    {% set rows = score_rows|default([], true) %}
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h2 class="text-2xl font-black">Mes scores</h2>
         <p class="text-sm text-gray-600 dark:text-slate-300">Historique de tes parties enregistrées. Trie et explore ton évolution.</p>
       </div>
+      {% if rows and latest_owned_score_id|default(none, true) and score_deletion_limit|default(0, true) > 0 %}
+      <div class="flex shrink-0 flex-col items-start gap-1 sm:items-end">
+        <button id="deleteLatestProfileScore" type="button" class="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/60" data-i18n="results.delete_last_score" data-limit="{{ score_deletion_limit|int }}" data-remaining="{{ score_deletions_remaining|int }}" {% if score_deletions_remaining|int <= 0 %}disabled{% endif %}>Supprimer mon dernier score</button>
+        <p id="profileScoreDeleteMessage" class="text-right text-[11px] text-slate-500 dark:text-slate-400">{{ score_deletions_remaining|int }} suppression(s) restante(s) aujourd’hui.</p>
+      </div>
+      {% endif %}
     </div>
-    {% set rows = score_rows|default([], true) %}
     {% if rows %}
     <div class="mt-6">
       <h3 class="text-lg font-semibold text-gray-800 dark:text-slate-100">Évolution de mon score</h3>
@@ -242,7 +283,13 @@
             ('total_score', 'Total'),
             ('rxn_score', 'Réaction'),
             ('str_score', 'Stroop'),
-            ('prs_score', 'Poursuite'),
+          ('prs_score', 'Poursuite'),
+            ('rfl_score', 'Réflexe'),
+            ('pong_score', 'Beer pong'),
+            ('drv_score', 'Conduite'),
+            ('ice_score', 'Glaçon fou'),
+            ('tilt_score', 'Barman précis'),
+            ('dino_score', 'Dino Dash'),
             ('mem_score', 'Mémoire'),
             ('bal_score', 'Équilibre'),
             ('created_at', 'Date')
@@ -280,9 +327,18 @@
                 <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Poursuite</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['prs_score']|round(1) if row['prs_score'] is not none else '—' }}</span></span>
               </div>
               <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Réflexe</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['rfl_score']|round(1) if row['rfl_score'] is not none else '—' }}</span></span>
+                <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Beer pong</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['pong_score']|round(1) if row['pong_score'] is not none else '—' }}</span></span>
                 <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Conduite</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['drv_score']|round(1) if row['drv_score'] is not none else '—' }}</span></span>
+              </div>
+              <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                 <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Mémoire</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</span></span>
                 <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Équilibre</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</span></span>
+                <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Glaçon fou</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['ice_score']|round(1) if row['ice_score'] is not none else '—' }}</span></span>
+              </div>
+              <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Barman précis</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['tilt_score']|round(1) if row['tilt_score'] is not none else '—' }}</span></span>
+                <span class="flex items-baseline gap-1"><span class="text-gray-500 dark:text-slate-300">Dino Dash</span><span class="font-medium text-gray-900 dark:text-slate-100">{{ row['dino_score']|round(1) if row['dino_score'] is not none else '—' }}</span></span>
               </div>
             </div>
           </article>
@@ -290,7 +346,7 @@
         </div>
       </div>
       <div class="hidden overflow-x-auto sm:block">
-        <table class="min-w-full text-[11px] sm:text-sm score-table">
+        <table class="min-w-full text-[11px] sm:text-sm score-table profile-score-table">
           <thead class="text-left text-gray-500 dark:text-slate-300">
             <tr>
               <th scope="col" class="px-2 py-1.5 sm:py-2">#</th>
@@ -371,6 +427,36 @@
                 <span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span>
               </a>
             </th>
+            {% set key = 'rfl_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}"><a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button"><span>Réflexe</span><span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span></a></th>
+            {% set key = 'pong_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}"><a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button"><span>Beer pong</span><span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span></a></th>
+            {% set key = 'ice_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}"><a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button"><span>Glaçon fou</span><span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span></a></th>
+            {% set key = 'tilt_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}"><a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button"><span>Barman précis</span><span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span></a></th>
+            {% set key = 'dino_score' %}
+            {% set default_order = sort_defaults.get(key, 'desc') %}
+            {% set is_active = active_sort_key == key %}
+            {% set current_order = active_sort_order if is_active else '' %}
+            {% set next_order = (current_order == 'asc' and 'desc' or 'asc') if is_active else default_order %}
+            <th scope="col" class="px-2 py-1.5 sm:py-2" data-sort-key="{{ key }}" aria-sort="{{ 'ascending' if is_active and current_order == 'asc' else 'descending' if is_active else 'none' }}"><a href="{{ url_for('profile_view', page=1, sort=key, order=next_order) }}" class="sort-button"><span>Dino Dash</span><span class="sort-indicator" aria-hidden="true">{{ '↑' if is_active and current_order == 'asc' else '↓' if is_active else '↕' }}</span></a></th>
             {% set key = 'created_at' %}
             {% set default_order = sort_defaults.get(key, 'desc') %}
             {% set is_active = active_sort_key == key %}
@@ -395,6 +481,11 @@
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['drv_score'] if row['drv_score'] is not none else '' }}">{{ row['drv_score']|round(1) if row['drv_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['mem_score'] if row['mem_score'] is not none else '' }}">{{ row['mem_score']|round(1) if row['mem_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['bal_score'] if row['bal_score'] is not none else '' }}">{{ row['bal_score']|round(1) if row['bal_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['rfl_score'] if row['rfl_score'] is not none else '' }}">{{ row['rfl_score']|round(1) if row['rfl_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['pong_score'] if row['pong_score'] is not none else '' }}">{{ row['pong_score']|round(1) if row['pong_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['ice_score'] if row['ice_score'] is not none else '' }}">{{ row['ice_score']|round(1) if row['ice_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['tilt_score'] if row['tilt_score'] is not none else '' }}">{{ row['tilt_score']|round(1) if row['tilt_score'] is not none else '—' }}</td>
+            <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['dino_score'] if row['dino_score'] is not none else '' }}">{{ row['dino_score']|round(1) if row['dino_score'] is not none else '—' }}</td>
             <td class="px-2 py-1.5 sm:py-2" data-sort-value="{{ row['created_at'] }}">
               <time
                 class="js-account-local-time"
@@ -459,6 +550,41 @@
   </section>
 </div>
 <script defer src="{{ asset_url('js/profile_chart.js') }}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const button = document.getElementById('deleteLatestProfileScore');
+    const message = document.getElementById('profileScoreDeleteMessage');
+    if (!button) return;
+    const t = window.i18n || ((key) => key);
+    const defaultLabel = t('results.delete_last_score');
+    button.addEventListener('click', async () => {
+      if (!window.confirm(t('results.delete_last_score_confirm'))) return;
+      button.disabled = true;
+      button.textContent = t('results.delete_last_score_progress');
+      try {
+        const response = await fetch('/api/scores/last/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const payload = await response.json().catch(() => null);
+        if (response.ok && payload && payload.ok) {
+          if (message) message.textContent = t('results.delete_last_score_success');
+          button.textContent = t('results.delete_last_score_success');
+          window.setTimeout(() => window.location.reload(), 450);
+          return;
+        }
+        if (message && payload && payload.error === 'daily_limit') {
+          message.textContent = t('results.delete_last_score_limit', { limit: payload.limit || button.dataset.limit });
+        } else if (message) {
+          message.textContent = t('results.delete_last_score_error');
+        }
+      } catch (error) {
+        console.error('delete_latest_profile_score', error);
+        if (message) message.textContent = t('results.delete_last_score_error');
+      }
+      button.disabled = false;
+      button.textContent = defaultLabel;
+    });
+  });
+</script>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {

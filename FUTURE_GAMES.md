@@ -2,7 +2,7 @@
 
 Ce document conserve les idées validées pour de futurs mini-jeux. Une idée n'est pas une décision d'implémentation : préciser son gameplay, ses réglages admin, ses textes i18n, son mode de secours et ses tests avant de la développer.
 
-## t11 — Niveau à bulles
+## t12 — Niveau à bulles
 
 **Concept :** le joueur incline son téléphone pour placer une bulle au centre d'un niveau circulaire, puis la maintient stable pendant une courte durée.
 
@@ -26,12 +26,10 @@ Ce document conserve les idées validées pour de futurs mini-jeux. Une idée n'
 
 - ajouter l'activation admin et les paramètres dans `DEFAULT_SETTINGS` ;
 - ajouter les traductions françaises, anglaises et italiennes ;
-- garantir le passage automatique au jeu suivant via `jsd:done:t11` ;
+- garantir le passage automatique au jeu suivant via `jsd:done:t12` ;
 - tester sur iOS, Android et sans capteur ;
 - ajouter au moins un test de flux dans `tests/core-flow.test.js`.
 
+## t11 — Dino Dash (livré)
 
-
-
-
-et le jeu de google chrome avec le t-rex qui court et on doit sauter pour éviter les obstacles, on pourrait pas en faire de meme mais on doit tenir le telephone dans la main et réellement sauter pour faire sauter le dino (grace aux capteurs du téléphone)
+Le jeu de course avec saut réel demandé est disponible dans `/t11`. Il utilise `DeviceMotionEvent` après une activation explicite, détecte les impulsions de mouvement pendant la course, propose un mode tactile de secours, et reste désactivé par défaut dans l'administration.

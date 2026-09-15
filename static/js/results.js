@@ -18,7 +18,7 @@
     if(parts && parts.bal && parts.bal.cheat && parts.bal.cheat.detected){
       return -42;
     }
-    const w={rxn:0.18,str:0.18,prs:0.18,rfl:0.12,pong:0.10,drv:0.12,mem:0.12,bal:0.1,ice:0.10,tilt:0.10}; let score=0,wsum=0;
+    const w={rxn:0.18,str:0.18,prs:0.18,rfl:0.12,pong:0.10,drv:0.12,mem:0.12,bal:0.1,ice:0.10,tilt:0.10,dino:0.10}; let score=0,wsum=0;
     if(parts.rxn && Number.isFinite(parts.rxn.score)){score+=parts.rxn.score*w.rxn; wsum+=w.rxn;}
     if(parts.str && Number.isFinite(parts.str.score)){score+=parts.str.score*w.str; wsum+=w.str;}
     if(parts.prs && Number.isFinite(parts.prs.score)){score+=parts.prs.score*w.prs; wsum+=w.prs;}
@@ -29,11 +29,12 @@
     if(parts.bal && Number.isFinite(parts.bal.score)){score+=parts.bal.score*w.bal; wsum+=w.bal;}
     if(parts.ice && Number.isFinite(parts.ice.score)){score+=parts.ice.score*w.ice; wsum+=w.ice;}
     if(parts.tilt && Number.isFinite(parts.tilt.score)){score+=parts.tilt.score*w.tilt; wsum+=w.tilt;}
+    if(parts.dino && Number.isFinite(parts.dino.score)){score+=parts.dino.score*w.dino; wsum+=w.dino;}
     if(wsum<=0) return NaN;
     return score/wsum;
   }
 
-  let rxn=null, str=null, prs=null, rfl=null, pong=null, drv=null, mem=null, bal=null, ice=null, tilt=null, total=NaN;
+  let rxn=null, str=null, prs=null, rfl=null, pong=null, drv=null, mem=null, bal=null, ice=null, tilt=null, dino=null, total=NaN;
   if(session && typeof session.gatherScores==='function'){
     const gathered=session.gatherScores();
     rxn=gathered.rxn;
@@ -46,6 +47,7 @@
     bal=gathered.bal;
     ice=gathered.ice;
     tilt=gathered.tilt;
+    dino=gathered.dino;
     total=gathered.total;
   } else {
     rxn=fallbackRead('jsd:rxn');
@@ -59,7 +61,8 @@
     ice=fallbackRead('jsd:ice');
     total=fallbackCompute({rxn,str,prs,rfl,pong,drv,mem,bal,ice});
     tilt=fallbackRead('jsd:tilt');
-    total=fallbackCompute({rxn,str,prs,rfl,pong,drv,mem,bal,ice,tilt});
+    dino=fallbackRead('jsd:dino');
+    total=fallbackCompute({rxn,str,prs,rfl,pong,drv,mem,bal,ice,tilt,dino});
   }
 
   const cheatDetected=!!(bal && bal.cheat && bal.cheat.detected);
@@ -229,6 +232,16 @@
       control: Number.isFinite(Number(tilt.control)) ? Math.round(Number(tilt.control)*100) : 0
     })));
   }
+  if(dino){
+    details.append(el("div","",t("results.dino_detail",{
+      score: formatScore(dino.score),
+      jumps: Number.isFinite(Number(dino.jumps)) ? Math.max(0, Math.trunc(Number(dino.jumps))) : 0,
+      obstacles: Number.isFinite(Number(dino.obstacles)) ? Math.max(0, Math.trunc(Number(dino.obstacles))) : 0,
+      misses: Number.isFinite(Number(dino.misses)) ? Math.max(0, Math.trunc(Number(dino.misses))) : 0,
+      distance: Number.isFinite(Number(dino.distance_m)) ? Number(dino.distance_m).toFixed(1) : '—',
+      sensor: Number(dino.sensor_used) === 1 ? t('results.dino_sensor') : t('results.dino_touch')
+    })));
+  }
   if(!bal && localStorage.getItem("jsd:skip:t4")==="1") details.append(el("div","text-amber-700",t("results.balance_skipped")));
   box.append(details);
 
@@ -242,9 +255,10 @@
     {id:'t7', section:'drv', title:'selection.game.t7.title', caption:'selection.game.t7.caption'},
     {id:'t8', section:'pong', title:'selection.game.t8.title', caption:'selection.game.t8.caption'},
     {id:'t9', section:'ice', title:'selection.game.t9.title', caption:'selection.game.t9.caption'},
-    {id:'t10', section:'tilt', title:'selection.game.t10.title', caption:'selection.game.t10.caption'}
+    {id:'t10', section:'tilt', title:'selection.game.t10.title', caption:'selection.game.t10.caption'},
+    {id:'t11', section:'dino', title:'selection.game.t11.title', caption:'selection.game.t11.caption'}
   ];
-  const scoreBySection = {rxn, str, prs, bal, mem, rfl, pong, drv, ice, tilt};
+  const scoreBySection = {rxn, str, prs, bal, mem, rfl, pong, drv, ice, tilt, dino};
   let playedIds = [];
   try {
     const sequence = window.jsdFlow && typeof window.jsdFlow.getSequence === 'function' ? window.jsdFlow.getSequence() : [];
@@ -416,6 +430,24 @@
   const share=el('button','px-4 py-2 rounded-xl border border-rose-500 text-rose-600 hover:bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:hover:bg-slate-800',t('results.share_button'));
   const restart=el('button','px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400',t('results.restart_button'));
   const leaderboard=el('button','text-sm px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700',t('results.scores_button'));
+  const deleteScore=el('button','px-4 py-2 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/60',t('results.delete_last_score'));
+  deleteScore.type='button';
+  deleteScore.hidden=true;
+  const deleteScoreHint=el('span','w-full text-xs text-slate-500 dark:text-slate-400',t('results.delete_last_score_hint',{remaining:3}));
+  deleteScoreHint.hidden=true;
+  const currentUser=window.jsdCurrentUser || null;
+  const deletionLimit=Number(window.jsdConfig && window.jsdConfig.settings && window.jsdConfig.settings.player_score_deletions_per_day);
+  const canDeleteScores=!!(currentUser && Number.isFinite(deletionLimit) && deletionLimit > 0);
+  const showDeleteScore=info=>{
+    if(!canDeleteScores || !info || !info.id) return;
+    deleteScore.hidden=false;
+    deleteScoreHint.hidden=false;
+    deleteScoreHint.textContent=t('results.delete_last_score_hint',{remaining:deletionLimit});
+  };
+  if(initialState==='1' && session && typeof session.getLastSubmissionInfo==='function'){
+    const cachedInfo=session.getLastSubmissionInfo();
+    if(matchesCurrentTotal(cachedInfo)) showDeleteScore(cachedInfo);
+  }
   if (feedbackPanel){
     const feedbackLauncher = el('button','px-4 py-2 rounded-xl border border-violet-400 bg-violet-50 text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-violet-100 dark:border-violet-500/70 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:bg-violet-500/20',t('results.feedback.open'));
     feedbackLauncher.type = 'button';
@@ -427,7 +459,7 @@
     });
     actions.append(feedbackLauncher);
   }
-  actions.append(stateBadge, share, restart, leaderboard); box.append(actions);
+  actions.append(stateBadge, deleteScore, share, restart, leaderboard, deleteScoreHint); box.append(actions);
 
   if(session && typeof session.submitScore==='function'){
     session.submitScore().then((result)=>{
@@ -435,16 +467,20 @@
       if(result){
         if(result.status==='ok' && matchesCurrentTotal(result.saved)){
           showPlacement(result.saved);
+          showDeleteScore(result.saved);
         } else if(result.status==='already' && matchesCurrentTotal(result.cached)){
           showPlacement(result.cached);
+          showDeleteScore(result.cached);
         } else if(result.status==='ok' && result.response){
           const fallbackInfo={
+            id:result.response.id,
             rank:result.response.rank,
             total_entries:result.response.total_entries,
             total_score:normalizedTotal
           };
           if(matchesCurrentTotal(fallbackInfo)){
             showPlacement(fallbackInfo);
+            showDeleteScore(fallbackInfo);
           }
         } else if(result.status==='error' && result.response){
           if(result.response.error==='nickname_reserved'){
@@ -466,6 +502,43 @@
       applyState('0');
     });
   }
+
+  deleteScore.addEventListener('click',async()=>{
+    if(!canDeleteScores || !window.confirm(t('results.delete_last_score_confirm'))) return;
+    deleteScore.disabled=true;
+    deleteScore.textContent=t('results.delete_last_score_progress');
+    try{
+      const response=await fetch('/api/scores/last/delete',{method:'POST',headers:{'Content-Type':'application/json'}});
+      const payload=await response.json().catch(()=>null);
+      if(response.ok && payload && payload.ok){
+        if(session && typeof session.resetProgress==='function') session.resetProgress({keepNickname:true});
+        deleteScore.hidden=true;
+        deleteScoreHint.hidden=true;
+        placementBox.style.display='none';
+        stateBadge.className=`${baseBadgeClasses} bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200`;
+        stateBadge.textContent=t('results.delete_last_score_success');
+        return;
+      }
+      if(payload && payload.error==='daily_limit'){
+        deleteScoreHint.hidden=false;
+        deleteScoreHint.textContent=t('results.delete_last_score_limit',{limit:payload.limit || deletionLimit});
+        stateBadge.className=`${baseBadgeClasses} bg-amber-100/80 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200`;
+        stateBadge.textContent=t('results.delete_last_score_limit',{limit:payload.limit || deletionLimit});
+      } else {
+        stateBadge.className=`${baseBadgeClasses} bg-rose-100/80 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200`;
+        stateBadge.textContent=t('results.delete_last_score_error');
+      }
+    }catch(err){
+      console.error('delete_last_score',err);
+      stateBadge.className=`${baseBadgeClasses} bg-rose-100/80 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200`;
+      stateBadge.textContent=t('results.delete_last_score_error');
+    }finally{
+      if(!deleteScore.hidden){
+        deleteScore.disabled=false;
+        deleteScore.textContent=t('results.delete_last_score');
+      }
+    }
+  });
 
   share.addEventListener("click", async ()=>{
     const roundedTotal = Number.isFinite(total) ? total.toFixed(1) : "—";
@@ -506,7 +579,7 @@
       if(session && typeof session.resetProgress==='function'){
         session.resetProgress({keepNickname:true});
       } else {
-        ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:score_submitted','jsd:last_submission','jsd:feedback_run_id','jsd:feedback_submitted']
+    ['jsd:done:t1','jsd:done:t2','jsd:done:t3','jsd:done:t4','jsd:done:t5','jsd:done:t6','jsd:done:t7','jsd:done:t8','jsd:done:t9','jsd:done:t10','jsd:done:t11','jsd:skip:t4','jsd:rxn','jsd:str','jsd:prs','jsd:rfl','jsd:pong','jsd:drv','jsd:mem','jsd:bal','jsd:ice','jsd:tilt','jsd:dino','jsd:score_submitted','jsd:last_submission','jsd:feedback_run_id','jsd:feedback_submitted']
           .forEach(key=>localStorage.removeItem(key));
       }
     }catch(err){

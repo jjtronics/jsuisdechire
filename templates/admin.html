@@ -363,7 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'admin.groups.general.title',
       description: 'admin.groups.general.description',
       fields: [
-        {k:'nickname_max_length', label:'admin.fields.general.nickname_max_length', helper:'admin.helpers.general.nickname_max_length', type:'number', step:'1', min:'1', max:'128'}
+        {k:'nickname_max_length', label:'admin.fields.general.nickname_max_length', helper:'admin.helpers.general.nickname_max_length', type:'number', step:'1', min:'1', max:'128'},
+        {k:'player_score_deletions_per_day', label:'admin.fields.general.player_score_deletions_per_day', helper:'admin.helpers.general.player_score_deletions_per_day', type:'number', step:'1', min:'0', max:'100'}
       ]
     },
     {
@@ -381,7 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'game_drv_enabled', label:'admin.fields.games.driving_enabled', helper:'admin.helpers.games.driving_enabled', type:'checkbox'},
         {k:'game_ice_enabled', label:'admin.fields.games.ice_enabled', helper:'admin.helpers.games.ice_enabled', type:'checkbox'},
         {k:'game_tilt_enabled', label:'admin.fields.games.tilt_enabled', helper:'admin.helpers.games.tilt_enabled', type:'checkbox'},
-        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'10'},
+        {k:'game_dino_enabled', label:'admin.fields.games.dino_enabled', helper:'admin.helpers.games.dino_enabled', type:'checkbox'},
+        {k:'session_total_games', label:'admin.fields.games.total', helper:'admin.helpers.games.total', type:'number', step:'1', min:'1', max:'11'},
         {k:'session_user_select_enabled', label:'admin.fields.games.user_select_enabled', helper:'admin.helpers.games.user_select_enabled', type:'checkbox'},
         {k:'session_feedback_enabled', label:'admin.fields.games.feedback_enabled', helper:'admin.helpers.games.feedback_enabled', type:'checkbox'}
       ]
@@ -549,6 +551,21 @@ document.addEventListener('DOMContentLoaded', () => {
         {k:'tilt_tolerance_px', label:'admin.fields.tilt.tolerance', helper:'admin.helpers.tilt.tolerance', type:'number', step:'1', min:'10', max:'100'},
         {k:'tilt_max_collisions', label:'admin.fields.tilt.max_collisions', helper:'admin.helpers.tilt.max_collisions', type:'number', step:'1', min:'1', max:'20'}
       ]
+    },
+    {
+      id: 'dino',
+      title: 'admin.groups.dino.title',
+      description: 'admin.groups.dino.description',
+      preview: { route: '/t11', enabledKey: 'game_dino_enabled' },
+      fields: [
+        {k:'dino_duration_ms', label:'admin.fields.dino.duration', helper:'admin.helpers.dino.duration', type:'number', step:'500', min:'10000', max:'90000'},
+        {k:'dino_initial_speed_px_s', label:'admin.fields.dino.initial_speed', helper:'admin.helpers.dino.initial_speed', type:'number', step:'5', min:'120', max:'600'},
+        {k:'dino_speed_growth_per_s', label:'admin.fields.dino.speed_growth', helper:'admin.helpers.dino.speed_growth', type:'number', step:'1', min:'0', max:'40'},
+        {k:'dino_spawn_interval_ms', label:'admin.fields.dino.spawn_interval', helper:'admin.helpers.dino.spawn_interval', type:'number', step:'10', min:'500', max:'4000'},
+        {k:'dino_spawn_decay_per_s', label:'admin.fields.dino.spawn_decay', helper:'admin.helpers.dino.spawn_decay', type:'number', step:'1', min:'0', max:'100'},
+        {k:'dino_jump_impulse_ms', label:'admin.fields.dino.jump_impulse', helper:'admin.helpers.dino.jump_impulse', type:'number', step:'10', min:'300', max:'1400'},
+        {k:'dino_jump_threshold', label:'admin.fields.dino.jump_threshold', helper:'admin.helpers.dino.jump_threshold', type:'number', step:'0.05', min:'0.5', max:'4'}
+      ]
     }
   ];
 
@@ -560,11 +577,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const gameSubnavLinks = document.getElementById('gameSubnavLinks');
   let settingsDirty = false;
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!==undefined) e.innerHTML=h; return e;};
-  const GROUP_BADGES = { general: 'G', games: 'S', email: '✉', reaction: '01', stroop: '02', pursuit: '03', balance: '04', memory: '05', reflex: '06', driving: '07', pong: '08', ice: '09', tilt: '10' };
-  const GAME_GROUP_IDS = ['reaction', 'stroop', 'pursuit', 'balance', 'memory', 'reflex', 'driving', 'pong', 'ice', 'tilt'];
+  const GROUP_BADGES = { general: 'G', games: 'S', email: '✉', reaction: '01', stroop: '02', pursuit: '03', balance: '04', memory: '05', reflex: '06', driving: '07', pong: '08', ice: '09', tilt: '10', dino: '11' };
+  const GAME_GROUP_IDS = ['reaction', 'stroop', 'pursuit', 'balance', 'memory', 'reflex', 'driving', 'pong', 'ice', 'tilt', 'dino'];
   const TAB_GROUPS = [
     {id:'session', badge:'⚙', label:'admin.tabs.session', description:'admin.tabs.session_description'},
-    {id:'games', badge:'01–10', label:'admin.tabs.games', description:'admin.tabs.games_description'},
+    {id:'games', badge:'01–11', label:'admin.tabs.games', description:'admin.tabs.games_description'},
     {id:'account', badge:'✉', label:'admin.tabs.account', description:'admin.tabs.account_description'},
     {id:'tools', badge:'★', label:'admin.tabs.tools', description:'admin.tabs.tools_description'},
     {id:'scores', badge:'↗', label:'admin.tabs.scores', description:'admin.tabs.scores_description'}
@@ -797,7 +814,8 @@ document.addEventListener('DOMContentLoaded', () => {
     {id:'t7', key:'game_drv_enabled', title:'selection.game.t7.title', caption:'selection.game.t7.caption', x:25, y:100},
     {id:'t8', key:'game_pong_enabled', title:'selection.game.t8.title', caption:'selection.game.t8.caption', x:50, y:100},
     {id:'t9', key:'game_ice_enabled', title:'selection.game.t9.title', caption:'selection.game.t9.caption', x:75, y:100},
-    {id:'t10', key:'game_tilt_enabled', title:'selection.game.t10.title', caption:'selection.game.t10.caption', x:100, y:100}
+    {id:'t10', key:'game_tilt_enabled', title:'selection.game.t10.title', caption:'selection.game.t10.caption', x:100, y:100},
+    {id:'t11', key:'game_dino_enabled', title:'selection.game.t11.title', caption:'selection.game.t11.caption', image:'{{ asset_url("branding/dino-dash-logo.png") }}'}
   ];
 
   function gameSelectionSection(group, settings){
@@ -834,7 +852,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const button = el('button', 'admin-game-card' + (input.checked ? ' is-enabled' : ' is-disabled'));
       button.type = 'button';
-      button.style.backgroundPosition = `${game.x}% ${game.y}%`;
+      if (game.image) {
+        button.classList.add('is-dino-game');
+        button.style.backgroundImage = `linear-gradient(145deg,rgba(15,23,42,.02),rgba(15,23,42,.78)),url('${game.image}')`;
+        button.style.backgroundSize = 'cover';
+        button.style.backgroundPosition = 'center';
+      } else {
+        button.style.backgroundPosition = `${game.x}% ${game.y}%`;
+      }
       button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
       button.setAttribute('aria-label', t(game.title));
 
@@ -1667,6 +1692,12 @@ document.addEventListener('DOMContentLoaded', () => {
       ,{key:'tilt_collisions', label:'admin.scores.tilt_collisions', type:'number', decimals:0}
       ,{key:'tilt_control', label:'admin.scores.tilt_control', type:'number', decimals:2}
       ,{key:'tilt_elapsed_ms', label:'admin.scores.tilt_elapsed_ms', type:'number', decimals:0}
+      ,{key:'dino_score', label:'admin.scores.dino_score', type:'number', decimals:0}
+      ,{key:'dino_jumps', label:'admin.scores.dino_jumps', type:'number', decimals:0}
+      ,{key:'dino_obstacles', label:'admin.scores.dino_obstacles', type:'number', decimals:0}
+      ,{key:'dino_misses', label:'admin.scores.dino_misses', type:'number', decimals:0}
+      ,{key:'dino_distance', label:'admin.scores.dino_distance', type:'number', decimals:1}
+      ,{key:'dino_elapsed_ms', label:'admin.scores.dino_elapsed_ms', type:'number', decimals:0}
     ];
 
     const scoreState = {

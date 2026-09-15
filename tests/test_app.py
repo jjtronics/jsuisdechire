@@ -56,18 +56,77 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertIn("/static/css/tailwind.css", home_html)
         self.assertNotIn("cdn.tailwindcss.com", home_html)
 
-        for route in ("/", "/t1", "/t2", "/t3", "/t4", "/t5", "/t6", "/t7", "/credits", "/jj-hub", "/leaderboard"):
+        for route in ("/", "/training", "/t1", "/t2", "/t3", "/t4", "/t5", "/t6", "/t7", "/t8", "/t9", "/t10", "/t11", "/credits", "/jj-hub", "/leaderboard"):
             with self.subTest(route=route):
                 self.assertEqual(self.client.get(route).status_code, 200)
+
+        training_html = self.client.get("/training").get_data(as_text=True)
+        self.assertIn("?training=1", training_html)
+        self.assertNotIn("/t11?training=1", training_html)
 
         settings = self.client.get("/api/settings").get_json()
         self.assertTrue(settings)
         self.assertFalse(any(key.startswith("smtp_") for key in settings))
+        self.assertFalse(settings["game_dino_enabled"])
 
         service_worker = self.client.get("/sw.js")
         self.assertEqual(service_worker.status_code, 200)
         self.assertIn("jsd-cache-v", service_worker.get_data(as_text=True))
         self.assertIn("Cache-Control", service_worker.headers)
+
+    def test_signed_in_player_can_delete_latest_score_with_daily_limit(self):
+        unique = str(id(self))
+        with app_module.app.app_context():
+            db = app_module.get_db()
+            cursor = db.execute(
+                """
+                INSERT INTO users (created_at, login, email, nickname, password_hash, auth_version, role)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (int(app_module.time.time()), f"delete-{unique}", f"delete-{unique}@example.test", f"Deleteur-{unique}", None, 1, "player"),
+            )
+            user_id = cursor.lastrowid
+            db.commit()
+
+        with self.client.session_transaction() as browser_session:
+            browser_session[app_module.USER_SESSION_KEY] = int(user_id)
+            browser_session[app_module.USER_AUTH_VERSION_SESSION_KEY] = 1
+
+        for _ in range(4):
+            response = self.post_json("/api/submit", self.valid_payload())
+            self.assertEqual(response.status_code, 200)
+
+        profile = self.client.get("/profile")
+        self.assertEqual(profile.status_code, 200)
+        profile_html = profile.get_data(as_text=True)
+        self.assertIn("deleteLatestProfileScore", profile_html)
+        for game_label in ("Réflexe", "Beer pong", "Glaçon fou", "Barman précis", "Dino Dash"):
+            self.assertIn(game_label, profile_html)
+
+        with app_module.app.app_context():
+            before = app_module.get_db().execute(
+                "SELECT id FROM scores WHERE user_id = ? ORDER BY created_at DESC, id DESC",
+                (int(user_id),),
+            ).fetchall()
+        self.assertEqual(len(before), 4)
+
+        deleted = self.post_json("/api/scores/last/delete", {})
+        self.assertEqual(deleted.status_code, 200)
+        self.assertEqual(deleted.get_json()["remaining"], 2)
+
+        with app_module.app.app_context():
+            after = app_module.get_db().execute(
+                "SELECT id FROM scores WHERE user_id = ? ORDER BY created_at DESC, id DESC",
+                (int(user_id),),
+            ).fetchall()
+        self.assertEqual(len(after), 3)
+        self.assertEqual(after[0]["id"], before[1]["id"])
+
+        self.assertEqual(self.post_json("/api/scores/last/delete", {}).status_code, 200)
+        self.assertEqual(self.post_json("/api/scores/last/delete", {}).status_code, 200)
+        limited = self.post_json("/api/scores/last/delete", {})
+        self.assertEqual(limited.status_code, 429)
+        self.assertEqual(limited.get_json()["error"], "daily_limit")
 
     def test_leaderboard_lists_every_current_mini_game(self):
         page = self.client.get("/leaderboard?sort=tilt_score&order=desc")
@@ -76,6 +135,7 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertIn("leaderboard.pong", html)
         self.assertIn("leaderboard.ice", html)
         self.assertIn("leaderboard.tilt", html)
+        self.assertIn("leaderboard.dino", html)
         self.assertIn("sort=ice_score", html)
         self.assertIn("sort=tilt_score", html)
 

@@ -28,15 +28,19 @@
       </div>
     </div>
 
-    <div id="gameGrid" class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4"></div>
+    <div id="gameGrid" class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
+      <button id="randomGames" type="button" class="selection-surprise-card" aria-label="Me surprendre" data-i18n-attr="aria-label:selection.random">
+        <span class="game-card-index">01</span>
+        <span class="selection-surprise-icon" aria-hidden="true">✦</span>
+        <span class="selection-surprise-copy"><span class="selection-surprise-title" data-i18n="selection.random">Me surprendre</span><span class="selection-surprise-hint" data-i18n="selection.random_hint">Laisse le hasard composer ta partie</span></span>
+        <span class="selection-surprise-arrow" aria-hidden="true">↗</span>
+      </button>
+    </div>
     <p id="selectionError" class="mt-4 hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200" role="alert"></p>
 
     <div class="mt-5 flex flex-col-reverse gap-3 border-t border-slate-200/80 pt-5 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
       <a href="/" class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" data-i18n="selection.back">Retour</a>
-      <div class="flex flex-col gap-3 sm:flex-row">
-        <button id="randomGames" type="button" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-fuchsia-200 bg-fuchsia-50 px-5 py-3 text-sm font-black text-fuchsia-700 transition hover:-translate-y-0.5 hover:border-fuchsia-300 hover:bg-fuchsia-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500/50 dark:border-fuchsia-900/70 dark:bg-fuchsia-950/30 dark:text-fuchsia-200 dark:hover:bg-fuchsia-950/60" data-i18n="selection.random">Me surprendre</button>
-        <button id="startSelected" type="button" disabled class="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-black text-white shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-slate-900 dark:hover:bg-rose-400" data-i18n="selection.start">Lancer ma partie</button>
-      </div>
+      <button id="startSelected" type="button" disabled class="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-black text-white shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-slate-900 dark:hover:bg-rose-400" data-i18n="selection.start">Lancer ma partie</button>
     </div>
   </section>
 </main>
@@ -47,6 +51,7 @@
   #gameSelection .game-card:active:not(:disabled) { transform:scale(.98); }
   #gameSelection .game-card.is-selected { border-color:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,.25),0 10px 0 -6px rgba(5,150,105,.35),0 18px 30px -20px rgba(5,150,105,.75); }
   #gameSelection .game-card.is-disabled { filter:grayscale(.75); cursor:not-allowed; opacity:.58; }
+  #gameSelection .game-card.is-dino-game { background-size:cover; background-position:center; }
   #gameSelection .game-card::after { content:''; position:absolute; inset:auto 0 0; height:58%; background:linear-gradient(transparent,rgba(2,6,23,.92)); pointer-events:none; }
   #gameSelection .game-card-index { position:absolute; left:.7rem; top:.7rem; z-index:2; display:grid; height:1.55rem; min-width:1.55rem; place-items:center; padding:0 .35rem; border:1px solid rgba(255,255,255,.35); border-radius:.55rem; background:rgba(15,23,42,.45); font-size:.62rem; font-weight:950; letter-spacing:.08em; }
   #gameSelection .game-card-copy { position:absolute; bottom:.7rem; left:.75rem; z-index:2; right:.5rem; }
@@ -55,6 +60,17 @@
   #gameSelection .game-card-check { position:absolute; right:.62rem; top:.62rem; z-index:3; display:grid; height:2rem; width:2rem; place-items:center; border:3px solid rgba(255,255,255,.9); border-radius:.75rem; background:#10b981; color:#fff; font-size:1.1rem; font-weight:950; opacity:0; transform:scale(.65) rotate(-10deg); transition:opacity .2s ease,transform .25s cubic-bezier(.2,.8,.2,1); }
   #gameSelection .game-card.is-selected .game-card-check { opacity:1; transform:scale(1) rotate(0); }
   #gameSelection .game-card-disabled-label { position:absolute; right:.65rem; top:.7rem; z-index:3; border-radius:999px; background:rgba(15,23,42,.64); padding:.35rem .5rem; color:rgba(255,255,255,.8); font-size:.56rem; font-weight:900; text-transform:uppercase; }
+  #gameSelection .selection-surprise-card { position:relative; display:flex; min-height:9.5rem; width:100%; max-width:none; align-items:center; gap:.8rem; overflow:hidden; border:3px solid rgba(255,255,255,.9); border-radius:1.35rem; background-color:#312e81; background-image:linear-gradient(110deg,rgba(15,23,42,.08),rgba(15,23,42,.85)),url('{{ asset_url("branding/game-selector-sprite-cartoon.png") }}'); background-size:500% 200%; background-position:0 0; color:#fff; padding:.85rem 1rem; font:inherit; text-align:left; cursor:pointer; box-shadow:inset 0 0 0 1px rgba(15,23,42,.3),0 10px 0 -6px rgba(15,23,42,.22),0 18px 28px -20px rgba(76,29,149,.7); transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,background-position .6s ease; touch-action:manipulation; }
+  #gameSelection .selection-surprise-card::before { content:''; position:absolute; inset:-2rem auto -2rem 38%; width:5rem; transform:rotate(18deg); background:rgba(255,255,255,.14); filter:blur(1px); pointer-events:none; }
+  #gameSelection .selection-surprise-card:hover { transform:translateY(-4px) rotate(.6deg); box-shadow:inset 0 0 0 1px rgba(15,23,42,.3),0 16px 0 -8px rgba(15,23,42,.22),0 20px 30px -18px rgba(76,29,149,.8); }
+  #gameSelection .selection-surprise-card:active { transform:scale(.98); }
+  #gameSelection .selection-surprise-card:focus-visible { outline:3px solid #facc15; outline-offset:3px; }
+  #gameSelection .selection-surprise-icon { position:relative; z-index:1; display:grid; height:2.6rem; width:2.6rem; flex:none; place-items:center; border:2px solid rgba(255,255,255,.72); border-radius:.85rem; background:linear-gradient(135deg,#facc15,#fb7185); color:#fff; font-size:1.45rem; box-shadow:0 8px 15px -10px #020617; }
+  #gameSelection .selection-surprise-copy { position:relative; z-index:1; min-width:0; flex:1; }
+  #gameSelection .selection-surprise-title { display:block; font-size:1rem; font-weight:950; line-height:1.05; text-shadow:0 2px 10px rgba(0,0,0,.45); }
+  #gameSelection .selection-surprise-hint { display:block; margin-top:.3rem; color:rgba(255,255,255,.76); font-size:.65rem; font-weight:800; line-height:1.2; }
+  #gameSelection .selection-surprise-arrow { position:relative; z-index:1; align-self:flex-start; font-size:1.5rem; font-weight:950; line-height:1; }
+  html.dark #gameSelection .selection-surprise-card { border-color:rgba(196,181,253,.7); box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 10px 0 -6px rgba(2,6,23,.45),0 18px 30px -20px rgba(2,6,23,.8); }
   @media (max-width:380px) { #gameSelection .game-card { min-height:8.7rem; } #gameSelection .game-card-title { font-size:.9rem; } }
 </style>
 
@@ -75,26 +91,49 @@
 
     const catalog = [
       ['t1','selection.game.t1.title','selection.game.t1.caption',0,0], ['t2','selection.game.t2.title','selection.game.t2.caption',25,0], ['t3','selection.game.t3.title','selection.game.t3.caption',50,0], ['t4','selection.game.t4.title','selection.game.t4.caption',75,0], ['t5','selection.game.t5.title','selection.game.t5.caption',100,0],
-      ['t6','selection.game.t6.title','selection.game.t6.caption',0,100], ['t7','selection.game.t7.title','selection.game.t7.caption',25,100], ['t8','selection.game.t8.title','selection.game.t8.caption',50,100], ['t9','selection.game.t9.title','selection.game.t9.caption',75,100], ['t10','selection.game.t10.title','selection.game.t10.caption',100,100]
+      ['t6','selection.game.t6.title','selection.game.t6.caption',0,100], ['t7','selection.game.t7.title','selection.game.t7.caption',25,100], ['t8','selection.game.t8.title','selection.game.t8.caption',50,100], ['t9','selection.game.t9.title','selection.game.t9.caption',75,100], ['t10','selection.game.t10.title','selection.game.t10.caption',100,100], ['t11','selection.game.t11.title','selection.game.t11.caption',0,0,'{{ asset_url("branding/dino-dash-logo.png") }}']
     ];
     const available = new Set((flow.availableTests() || []).map((game) => game.id));
     const target = flow.targetCount();
     const selected = [];
+    const rotateSurpriseCard = () => {
+      const visualCatalog = catalog.filter(([id]) => available.has(id));
+      const visualPool = visualCatalog.length ? visualCatalog : catalog;
+      const game = visualPool[Math.floor(Math.random() * visualPool.length)];
+      const [, , , x, y, image] = game;
+      if (image) {
+        random.style.backgroundImage = `linear-gradient(110deg,rgba(15,23,42,.08),rgba(15,23,42,.85)),url('${image}')`;
+        random.style.backgroundSize = 'cover';
+        random.style.backgroundPosition = 'center';
+      } else {
+        random.style.backgroundImage = `linear-gradient(110deg,rgba(15,23,42,.08),rgba(15,23,42,.85)),url('{{ asset_url("branding/game-selector-sprite-cartoon.png") }}')`;
+        random.style.backgroundSize = '500% 200%';
+        random.style.backgroundPosition = `${x}% ${y}%`;
+      }
+    };
 
     const render = () => {
       grid.innerHTML = '';
-      catalog.forEach(([id, titleKey, captionKey, x, y], index) => {
+      grid.append(random);
+      catalog.forEach(([id, titleKey, captionKey, x, y, image], index) => {
         const enabled = available.has(id);
         const title = t(titleKey);
         const caption = t(captionKey);
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'game-card' + (enabled ? '' : ' is-disabled');
-        button.style.backgroundPosition = `${x}% ${y}%`;
+        if (image) {
+          button.classList.add('is-dino-game');
+          button.style.backgroundImage = `linear-gradient(145deg,rgba(15,23,42,.02),rgba(15,23,42,.78)),url('${image}')`;
+          button.style.backgroundSize = 'cover';
+          button.style.backgroundPosition = 'center';
+        } else {
+          button.style.backgroundPosition = `${x}% ${y}%`;
+        }
         button.disabled = !enabled;
         button.setAttribute('aria-label', enabled ? title : `${title} — ${t('selection.unavailable')}`);
         if (selected.includes(id)) button.classList.add('is-selected');
-        button.innerHTML = `<span class="game-card-index">${String(index + 1).padStart(2, '0')}</span><span class="game-card-check" aria-hidden="true">✓</span><span class="game-card-copy"><span class="game-card-title">${title}</span><span class="game-card-caption">${caption}</span></span>${enabled ? '' : `<span class="game-card-disabled-label">${t('selection.unavailable')}</span>`}`;
+        button.innerHTML = `<span class="game-card-index">${String(index + 2).padStart(2, '0')}</span><span class="game-card-check" aria-hidden="true">✓</span><span class="game-card-copy"><span class="game-card-title">${title}</span><span class="game-card-caption">${caption}</span></span>${enabled ? '' : `<span class="game-card-disabled-label">${t('selection.unavailable')}</span>`}`;
         button.addEventListener('click', () => {
           const position = selected.indexOf(id);
           if (position >= 0) selected.splice(position, 1);
@@ -130,6 +169,10 @@
       }
       go(pool.slice(0, target));
     });
+    rotateSurpriseCard();
+    if (!window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      window.setInterval(rotateSurpriseCard, 3200);
+    }
     render();
   });
 </script>

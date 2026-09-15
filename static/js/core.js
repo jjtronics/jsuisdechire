@@ -1,6 +1,7 @@
 (function(){
   const isAdminPreview = new URLSearchParams(window.location.search).get('admin_preview') === '1';
-  if (isAdminPreview || (window.jsdConfig && window.jsdConfig.preview)){
+  const isTraining = new URLSearchParams(window.location.search).get('training') === '1';
+  if (isAdminPreview || isTraining || (window.jsdConfig && window.jsdConfig.preview)){
     return;
   }
   const HOME_ROUTE = '/';
@@ -17,8 +18,9 @@
     '/t8': 't8',
     '/t9': 't9',
     '/t10': 't10',
+    '/t11': 't11',
   };
-  const FALLBACK_SEQUENCE = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10'];
+  const FALLBACK_SEQUENCE = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11'];
   const FALLBACK_ROUTES = {
     t1: '/t1',
     t2: '/t2',
@@ -30,6 +32,7 @@
     t8: '/t8',
     t9: '/t9',
     t10: '/t10',
+    t11: '/t11',
   };
 
   const path = location.pathname;

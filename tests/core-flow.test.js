@@ -4,7 +4,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const coreSource = fs.readFileSync('static/js/core.js', 'utf8');
-const sequence = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10'];
+const sequence = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11'];
 
 function runGuard(currentTestId){
   const storage = new Map([['jsd:nick', 'Testeur']]);

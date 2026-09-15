@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<main id="trainingPage" class="mx-auto w-full max-w-5xl pb-8">
+  <section class="training-hero relative isolate overflow-hidden rounded-[2rem] px-5 py-8 sm:px-8 sm:py-10">
+    <div class="training-hero-orb training-hero-orb-fuchsia pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full blur-3xl"></div>
+    <div class="training-hero-orb training-hero-orb-cyan pointer-events-none absolute -bottom-28 left-1/4 h-64 w-64 rounded-full blur-3xl"></div>
+    <div class="relative">
+      <p class="training-hero-kicker mb-3 text-[11px] font-black uppercase tracking-[0.2em]" data-i18n="training.eyebrow">Mode entraînement</p>
+      <h1 class="max-w-2xl text-3xl font-black leading-tight tracking-tight" data-i18n="training.title">Entraîne-toi avant le vrai test</h1>
+      <p class="training-hero-subtitle mt-3 max-w-2xl text-sm leading-6 sm:text-base" data-i18n="training.subtitle">Choisis un mini-jeu pour découvrir les commandes et prendre le coup de main. Tes essais ne comptent pas dans ta partie ni dans le classement.</p>
+    </div>
+  </section>
+
+  <section class="training-panel mt-5 rounded-[1.75rem] border border-white/60 bg-white/90 p-4 shadow-xl shadow-slate-900/5 dark:border-slate-700/70 dark:bg-slate-900/70 sm:mt-6 sm:p-6">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-rose-500" data-i18n="training.eyebrow">Mode entraînement</p>
+        <h2 class="mt-1 text-xl font-black text-slate-900 dark:text-white sm:text-2xl" data-i18n="selection.choose_title">Sélectionne tes jeux</h2>
+      </div>
+      <span id="trainingCount" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"></span>
+    </div>
+    <div id="trainingGrid" class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4"></div>
+    <div class="mt-5 border-t border-slate-200/80 pt-5 dark:border-slate-800">
+      <a href="/" class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" data-i18n="training.back">Retour à l'accueil</a>
+    </div>
+  </section>
+</main>
+
+<style>
+  #trainingPage .training-hero { background:linear-gradient(135deg,#fff7ed 0%,#f5f3ff 48%,#ecfeff 100%); color:#1e1b4b; box-shadow:0 25px 55px -28px rgba(109,40,217,.35); }
+  #trainingPage .training-hero-kicker { color:#6d28d9; }
+  #trainingPage .training-hero-subtitle { color:#475569; }
+  #trainingPage .training-hero-orb-fuchsia { background:rgba(217,70,239,.24); }
+  #trainingPage .training-hero-orb-cyan { background:rgba(34,211,238,.2); }
+  html.dark #trainingPage .training-hero { background:linear-gradient(135deg,#0f172a 0%,#211044 48%,#082f49 100%); color:#fff; box-shadow:0 25px 55px -28px rgba(76,29,149,.8); }
+  html.dark #trainingPage .training-hero-kicker { color:#ddd6fe; }
+  html.dark #trainingPage .training-hero-subtitle { color:#cbd5e1; }
+  html.dark #trainingPage .training-hero-orb-fuchsia { background:rgba(217,70,239,.3); }
+  html.dark #trainingPage .training-hero-orb-cyan { background:rgba(34,211,238,.2); }
+  #trainingPage .training-game-card { position:relative; min-height:10rem; overflow:hidden; border:3px solid rgba(255,255,255,.82); border-radius:1.35rem; background-color:#172033; background-image:linear-gradient(145deg,rgba(15,23,42,.02),rgba(15,23,42,.78)),url('{{ asset_url("branding/game-selector-sprite-cartoon.png") }}'); background-size:500% 200%; background-repeat:no-repeat; color:#fff; box-shadow:inset 0 0 0 1px rgba(15,23,42,.28),0 10px 0 -6px rgba(15,23,42,.2); transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,border-color .2s ease; }
+  #trainingPage .training-game-card:hover { transform:translateY(-4px) rotate(-.6deg); border-color:#c4b5fd; box-shadow:inset 0 0 0 1px rgba(15,23,42,.28),0 16px 0 -8px rgba(15,23,42,.22),0 20px 28px -18px rgba(15,23,42,.7); }
+  #trainingPage .training-game-card:active { transform:scale(.98); }
+  #trainingPage .training-game-card.is-dino-game { background-size:cover; background-position:center; }
+  #trainingPage .training-game-card::after { content:''; position:absolute; inset:auto 0 0; height:62%; background:linear-gradient(transparent,rgba(2,6,23,.92)); pointer-events:none; }
+  #trainingPage .training-game-index { position:absolute; left:.7rem; top:.7rem; z-index:2; display:grid; height:1.55rem; min-width:1.55rem; place-items:center; padding:0 .35rem; border:1px solid rgba(255,255,255,.35); border-radius:.55rem; background:rgba(15,23,42,.45); font-size:.62rem; font-weight:950; letter-spacing:.08em; }
+  #trainingPage .training-game-copy { position:absolute; bottom:.7rem; left:.75rem; z-index:2; right:.5rem; }
+  #trainingPage .training-game-title { display:block; font-size:1rem; font-weight:950; line-height:1.05; text-shadow:0 2px 12px rgba(0,0,0,.45); }
+  #trainingPage .training-game-caption { display:block; margin-top:.3rem; color:rgba(255,255,255,.72); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  #trainingPage .training-game-play { position:absolute; right:.62rem; bottom:.62rem; z-index:3; display:grid; height:2rem; min-width:2rem; place-items:center; padding:0 .55rem; border:2px solid rgba(255,255,255,.75); border-radius:999px; background:rgba(124,58,237,.86); color:#fff; font-size:.65rem; font-weight:950; text-transform:uppercase; }
+  #trainingPage .training-beta-badge { position:absolute; right:.62rem; top:.62rem; z-index:3; border:2px solid rgba(255,255,255,.78); border-radius:999px; background:#fbbf24; color:#451a03; padding:.28rem .48rem; font-size:.56rem; font-weight:950; letter-spacing:.08em; box-shadow:0 5px 12px rgba(120,53,15,.28); }
+  @media (max-width:380px) { #trainingPage .training-game-card { min-height:9rem; } #trainingPage .training-game-title { font-size:.9rem; } }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const t = window.i18n || ((key) => key);
+    const grid = document.getElementById('trainingGrid');
+    const count = document.getElementById('trainingCount');
+    const enabledIds = new Set({{ enabled_game_ids | tojson }});
+    const catalog = [
+      ['t1','selection.game.t1.title','selection.game.t1.caption',0,0],
+      ['t2','selection.game.t2.title','selection.game.t2.caption',25,0],
+      ['t3','selection.game.t3.title','selection.game.t3.caption',50,0],
+      ['t4','selection.game.t4.title','selection.game.t4.caption',75,0],
+      ['t5','selection.game.t5.title','selection.game.t5.caption',100,0],
+      ['t6','selection.game.t6.title','selection.game.t6.caption',0,100],
+      ['t7','selection.game.t7.title','selection.game.t7.caption',25,100],
+      ['t8','selection.game.t8.title','selection.game.t8.caption',50,100],
+      ['t9','selection.game.t9.title','selection.game.t9.caption',75,100],
+      ['t10','selection.game.t10.title','selection.game.t10.caption',100,100],
+      ['t11','selection.game.t11.title','selection.game.t11.caption',0,0,'{{ asset_url("branding/dino-dash-logo.png") }}']
+    ];
+    count.textContent = t('training.count').replace('{enabled}', String(enabledIds.size)).replace('{total}', String(catalog.length));
+    catalog.forEach(([id, titleKey, captionKey, x, y, image], index) => {
+      const link = document.createElement('a');
+      link.href = `/${id}?training=1`;
+      const isBeta = !enabledIds.has(id);
+      link.className = 'training-game-card' + (image ? ' is-dino-game' : '') + (isBeta ? ' is-beta' : '');
+      if (image) {
+        link.style.backgroundImage = `linear-gradient(145deg,rgba(15,23,42,.02),rgba(15,23,42,.78)),url('${image}')`;
+        link.style.backgroundSize = 'cover';
+        link.style.backgroundPosition = 'center';
+      } else {
+        link.style.backgroundPosition = `${x}% ${y}%`;
+      }
+      const title = t(titleKey);
+      link.setAttribute('aria-label', `${title} — ${t('training.play')}${isBeta ? ` — ${t('training.beta_hint')}` : ''}`);
+      link.innerHTML = `<span class="training-game-index">${String(index + 1).padStart(2, '0')}</span>${isBeta ? `<span class="training-beta-badge">${t('training.beta')}</span>` : ''}<span class="training-game-play">▶</span><span class="training-game-copy"><span class="training-game-title">${title}</span><span class="training-game-caption">${t(captionKey)}</span></span>`;
+      grid.append(link);
+    });
+  });
+</script>
+{% endblock %}

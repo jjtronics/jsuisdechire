@@ -297,9 +297,17 @@ DEFAULT_SETTINGS = {
     "tilt_spawn_decay_per_s": 14,
     "tilt_tolerance_px": 26,
     "tilt_max_collisions": 5,
+    "dino_duration_ms": 30000,
+    "dino_initial_speed_px_s": 310,
+    "dino_speed_growth_per_s": 7,
+    "dino_spawn_interval_ms": 1450,
+    "dino_spawn_decay_per_s": 18,
+    "dino_jump_impulse_ms": 720,
+    "dino_jump_threshold": 1.35,
     "session_total_games": 10,
     "session_user_select_enabled": False,
     "session_feedback_enabled": True,
+    "player_score_deletions_per_day": 3,
     "game_rxn_enabled": True,
     "game_str_enabled": True,
     "game_prs_enabled": True,
@@ -310,6 +318,7 @@ DEFAULT_SETTINGS = {
     "game_drv_enabled": True,
     "game_ice_enabled": True,
     "game_tilt_enabled": True,
+    "game_dino_enabled": False,
     "nickname_max_length": 32,
     "smtp_host": "",
     "smtp_port": 587,
@@ -395,7 +404,15 @@ SETTING_RANGES = {
     "tilt_spawn_decay_per_s": (0, 80, float),
     "tilt_tolerance_px": (10, 100, float),
     "tilt_max_collisions": (1, 20, int),
-    "session_total_games": (1, 10, int),
+    "dino_duration_ms": (10000, 90000, int),
+    "dino_initial_speed_px_s": (120, 600, float),
+    "dino_speed_growth_per_s": (0, 40, float),
+    "dino_spawn_interval_ms": (500, 4000, int),
+    "dino_spawn_decay_per_s": (0, 100, float),
+    "dino_jump_impulse_ms": (300, 1400, int),
+    "dino_jump_threshold": (0.5, 4, float),
+    "session_total_games": (1, 11, int),
+    "player_score_deletions_per_day": (0, 100, int),
     "nickname_max_length": (1, 128, int),
     "smtp_port": (1, 65535, int),
 }
@@ -412,6 +429,7 @@ BOOLEAN_SETTING_KEYS = frozenset({
     "game_drv_enabled",
     "game_ice_enabled",
     "game_tilt_enabled",
+    "game_dino_enabled",
     "bal_cheat_detection_enabled",
 })
 
@@ -516,8 +534,13 @@ FEEDBACK_GAME_CATALOG = (
     {"id": "t8", "section": "pong", "admin_group": "pong"},
     {"id": "t9", "section": "ice", "admin_group": "ice"},
     {"id": "t10", "section": "tilt", "admin_group": "tilt"},
+    {"id": "t11", "section": "dino", "admin_group": "dino"},
 )
 FEEDBACK_GAME_BY_ID = {game["id"]: game for game in FEEDBACK_GAME_CATALOG}
+GAME_SETTING_KEYS = {
+    game["id"]: f"game_{game['section']}_enabled"
+    for game in FEEDBACK_GAME_CATALOG
+}
 FEEDBACK_DIFFICULTIES = frozenset({"too_easy", "perfect", "too_hard"})
 
 def get_db():
@@ -554,7 +577,8 @@ def ensure_schema(db=None):
         cheat_details TEXT,
         cheat_avatar_path TEXT,
         ice_score INTEGER, ice_hits INTEGER, ice_mistakes INTEGER, ice_best_combo INTEGER, ice_elapsed_ms INTEGER, ice_accuracy REAL, ice_duration_ms INTEGER,
-        tilt_score INTEGER, tilt_catches INTEGER, tilt_collisions INTEGER, tilt_control REAL, tilt_elapsed_ms INTEGER, tilt_misses INTEGER, tilt_sensor_samples INTEGER, tilt_sensor_used INTEGER
+        tilt_score INTEGER, tilt_catches INTEGER, tilt_collisions INTEGER, tilt_control REAL, tilt_elapsed_ms INTEGER, tilt_misses INTEGER, tilt_sensor_samples INTEGER, tilt_sensor_used INTEGER,
+        dino_score INTEGER, dino_jumps INTEGER, dino_obstacles INTEGER, dino_misses INTEGER, dino_distance REAL, dino_elapsed_ms INTEGER, dino_sensor_used INTEGER
     )''')
     db.execute('''CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
@@ -606,6 +630,12 @@ def ensure_schema(db=None):
         UNIQUE(run_id, game_id)
     )''')
     db.execute("CREATE INDEX IF NOT EXISTS idx_game_feedback_created_at ON game_feedback(created_at DESC)")
+    db.execute('''CREATE TABLE IF NOT EXISTS score_deletions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at INTEGER NOT NULL,
+        user_id INTEGER NOT NULL
+    )''')
+    db.execute("CREATE INDEX IF NOT EXISTS idx_score_deletions_user_day ON score_deletions(user_id, created_at)")
 
     # Ensure new columns exist without requiring a destructive migration
     score_columns = {row["name"] for row in db.execute("PRAGMA table_info(scores)").fetchall()}
@@ -676,6 +706,20 @@ def ensure_schema(db=None):
         db.execute("ALTER TABLE scores ADD COLUMN tilt_sensor_samples INTEGER")
     if "tilt_sensor_used" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN tilt_sensor_used INTEGER")
+    if "dino_score" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN dino_score INTEGER")
+    if "dino_jumps" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN dino_jumps INTEGER")
+    if "dino_obstacles" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN dino_obstacles INTEGER")
+    if "dino_misses" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN dino_misses INTEGER")
+    if "dino_distance" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN dino_distance REAL")
+    if "dino_elapsed_ms" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN dino_elapsed_ms INTEGER")
+    if "dino_sensor_used" not in score_columns:
+        db.execute("ALTER TABLE scores ADD COLUMN dino_sensor_used INTEGER")
     if "is_cheater" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN is_cheater INTEGER DEFAULT 0")
     if "cheat_reason" not in score_columns:
@@ -767,6 +811,20 @@ def get_request_identity() -> str:
     # ProxyFix normalizes remote_addr when the application is behind its single
     # trusted reverse proxy. Never persist the raw address in the database.
     return request.remote_addr or "unknown"
+
+
+def score_deletion_day_start(timestamp: Optional[int] = None) -> int:
+    current = datetime.datetime.fromtimestamp(int(timestamp or time.time()))
+    return int(current.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+
+
+def get_player_score_deletion_limit(settings: Optional[dict] = None) -> int:
+    source = settings if settings is not None else get_settings()
+    try:
+        configured = int(source.get("player_score_deletions_per_day", 0))
+    except (TypeError, ValueError):
+        configured = 0
+    return max(0, min(100, configured))
 
 
 def record_security_event(action: str, *, actor_user_id: Optional[int] = None, details: Optional[dict] = None) -> None:
@@ -1298,6 +1356,20 @@ def home():
 def select_games():
     return render_template("select_games.html", app_name=APP_NAME)
 
+@app.route("/training")
+def training():
+    settings = get_settings()
+    enabled_game_ids = [
+        game["id"]
+        for game in FEEDBACK_GAME_CATALOG
+        if bool(settings.get(GAME_SETTING_KEYS[game["id"]], False))
+    ]
+    return render_template(
+        "training.html",
+        app_name=APP_NAME,
+        enabled_game_ids=enabled_game_ids,
+    )
+
 @app.route("/t1")
 def t1():
     return render_template("t1.html", app_name=APP_NAME)
@@ -1337,6 +1409,10 @@ def t9():
 @app.route("/t10")
 def t10():
     return render_template("t10.html", app_name=APP_NAME)
+
+@app.route("/t11")
+def t11():
+    return render_template("t11.html", app_name=APP_NAME)
 
 @app.route("/results")
 def results_page():
@@ -1417,6 +1493,13 @@ latest_scores AS (
         tilt_misses,
         tilt_sensor_samples,
         tilt_sensor_used,
+        dino_score,
+        dino_jumps,
+        dino_obstacles,
+        dino_misses,
+        dino_distance,
+        dino_elapsed_ms,
+        dino_sensor_used,
         user_id,
         is_cheater,
         cheat_reason,
@@ -1521,6 +1604,11 @@ LEADERBOARD_SORTS = {
     },
     "tilt_score": {
         "expression": "scores.tilt_score",
+        "default_order": "desc",
+        "secondary": ["scores.created_at DESC", "scores.id DESC"],
+    },
+    "dino_score": {
+        "expression": "scores.dino_score",
         "default_order": "desc",
         "secondary": ["scores.created_at DESC", "scores.id DESC"],
     },
@@ -1911,6 +1999,13 @@ def api_admin_scores():
             "tilt_misses": row["tilt_misses"],
             "tilt_sensor_samples": row["tilt_sensor_samples"],
             "tilt_sensor_used": row["tilt_sensor_used"],
+            "dino_score": row["dino_score"],
+            "dino_jumps": row["dino_jumps"],
+            "dino_obstacles": row["dino_obstacles"],
+            "dino_misses": row["dino_misses"],
+            "dino_distance": row["dino_distance"],
+            "dino_elapsed_ms": row["dino_elapsed_ms"],
+            "dino_sensor_used": row["dino_sensor_used"],
         })
     return jsonify(payload)
 
@@ -1933,6 +2028,70 @@ def api_admin_delete_scores():
     db.execute(query, ids)
     db.commit()
     return jsonify({"ok": True, "deleted": ids})
+
+
+@app.post("/api/scores/last/delete")
+def api_delete_last_player_score():
+    user = get_current_user()
+    if user is None:
+        return jsonify({"ok": False, "error": "auth_required"}), 401
+
+    settings = get_settings()
+    daily_limit = get_player_score_deletion_limit(settings)
+    if daily_limit <= 0:
+        return jsonify({"ok": False, "error": "deletion_disabled"}), 403
+
+    db = get_db()
+    user_id = int(user["id"])
+    now = int(time.time())
+    day_start = score_deletion_day_start(now)
+
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        deletion_count = db.execute(
+            "SELECT COUNT(*) AS total FROM score_deletions WHERE user_id = ? AND created_at >= ?",
+            (user_id, day_start),
+        ).fetchone()["total"]
+        remaining = max(0, daily_limit - int(deletion_count))
+        if deletion_count >= daily_limit:
+            db.rollback()
+            return jsonify({"ok": False, "error": "daily_limit", "remaining": 0, "limit": daily_limit}), 429
+
+        latest = db.execute(
+            "SELECT id FROM scores WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+        if latest is None:
+            db.rollback()
+            return jsonify({"ok": False, "error": "not_found"}), 404
+
+        deleted_id = int(latest["id"])
+        cursor = db.execute("DELETE FROM scores WHERE id = ? AND user_id = ?", (deleted_id, user_id))
+        if cursor.rowcount != 1:
+            db.rollback()
+            return jsonify({"ok": False, "error": "not_found"}), 404
+
+        db.execute(
+            "INSERT INTO score_deletions(created_at, user_id) VALUES (?, ?)",
+            (now, user_id),
+        )
+        db.commit()
+    except sqlite3.Error:
+        db.rollback()
+        app.logger.exception("Impossible de supprimer le dernier score du joueur %s.", user_id)
+        return jsonify({"ok": False, "error": "server_error"}), 500
+
+    record_security_event(
+        "player_last_score_deleted",
+        actor_user_id=user_id,
+        details={"score_id": deleted_id, "remaining": remaining - 1},
+    )
+    return jsonify({
+        "ok": True,
+        "deleted": deleted_id,
+        "remaining": max(0, remaining - 1),
+        "limit": daily_limit,
+    })
 
 @app.get("/api/nickname/check")
 def api_nickname_check():
@@ -2204,6 +2363,7 @@ def submit():
         "drv": _section("drv"),
         "ice": _section("ice"),
         "tilt": _section("tilt"),
+        "dino": _section("dino"),
     }
 
     def _parse_float(value):
@@ -2296,6 +2456,15 @@ def submit():
             "sensor_samples": ("int", 0, 1000000),
             "sensor_used": ("int", 0, 1),
         },
+        "dino": {
+            "score": ("float", 0, 100),
+            "jumps": ("int", 0, 1000),
+            "obstacles": ("int", 0, 1000),
+            "misses": ("int", 0, 1000),
+            "distance_m": ("float", 0, 100000),
+            "elapsed_ms": ("int", 0, 120000),
+            "sensor_used": ("int", 0, 1),
+        },
     }
     validated_sections = {name: {} for name in sections}
     invalid_fields = []
@@ -2330,6 +2499,7 @@ def submit():
         "bal": 0.10,
         "ice": 0.10,
         "tilt": 0.10,
+        "dino": 0.10,
     }
     weighted_score = 0.0
     weight_sum = 0.0
@@ -2387,6 +2557,13 @@ def submit():
         "tilt_misses": validated_sections["tilt"].get("misses"),
         "tilt_sensor_samples": validated_sections["tilt"].get("sensor_samples"),
         "tilt_sensor_used": validated_sections["tilt"].get("sensor_used"),
+        "dino_score": validated_sections["dino"].get("score"),
+        "dino_jumps": validated_sections["dino"].get("jumps"),
+        "dino_obstacles": validated_sections["dino"].get("obstacles"),
+        "dino_misses": validated_sections["dino"].get("misses"),
+        "dino_distance": validated_sections["dino"].get("distance_m"),
+        "dino_elapsed_ms": validated_sections["dino"].get("elapsed_ms"),
+        "dino_sensor_used": validated_sections["dino"].get("sensor_used"),
     }
 
     bal_section = sections["bal"]
@@ -2433,7 +2610,7 @@ def submit():
     ensure_schema(db)
     created_at = int(time.time())
     cursor = db.execute(
-"INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, pong_score, pong_hits, pong_attempts, pong_best_error, pong_avg_error, drv_score, drv_collisions, drv_distance, drv_duration_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, ice_score, ice_hits, ice_mistakes, ice_best_combo, ice_elapsed_ms, ice_accuracy, ice_duration_ms, tilt_score, tilt_catches, tilt_collisions, tilt_control, tilt_elapsed_ms, tilt_misses, tilt_sensor_samples, tilt_sensor_used, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+"INSERT INTO scores (created_at, nickname, total_score, rxn_score, rxn_median, rxn_mean, str_score, str_accuracy, str_mean, prs_score, prs_error, time_to_catch_ms, rfl_score, rfl_hits, rfl_attempts, rfl_best_error, rfl_avg_error, pong_score, pong_hits, pong_attempts, pong_best_error, pong_avg_error, drv_score, drv_collisions, drv_distance, drv_duration_ms, bal_score, bal_std, mem_score, mem_time_ms, mem_errors, ice_score, ice_hits, ice_mistakes, ice_best_combo, ice_elapsed_ms, ice_accuracy, ice_duration_ms, tilt_score, tilt_catches, tilt_collisions, tilt_control, tilt_elapsed_ms, tilt_misses, tilt_sensor_samples, tilt_sensor_used, dino_score, dino_jumps, dino_obstacles, dino_misses, dino_distance, dino_elapsed_ms, dino_sensor_used, user_id, is_cheater, cheat_reason, cheat_details, cheat_avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (created_at, nickname, total,
          fields['rxn_score'], fields['rxn_median'], fields['rxn_mean'],
          fields['str_score'], fields['str_accuracy'], fields['str_mean'],
@@ -2446,6 +2623,7 @@ def submit():
          fields['ice_score'], fields['ice_hits'], fields['ice_mistakes'], fields['ice_best_combo'], fields['ice_elapsed_ms'], fields['ice_accuracy'], fields['ice_duration_ms'],
          fields['tilt_score'], fields['tilt_catches'], fields['tilt_collisions'], fields['tilt_control'], fields['tilt_elapsed_ms'],
          fields['tilt_misses'], fields['tilt_sensor_samples'], fields['tilt_sensor_used'],
+         fields['dino_score'], fields['dino_jumps'], fields['dino_obstacles'], fields['dino_misses'], fields['dino_distance'], fields['dino_elapsed_ms'], fields['dino_sensor_used'],
          user_id,
          1 if cheat_detected else 0,
          cheat_reason,
@@ -2779,6 +2957,7 @@ def profile_view():
         "bal_score",
         "ice_score",
         "tilt_score",
+        "dino_score",
         "created_at",
     }
 
@@ -2818,9 +2997,9 @@ def profile_view():
 
     score_rows = []
     has_next = False
+    db = get_db()
     if score_filters:
         where_sql = " OR ".join(score_filters)
-        db = get_db()
         query = db.execute(
             f"""
             SELECT scores.*
@@ -2833,6 +3012,19 @@ def profile_view():
         ).fetchall()
         has_next = len(query) > per_page
         score_rows = [dict(row) for row in query[:per_page]]
+
+    latest_owned_score = db.execute(
+        "SELECT id FROM scores WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 1",
+        (user_id,),
+    ).fetchone()
+    score_deletion_limit = get_player_score_deletion_limit()
+    score_deletions_remaining = score_deletion_limit
+    if score_deletion_limit > 0:
+        deletion_count = get_db().execute(
+            "SELECT COUNT(*) AS total FROM score_deletions WHERE user_id = ? AND created_at >= ?",
+            (user_id, score_deletion_day_start()),
+        ).fetchone()["total"]
+        score_deletions_remaining = max(0, score_deletion_limit - int(deletion_count))
 
     has_prev = page > 1
 
@@ -2860,6 +3052,9 @@ def profile_view():
             key: cfg["default_order"] for key, cfg in LEADERBOARD_SORTS.items() if key in allowed_sort_keys
         },
         score_per_page=per_page,
+        latest_owned_score_id=int(latest_owned_score["id"]) if latest_owned_score else None,
+        score_deletion_limit=score_deletion_limit,
+        score_deletions_remaining=score_deletions_remaining,
     )
 
 

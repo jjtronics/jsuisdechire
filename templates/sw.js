@@ -6,7 +6,6 @@ const PRECACHE = [
   '{{ asset_url("manifest.webmanifest") }}',
   '{{ asset_url("branding/logo-horizontal.webp") }}',
   '{{ asset_url("branding/logo-mark-192.png") }}',
-  '{{ asset_url("icons/icon-192.png") }}',
   '{{ asset_url("icons/icon-512.png") }}',
   '{{ asset_url("js/core.js") }}',
   '{{ asset_url("js/flow.js") }}',
