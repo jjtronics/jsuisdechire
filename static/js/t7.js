@@ -79,7 +79,7 @@
     #t7 .t7-btn:not(:disabled):active{transform:translateY(1px) scale(0.98);filter:brightness(0.96);}
     #t7 .t7-secondary{border-color:rgba(16,185,129,0.28);background:rgba(16,185,129,0.12);color:#047857;box-shadow:none;}
     html.dark #t7 .t7-secondary{border-color:rgba(52,211,153,0.32);background:rgba(16,185,129,0.16);color:#a7f3d0;}
-    #t7 .t7-start-wrapper{display:flex;justify-content:center;}
+    #t7 .t7-start-wrapper{display:flex;flex-direction:column;align-items:center;gap:.65rem;}
     #t7 .t7-start{min-width:12rem;}
     #t7 .t7-btn:disabled{opacity:0.55;cursor:default;box-shadow:none;}
     @media (min-width:640px){
@@ -134,9 +134,9 @@
   const startWrapper = el('div', 't7-start-wrapper');
   const startBtn = el('button', 't7-btn t7-start', translate('t7.start_button', null, 'Démarrer'));
   startBtn.type = 'button';
-  startWrapper.appendChild(startBtn);
+  startWrapper.append(startBtn, helpEl);
 
-  wrapper.append(hud, stage, messageEl, helpEl, controls, startWrapper);
+  wrapper.append(hud, stage, messageEl, controls, startWrapper);
   root.appendChild(wrapper);
 
   const game = {
