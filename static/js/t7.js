@@ -174,6 +174,18 @@
     { color: '#34d399', accent: '#d1fae5' },
     { color: '#f97316', accent: '#ffedd5' }
   ];
+  const POLICE_VEHICLE = { color: '#2563eb', accent: '#dbeafe' };
+
+  function randomObstacleKind(){
+    const roll = Math.random();
+    if (roll < 0.18){
+      return 'animal';
+    }
+    if (roll < 0.36){
+      return 'police';
+    }
+    return 'vehicle';
+  }
 
   function roundedRect(context, x, y, width, height, radius){
     const r = Math.min(radius, width / 2, height / 2);
@@ -254,7 +266,9 @@
     }
     const pool = available.length ? available : Array.from({length: config.lanes}, (_, index) => index);
     const lane = pool[Math.floor(Math.random() * pool.length)];
+    const kind = randomObstacleKind();
     state.obstacles.push({
+      kind,
       lane,
       lanePosition: lane,
       targetLane: lane,
@@ -266,7 +280,7 @@
       counted: false,
       hitAt: 0,
       laneChange: null,
-      laneChangeTimerMs: 700 + Math.random() * 900
+      laneChangeTimerMs: kind === 'animal' ? Number.POSITIVE_INFINITY : 700 + Math.random() * 900
     });
     state.spawned += 1;
   }
@@ -610,6 +624,92 @@
     ctx.restore();
   }
 
+  function drawPoliceVehicle(x, y, width, height, obstacle, now){
+    drawVehicle(x, y, width, height, { ...obstacle, vehicle: POLICE_VEHICLE }, false, now);
+    const blinkOn = Math.floor(now / 170) % 2 === 0;
+    ctx.save();
+    ctx.fillStyle = '#e0f2fe';
+    roundedRect(ctx, x + width * 0.34, y + height * 0.04, width * 0.32, height * 0.1, width * 0.04);
+    ctx.fill();
+    ctx.fillStyle = blinkOn ? '#ef4444' : '#60a5fa';
+    ctx.fillRect(x + width * 0.36, y + height * 0.055, width * 0.13, height * 0.07);
+    ctx.fillStyle = blinkOn ? '#60a5fa' : '#ef4444';
+    ctx.fillRect(x + width * 0.51, y + height * 0.055, width * 0.13, height * 0.07);
+    ctx.fillStyle = '#eff6ff';
+    ctx.font = `900 ${Math.max(6, width * 0.13)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('POLICE', x + width / 2, y + height * 0.68);
+    ctx.restore();
+  }
+
+  function drawAnimal(x, y, width, height, obstacle, now){
+    const hit = now - obstacle.hitAt < 320;
+    ctx.save();
+    if (hit){
+      ctx.translate(Math.sin((now - obstacle.hitAt) / 22) * 3, 0);
+      ctx.globalAlpha = clamp(1 - (now - obstacle.hitAt) / 360, 0.15, 1);
+    }
+    ctx.fillStyle = 'rgba(15,23,42,0.26)';
+    ctx.beginPath();
+    ctx.ellipse(x + width / 2, y + height * 0.9, width * 0.42, height * 0.09, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const fur = '#b45309';
+    ctx.fillStyle = fur;
+    ctx.beginPath();
+    ctx.ellipse(x + width * 0.48, y + height * 0.55, width * 0.34, height * 0.28, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + width * 0.73, y + height * 0.39, width * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x + width * 0.64, y + height * 0.28);
+    ctx.lineTo(x + width * 0.67, y + height * 0.05);
+    ctx.lineTo(x + width * 0.77, y + height * 0.27);
+    ctx.moveTo(x + width * 0.78, y + height * 0.27);
+    ctx.lineTo(x + width * 0.86, y + height * 0.05);
+    ctx.lineTo(x + width * 0.88, y + height * 0.32);
+    ctx.fill();
+    ctx.fillStyle = '#fef3c7';
+    ctx.beginPath();
+    ctx.ellipse(x + width * 0.78, y + height * 0.48, width * 0.11, height * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(x + width * 0.7, y + height * 0.37, Math.max(1.6, width * 0.035), 0, Math.PI * 2);
+    ctx.arc(x + width * 0.8, y + height * 0.37, Math.max(1.6, width * 0.035), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + width * 0.79, y + height * 0.49, Math.max(2, width * 0.045), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = fur;
+    ctx.lineWidth = Math.max(3, width * 0.075);
+    ctx.lineCap = 'round';
+    for (const legX of [0.32, 0.52, 0.64]){
+      ctx.beginPath();
+      ctx.moveTo(x + width * legX, y + height * 0.68);
+      ctx.lineTo(x + width * legX, y + height * 0.87);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.moveTo(x + width * 0.25, y + height * 0.5);
+    ctx.quadraticCurveTo(x + width * 0.05, y + height * 0.35, x + width * 0.12, y + height * 0.18);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawObstacle(x, y, width, height, obstacle, now){
+    if (obstacle.kind === 'animal'){
+      drawAnimal(x, y, width, height, obstacle, now);
+      return;
+    }
+    if (obstacle.kind === 'police'){
+      drawPoliceVehicle(x, y, width, height, obstacle, now);
+      return;
+    }
+    drawVehicle(x, y, width, height, obstacle, false, now);
+  }
+
   function drawOverlay(){
     if (state.phase === 'running'){
       return;
@@ -644,7 +744,7 @@
     const dimensions = vehicleDimensions();
     state.obstacles.forEach((obstacle) => {
       const x = laneCenter(obstacle.lanePosition) - dimensions.width / 2;
-      drawVehicle(x, obstacle.y, dimensions.width, dimensions.height, obstacle, false, now);
+      drawObstacle(x, obstacle.y, dimensions.width, dimensions.height, obstacle, now);
     });
     const playerX = laneCenter(state.lane) - game.playerWidth / 2;
     drawVehicle(playerX, game.playerY, game.playerWidth, game.playerHeight, VEHICLES[0], true, now);
