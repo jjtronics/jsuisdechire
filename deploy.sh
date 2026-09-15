@@ -292,6 +292,7 @@ run_root test -f "${REMOTE_APP_DIR}/static/branding/logo-horizontal.webp"
 run_root test -f "${REMOTE_APP_DIR}/static/icons/icon-192.png"
 run_root test -f "${REMOTE_APP_DIR}/static/icons/icon-512.png"
 
+PREVIOUS_MAIN_PID="$(run_root systemctl show --property=MainPID --value "$REMOTE_SERVICE" 2>/dev/null || true)"
 echo "Redémarrage du service ${REMOTE_SERVICE}..."
 run_root systemctl restart "$REMOTE_SERVICE"
 sleep 2
@@ -300,7 +301,14 @@ if ! run_root systemctl is-active --quiet "$REMOTE_SERVICE"; then
   exit 1
 fi
 
-echo "Service actif : ${REMOTE_SERVICE}"
+CURRENT_MAIN_PID="$(run_root systemctl show --property=MainPID --value "$REMOTE_SERVICE")"
+if [[ -z "$CURRENT_MAIN_PID" || "$CURRENT_MAIN_PID" == "0" || "$CURRENT_MAIN_PID" == "$PREVIOUS_MAIN_PID" ]]; then
+  echo "Le processus ${REMOTE_SERVICE} n'a pas été remplacé après le redémarrage." >&2
+  run_root systemctl status "$REMOTE_SERVICE" --no-pager -l || true
+  exit 1
+fi
+
+echo "Service actif : ${REMOTE_SERVICE} (PID ${CURRENT_MAIN_PID})"
 echo "Backup : ${BACKUP_PATH}"
 REMOTE_SCRIPT
 

@@ -1,5 +1,14 @@
 # Journal des changements
 
+## 15 septembre 2026 — Renforcement comptes, sessions et administration
+
+- Limitation des tentatives de connexion joueur/admin, d'inscription et de récupération de mot de passe, avec réponses qui ne divulguent plus si un compte existe ou s'il utilise Google.
+- Renouvellement de l'état de session à chaque authentification et révocation des autres sessions lors d'un changement de mot de passe ; le même principe s'applique aux sessions admin après rotation du mot de passe.
+- Journal d'audit admin borné aux 200 derniers événements consultables, ne contenant ni secret ni adresse IP en clair.
+- En-têtes HTTP renforcés (anti-iframe, isolation cross-origin, HSTS uniquement en HTTPS, non-mise en cache des écrans sensibles) et service systemd davantage cloisonné.
+- Correctif PWA/session : les pages HTML ne sont plus précachées et l’état de compte est relu depuis `/api/session` avant le démarrage d’une partie.
+- Correctif de déploiement : le script refuse désormais de terminer si le PID Gunicorn n’a pas été remplacé après le redémarrage systemd.
+
 ## 15 septembre 2026 — Refonte cartoon des mini-jeux
 
 ### Réaction, Stroop & mobile

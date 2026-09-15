@@ -96,18 +96,48 @@
     };
   }
 
-  // Random base freqs each run
-  const baseA = rand(0.0030, 0.0050);
-  const baseB = rand(0.0035, 0.0055);
-  // Drifts & jitter
-  const driftA = rand(0.00008, 0.00018);
-  const driftB = rand(0.00008, 0.00018);
-  const phase0 = rand(0, Math.PI*2);
-
   let start=0,raf=0,samples=[],cursor={x:0,y:0};
   let targetPos={x:0,y:0}; let running=false, finished=false; let params=null; let misses=0;
+  let motion={x:0,y:0,vx:0,vy:0,desiredVx:0,desiredVy:0,nextTurn:0,lastFrame:0};
 
-  function noise1D(t){ return Math.sin(t*0.9)*0.5 + Math.sin(t*0.27+1.3)*0.3 + Math.sin(t*0.61+2.1)*0.2; }
+  // The pitcher follows short, randomly steered bursts instead of a repeating orbit.
+  // Velocity eases toward each new direction so it remains catchable on touch screens.
+  function resetMotion(now, W, H){
+    const half=params.targetDiameter/2;
+    const speedScale=clamp(params.timeSpeed/0.75,0.55,1.7);
+    const angle=rand(0,Math.PI*2);
+    const speed=rand(120,175)*speedScale;
+    motion={
+      x:rand(half+12,W-half-12), y:rand(half+12,H-half-12),
+      vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed,
+      desiredVx:Math.cos(angle)*speed, desiredVy:Math.sin(angle)*speed,
+      nextTurn:now+rand(360,820), lastFrame:now
+    };
+  }
+  function moveTarget(now,W,H){
+    const half=params.targetDiameter/2;
+    const dt=clamp((now-motion.lastFrame)/1000,0,0.045);
+    motion.lastFrame=now;
+    const speedScale=clamp(params.timeSpeed/0.75,0.55,1.7);
+    if(now>=motion.nextTurn){
+      const currentAngle=Math.atan2(motion.vy,motion.vx);
+      // Most turns keep momentum; occasional reversals prevent an easy repeating loop.
+      const turn=rand(-1.75,1.75)+(Math.random()<0.18 ? (Math.random()<.5?-1:1)*1.35 : 0);
+      const speed=rand(105,230)*speedScale;
+      motion.desiredVx=Math.cos(currentAngle+turn)*speed;
+      motion.desiredVy=Math.sin(currentAngle+turn)*speed;
+      motion.nextTurn=now+rand(300,920);
+    }
+    const easing=1-Math.exp(-5.2*dt);
+    motion.vx+=(motion.desiredVx-motion.vx)*easing;
+    motion.vy+=(motion.desiredVy-motion.vy)*easing;
+    motion.x+=motion.vx*dt;
+    motion.y+=motion.vy*dt;
+    const minX=half+8,maxX=W-half-8,minY=half+8,maxY=H-half-8;
+    if(motion.x<minX||motion.x>maxX){motion.x=clamp(motion.x,minX,maxX);motion.vx*=-1;motion.desiredVx*=-1;}
+    if(motion.y<minY||motion.y>maxY){motion.y=clamp(motion.y,minY,maxY);motion.vy*=-1;motion.desiredVy*=-1;}
+    return {x:motion.x,y:motion.y};
+  }
 
   function detach(){ area.style.pointerEvents="none"; }
   area.addEventListener("pointermove",(e)=>{ const r=area.getBoundingClientRect(); cursor.x=clamp(e.clientX-r.left,0,r.width); cursor.y=clamp(e.clientY-r.top,0,r.height); });
@@ -115,14 +145,8 @@
   function anim(now){
     if(finished || !params) return;
     const elapsedReal = now - start;
-    const motionTime = elapsedReal * params.timeSpeed;
     const rect=area.getBoundingClientRect(); const W=Math.max(240, rect.width), H=Math.max(120, rect.height);
-    const a = baseA + driftA * (motionTime/1000);
-    const b = baseB + driftB * (motionTime/1000);
-    const cx=W/2,cy=H/2,ax=W*0.44,ay=H*0.38;
-    const jitter = params.jitterAmp * noise1D(motionTime/500);
-    const x=cx + ax * Math.sin(a*motionTime*2*Math.PI + phase0) + jitter*24;
-    const y=cy + ay * Math.sin(b*motionTime*2*Math.PI + Math.PI/3) + jitter*16;
+    const {x,y}=moveTarget(now,W,H);
 
     const half=params.targetDiameter/2;
     target.style.left=(x-half)+"px"; target.style.top=(y-half)+"px";
@@ -149,7 +173,10 @@
     samples=[]; misses=0; btn.textContent=t("t3.button_running");
     setAttempts();
     setCountdown(params.duration||0);
-    start=performance.now(); raf=requestAnimationFrame(anim);
+    start=performance.now();
+    const rect=area.getBoundingClientRect();
+    resetMotion(start,Math.max(240,rect.width),Math.max(120,rect.height));
+    raf=requestAnimationFrame(anim);
   }
 
   function finish(forcedData){

@@ -12,8 +12,20 @@ Environment="FLASK_ENV=production"
 ExecStart=/opt/jsuisdechire/app/.venv/bin/gunicorn --workers 2 --bind 0.0.0.0:9001 --access-logfile - --error-logfile - app:app
 Restart=on-failure
 RestartSec=5
+UMask=0027
 NoNewPrivileges=true
 PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=full
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 
 [Install]
 WantedBy=multi-user.target

@@ -17,6 +17,12 @@ Ce document consigne les problèmes constatés pendant le tour du site et les co
 - Ajout des balises SEO, d’un favicon, de `robots.txt`, d’un cache hors-ligne précaché et d’une version WebP optimisée du logo horizontal.
 - Déploiements vérifiés par SSH avec correspondance des empreintes SHA-256 locales/distantes.
 
+### Incident de déploiement — processus Gunicorn non rechargé (15 septembre 2026)
+
+**Cause :** les fichiers applicatifs avaient été copiés sur le serveur, mais Gunicorn restait actif avec le code chargé plus de quatorze heures auparavant. Le site public servait donc l’ancien service worker, qui précachait la page d’accueil et pouvait afficher un état anonyme juste après connexion.
+
+**Prévention :** les pages HTML ne sont plus stockées par le service worker ; le client synchronise l’état du compte via `/api/session` sans rechargement. Surtout, [`deploy.sh`](deploy.sh) vérifie désormais que le PID principal de `jsuisdechire` change après `systemctl restart`. Si ce n’est pas le cas, le déploiement échoue au lieu d’annoncer une fausse réussite.
+
 Derniers déploiements contrôlés :
 
 - `2026-09-12 16:02 UTC` : première mise en ligne du script et des sept tests.

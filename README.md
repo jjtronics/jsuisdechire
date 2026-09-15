@@ -72,6 +72,8 @@ python app.py  # démarre sur 0.0.0.0:9001
   - `GOOGLE_ANALYTICS_ID` (identifiant de mesure GA4 au format `G-XXXXXXXXXX`) – active GA4 avec Consent Mode v2 : refus par défaut dans l’EEE, au Royaume-Uni et en Suisse, autorisation par défaut ailleurs ; laissé vide, le suivi reste désactivé.
 - `ASSET_VERSION` pour invalider le cache des assets statiques.
 
+Sécurité opérationnelle : les tentatives de connexion, d'inscription et de récupération de mot de passe sont limitées par adresse cliente. Une mise à jour de mot de passe déconnecte les autres sessions du compte ; un changement du mot de passe admin révoque les autres sessions d'administration. Les 200 derniers événements sensibles peuvent être consultés par un administrateur via `/api/admin/security-audit` (sans mot de passe, secret SMTP ni adresse IP en clair).
+
 Contrôles avant livraison :
 
 ```bash
@@ -94,6 +96,10 @@ REMOTE_HOST=192.168.1.30 RUN_HTTP_CHECKS=0 ./deploy.sh
 ```
 
 Le script exclut la base SQLite, les secrets, l’environnement virtuel et les uploads locaux de l’archive ; il sauvegarde l’installation distante avant copie, crée en plus une copie dédiée de `data.sqlite`, installe uniquement les fichiers applicatifs, crée une clé de session de production si nécessaire, redémarre le service et contrôle les routes principales ainsi que les nouveaux assets de marque. Il ne supprime ni ne remplace jamais la base de production. Pour provisionner les identifiants admin sur le serveur malgré l’exclusion de `data.sqlite`, définis `ADMIN_LOGIN` et `ADMIN_PASSWORD` dans `.env.deploy` : le mot de passe est envoyé uniquement sous forme de hash et écrit dans la base distante pendant le déploiement.
+
+### Règle impérative après un déploiement
+
+Copier `app.py` et les templates sur le serveur ne suffit pas : Gunicorn conserve le code en mémoire jusqu’à son redémarrage. Un déploiement n’est valide que si `systemctl daemon-reload`, puis `systemctl restart jsuisdechire`, ont réellement remplacé le PID principal. `deploy.sh` contrôle désormais ce remplacement et échoue si le PID est identique. Vérifie aussi que `https://jsuisdechire.com/sw.js` contient la nouvelle version avant de conclure à un défaut de navigateur/PWA ; une ancienne version du worker pouvait réafficher une page anonyme après connexion.
 
 ### 👩‍💻 Admin & scores
 - Accès admin : `/admin` (utiliser un login et un mot de passe uniques ; aucun mot de passe par défaut n’est accepté).

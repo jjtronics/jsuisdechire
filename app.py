@@ -154,18 +154,34 @@ def protect_state_changing_requests():
 @app.after_request
 def add_security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+    response.headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
     response.headers.setdefault(
         "Permissions-Policy",
         "camera=(), microphone=(), geolocation=(), accelerometer=(self), gyroscope=(self), magnetometer=(self)",
     )
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
+        "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
         "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; "
-        "font-src 'self' https: data:; connect-src 'self' https://accounts.google.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com; form-action 'self';",
+        "font-src 'self' https: data:; connect-src 'self' https://accounts.google.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com; worker-src 'self'; manifest-src 'self'; form-action 'self';",
     )
+    if request.is_secure:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+
+    # Every rendered page can contain session-specific navigation, account
+    # data, CSRF material, or settings. Do not let a browser/proxy reuse an
+    # anonymous page just after login (or an authenticated one after logout).
+    is_html_page = response.mimetype == "text/html"
+    sensitive_page = request.path in {"/login", "/register", "/forgot-password", "/profile", "/admin/login"}
+    authenticated = is_admin_authenticated() or get_current_user() is not None
+    if is_html_page or sensitive_page or authenticated or request.path.startswith("/admin") or request.path.startswith("/api/admin/"):
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers.add("Vary", "Cookie")
     return response
 
 
@@ -468,7 +484,10 @@ DEFAULT_ADMIN_LOGIN = "admin"
 # explicitly before the admin area can be used.
 DEFAULT_ADMIN_PASSWORD_HASH = None
 ADMIN_SESSION_KEY = "admin_authenticated"
+ADMIN_AUTH_VERSION_SESSION_KEY = "admin_auth_version"
+ADMIN_AUTH_VERSION_SETTING_KEY = "admin_auth_version"
 USER_SESSION_KEY = "user_authenticated_id"
+USER_AUTH_VERSION_SESSION_KEY = "user_auth_version"
 GOOGLE_PENDING_SESSION_KEY = "pending_google_signup"
 DEFAULT_USER_ROLE = "player"
 PASSWORD_RESET_TOKEN_TTL = 3600
@@ -477,6 +496,14 @@ SCORE_SUBMIT_RATE_LIMIT = 6
 SCORE_SUBMIT_RATE_WINDOW_SECONDS = 60
 FEEDBACK_SUBMIT_RATE_LIMIT = 12
 FEEDBACK_SUBMIT_RATE_WINDOW_SECONDS = 60
+AUTH_LOGIN_RATE_LIMIT = 10
+AUTH_LOGIN_RATE_WINDOW_SECONDS = 15 * 60
+AUTH_RESET_RATE_LIMIT = 5
+AUTH_RESET_RATE_WINDOW_SECONDS = 60 * 60
+AUTH_REGISTER_RATE_LIMIT = 5
+AUTH_REGISTER_RATE_WINDOW_SECONDS = 60 * 60
+ADMIN_LOGIN_RATE_LIMIT = 8
+ADMIN_LOGIN_RATE_WINDOW_SECONDS = 15 * 60
 
 FEEDBACK_GAME_CATALOG = (
     {"id": "t1", "section": "rxn", "admin_group": "reaction"},
@@ -540,6 +567,7 @@ def ensure_schema(db=None):
         email TEXT NOT NULL UNIQUE COLLATE NOCASE,
         nickname TEXT NOT NULL UNIQUE COLLATE NOCASE,
         password_hash TEXT,
+        auth_version INTEGER NOT NULL DEFAULT 1,
         role TEXT NOT NULL DEFAULT 'player',
         google_id TEXT UNIQUE,
         avatar_path TEXT
@@ -557,6 +585,15 @@ def ensure_schema(db=None):
         window_started INTEGER NOT NULL,
         request_count INTEGER NOT NULL
     )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS security_audit (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        actor_user_id INTEGER,
+        ip_hash TEXT,
+        details TEXT
+    )''')
+    db.execute("CREATE INDEX IF NOT EXISTS idx_security_audit_created_at ON security_audit(created_at DESC)")
     db.execute('''CREATE TABLE IF NOT EXISTS game_feedback (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         created_at INTEGER NOT NULL,
@@ -648,6 +685,9 @@ def ensure_schema(db=None):
     if "cheat_avatar_path" not in score_columns:
         db.execute("ALTER TABLE scores ADD COLUMN cheat_avatar_path TEXT")
     user_columns = {row["name"] for row in db.execute("PRAGMA table_info(users)").fetchall()}
+    if "auth_version" not in user_columns:
+        db.execute("ALTER TABLE users ADD COLUMN auth_version INTEGER NOT NULL DEFAULT 1")
+        user_columns.add("auth_version")
     if "avatar_path" not in user_columns:
         db.execute("ALTER TABLE users ADD COLUMN avatar_path TEXT")
     db.commit()
@@ -721,14 +761,46 @@ def consume_rate_limit(bucket: str, identity: str, limit: int, window_seconds: i
         app.logger.exception("Impossible de mettre à jour la limitation de fréquence (%s).", bucket)
         return True
 
+
+def get_request_identity() -> str:
+    """Return a privacy-preserving, stable key for per-client protections."""
+    # ProxyFix normalizes remote_addr when the application is behind its single
+    # trusted reverse proxy. Never persist the raw address in the database.
+    return request.remote_addr or "unknown"
+
+
+def record_security_event(action: str, *, actor_user_id: Optional[int] = None, details: Optional[dict] = None) -> None:
+    """Keep a compact admin-only security trail without storing secrets or raw IPs."""
+    safe_details = details or {}
+    try:
+        get_db().execute(
+            "INSERT INTO security_audit(created_at, action, actor_user_id, ip_hash, details) VALUES (?, ?, ?, ?, ?)",
+            (
+                int(time.time()),
+                action,
+                actor_user_id,
+                hashlib.sha256(get_request_identity().encode("utf-8", "ignore")).hexdigest(),
+                json.dumps(safe_details, separators=(",", ":")),
+            ),
+        )
+        # Keep only a short operational trail: useful for investigation, but
+        # not an indefinitely growing store of behavioral metadata.
+        get_db().execute(
+            "DELETE FROM security_audit WHERE id NOT IN (SELECT id FROM security_audit ORDER BY id DESC LIMIT 1000)"
+        )
+        get_db().commit()
+    except sqlite3.Error:
+        # Audit logging must never make login, logout, or recovery unavailable.
+        app.logger.exception("Impossible d'enregistrer l'événement de sécurité %s.", action)
+
 def get_settings():
     if hasattr(g, "settings_cache"):
         return g.settings_cache
 
     db = get_db()
     rows = db.execute(
-        "SELECT key, value FROM settings WHERE key NOT IN (?, ?)",
-        ("admin_login", "admin_password_hash"),
+        "SELECT key, value FROM settings WHERE key NOT IN (?, ?, ?)",
+        ("admin_login", "admin_password_hash", ADMIN_AUTH_VERSION_SETTING_KEY),
     ).fetchall()
     store = { r["key"]: json.loads(r["value"]) for r in rows }
     merged = DEFAULT_SETTINGS.copy()
@@ -812,8 +884,35 @@ def set_admin_credentials(*, login=None, password_hash=None):
         del g.admin_credentials
 
 
+def get_admin_auth_version() -> int:
+    row = get_db().execute("SELECT value FROM settings WHERE key = ?", (ADMIN_AUTH_VERSION_SETTING_KEY,)).fetchone()
+    if row is None:
+        return 1
+    try:
+        return max(1, int(json.loads(row["value"])))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return 1
+
+
+def rotate_admin_auth_version() -> int:
+    version = get_admin_auth_version() + 1
+    get_db().execute(
+        "INSERT INTO settings(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (ADMIN_AUTH_VERSION_SETTING_KEY, json.dumps(version)),
+    )
+    get_db().commit()
+    return version
+
+
 def is_admin_authenticated() -> bool:
-    return session.get(ADMIN_SESSION_KEY) is True
+    if session.get(ADMIN_SESSION_KEY) is not True:
+        return False
+    current_version = get_admin_auth_version()
+    session_version = session.get(ADMIN_AUTH_VERSION_SESSION_KEY)
+    if session_version != current_version:
+        session.clear()
+        return False
+    return True
 
 
 def is_google_login_available() -> bool:
@@ -1139,7 +1238,12 @@ def create_user(*, login: str, email: str, nickname: str, password: Optional[str
 
 
 def login_user(user: sqlite3.Row) -> None:
+    # Regenerate all signed-session state on authentication, including CSRF and
+    # transient OAuth data, so an anonymous browser state cannot survive login.
+    session.clear()
     session[USER_SESSION_KEY] = int(user["id"])
+    session[USER_AUTH_VERSION_SESSION_KEY] = int(user["auth_version"] or 1)
+    session[CSRF_SESSION_KEY] = secrets.token_urlsafe(32)
 
 
 def logout_user() -> None:
@@ -1175,7 +1279,14 @@ def _ensure_db():
 @app.before_request
 def _load_current_user():
     user_id = session.get(USER_SESSION_KEY)
-    g.current_user = get_user_by_id(user_id) if user_id else None
+    user = get_user_by_id(user_id) if user_id else None
+    if user is not None:
+        expected_version = int(user["auth_version"] or 1)
+        session_version = session.get(USER_AUTH_VERSION_SESSION_KEY)
+        if session_version != expected_version:
+            session.clear()
+            user = None
+    g.current_user = user
 
 @app.route("/")
 def home():
@@ -1540,6 +1651,20 @@ def api_settings():
         return jsonify(get_admin_client_settings(settings))
     return jsonify(get_public_settings(settings))
 
+
+@app.get("/api/session")
+def api_session():
+    """Expose only the display-safe account state used to keep the PWA in sync."""
+    user = get_current_user()
+    if user is None:
+        return jsonify({"user": None})
+    avatar_url = asset_url(user["avatar_path"]) if user["avatar_path"] else None
+    return jsonify({"user": {
+        "id": int(user["id"]),
+        "nickname": user["nickname"],
+        "avatar_url": avatar_url,
+    }})
+
 @app.post("/api/admin/settings")
 @require_admin
 def api_admin_settings():
@@ -1553,6 +1678,7 @@ def api_admin_settings():
     if validation_errors:
         return jsonify({"ok": False, "error": "invalid_settings", "fields": validation_errors[:20]}), 400
     set_settings(filtered)
+    record_security_event("admin_settings_updated", details={"keys": sorted(filtered)})
     return jsonify({"ok": True, "saved": filtered})
 
 
@@ -1566,6 +1692,7 @@ def api_admin_smtp_test():
             settings[key] = data[key]
 
     ok, status = test_smtp_connection(settings)
+    record_security_event("admin_smtp_test", details={"ok": ok, "status": status})
     if ok:
         return jsonify({"ok": True})
     return jsonify({"ok": False, "error": status}), 400
@@ -1599,7 +1726,9 @@ def api_admin_smtp_test_email():
         settings=settings,
     )
     if not sent:
+        record_security_event("admin_smtp_test_email", details={"ok": False})
         return jsonify({"ok": False, "error": "send_failed"}), 502
+    record_security_event("admin_smtp_test_email", details={"ok": True})
     return jsonify({"ok": True})
 
 
@@ -1632,7 +1761,12 @@ def api_admin_credentials_update():
 
     set_admin_credentials(**updates)
     if "password_hash" in updates:
+        admin_auth_version = rotate_admin_auth_version()
+        session.clear()
         session[ADMIN_SESSION_KEY] = True
+        session[ADMIN_AUTH_VERSION_SESSION_KEY] = admin_auth_version
+        session[CSRF_SESSION_KEY] = secrets.token_urlsafe(32)
+    record_security_event("admin_credentials_updated", details={"login_changed": "login" in updates, "password_changed": "password_hash" in updates})
     return jsonify({"ok": True, "login": updates.get("login", creds["login"])})
 
 @app.post("/api/admin/clear")
@@ -1641,6 +1775,7 @@ def api_admin_clear():
     db = get_db()
     db.execute("DELETE FROM scores")
     db.commit()
+    record_security_event("admin_scores_cleared")
     return jsonify({"ok": True})
 
 @app.get("/api/admin/users")
@@ -1663,6 +1798,28 @@ def api_admin_users():
     return jsonify(payload)
 
 
+@app.get("/api/admin/security-audit")
+@require_admin
+def api_admin_security_audit():
+    rows = get_db().execute(
+        "SELECT id, created_at, action, actor_user_id, details FROM security_audit ORDER BY id DESC LIMIT 200"
+    ).fetchall()
+    events = []
+    for row in rows:
+        try:
+            details = json.loads(row["details"] or "{}")
+        except json.JSONDecodeError:
+            details = {}
+        events.append({
+            "id": int(row["id"]),
+            "created_at": int(row["created_at"]),
+            "action": row["action"],
+            "actor_user_id": row["actor_user_id"],
+            "details": details,
+        })
+    return jsonify(events)
+
+
 @app.post("/api/admin/users/<int:user_id>/reset-password")
 @require_admin
 def api_admin_reset_user_password(user_id: int):
@@ -1672,15 +1829,16 @@ def api_admin_reset_user_password(user_id: int):
 
     data = request.get_json(silent=True) or {}
     password = (data.get("password") or "").strip()
-    if len(password) < 8:
-        return jsonify({"ok": False, "error": "password_too_short"}), 400
+    if not password:
+        return jsonify({"ok": False, "error": "password_required"}), 400
 
     db = get_db()
     db.execute(
-        "UPDATE users SET password_hash = ? WHERE id = ?",
+        "UPDATE users SET password_hash = ?, auth_version = auth_version + 1 WHERE id = ?",
         (generate_password_hash(password), int(user_id)),
     )
     db.commit()
+    record_security_event("admin_user_password_reset", details={"user_id": int(user_id)})
     return jsonify({"ok": True, "user_id": int(user_id)})
 
 
@@ -1695,6 +1853,7 @@ def api_admin_delete_user(user_id: int):
     db.execute("UPDATE scores SET user_id = NULL WHERE user_id = ?", (int(user_id),))
     db.execute("DELETE FROM users WHERE id = ?", (int(user_id),))
     db.commit()
+    record_security_event("admin_user_deleted", details={"user_id": int(user_id)})
     return jsonify({"ok": True, "deleted": int(user_id)})
 
 
@@ -2364,8 +2523,12 @@ def login_view():
     if request.method == "POST":
         identifier_value = (request.form.get("login") or request.form.get("identifier") or "").strip()
         password_value = request.form.get("password") or ""
-        if not identifier_value or not password_value:
-            error = "Entre ton login (ou email) et ton mot de passe."
+        if not consume_rate_limit("user-login", get_request_identity(), AUTH_LOGIN_RATE_LIMIT, AUTH_LOGIN_RATE_WINDOW_SECONDS):
+            record_security_event("user_login_rate_limited")
+            error = "Trop de tentatives. Réessaie dans quelques minutes."
+        elif not identifier_value or not password_value:
+            record_security_event("user_login_failed")
+            error = "Identifiants invalides."
         else:
             user = find_user_by_login(identifier_value)
             if user is None:
@@ -2373,12 +2536,13 @@ def login_view():
             if user and user["password_hash"]:
                 if check_password_hash(user["password_hash"], password_value):
                     login_user(user)
+                    record_security_event("user_login_succeeded", actor_user_id=int(user["id"]))
                     return redirect(next_url or url_for("home"))
-                error = "Mot de passe incorrect."
-            elif user and not user["password_hash"]:
-                error = "Ce compte utilise la connexion Google. Clique sur le bouton Google."
-            else:
-                error = "Identifiants introuvables."
+            # Use one response for an unknown account, a wrong password and a
+            # Google-only account to avoid turning the form into an account
+            # enumeration oracle.
+            record_security_event("user_login_failed")
+            error = "Identifiants invalides."
 
     return render_template(
         "login.html",
@@ -2402,7 +2566,11 @@ def forgot_password_view():
     if request.method == "POST":
         submitted = True
         email_value = (request.form.get("email") or "").strip()
-        if not email_value:
+        if not consume_rate_limit("password-reset", get_request_identity(), AUTH_RESET_RATE_LIMIT, AUTH_RESET_RATE_WINDOW_SECONDS):
+            record_security_event("password_reset_rate_limited")
+            # Keep the same neutral confirmation shown for a valid request.
+            email_value = ""
+        elif not email_value:
             email_error = "Entre ton adresse e-mail."
         else:
             user = find_user_by_email(email_value)
@@ -2413,9 +2581,10 @@ def forgot_password_view():
                     email_error = "Impossible d'envoyer l'email. Vérifie la configuration SMTP dans l'admin."
                 else:
                     email_value = ""
+                    record_security_event("password_reset_requested", actor_user_id=int(user["id"]))
             else:
                 # Répondre positivement pour éviter de divulguer l'existence d'un compte
-                pass
+                record_security_event("password_reset_requested")
 
     return render_template(
         "forgot_password.html",
@@ -2444,18 +2613,19 @@ def reset_password_view(token: str):
     if request.method == "POST":
         password_value = request.form.get("password") or ""
         confirm_value = request.form.get("password_confirm") or ""
-        if len(password_value) < 8:
-            error = "Ton nouveau mot de passe doit contenir au moins 8 caractères."
+        if not password_value:
+            error = "Choisis un mot de passe."
         elif password_value != confirm_value:
             error = "Les deux mots de passe ne correspondent pas."
         else:
             db = get_db()
             db.execute(
-                "UPDATE users SET password_hash = ? WHERE id = ?",
+                "UPDATE users SET password_hash = ?, auth_version = auth_version + 1 WHERE id = ?",
                 (generate_password_hash(password_value), int(reset_request["user_id"])),
             )
             mark_password_reset_used(int(reset_request["id"]), db=db)
             db.commit()
+            record_security_event("password_reset_completed", actor_user_id=int(reset_request["user_id"]))
             return redirect(url_for("login_view", reset="1"))
 
     return render_template(
@@ -2540,15 +2710,15 @@ def profile_view():
                 elif not check_password_hash(user["password_hash"], current_password):
                     errors.append("Ton mot de passe actuel est incorrect.")
 
-            if len(new_password) < 8:
-                errors.append("Ton nouveau mot de passe doit faire au moins 8 caractères.")
+            if not new_password:
+                errors.append("Choisis un nouveau mot de passe.")
             if new_password != confirm_password:
                 errors.append("Les deux nouveaux mots de passe ne correspondent pas.")
 
             if not errors:
                 db = get_db()
                 db.execute(
-                    "UPDATE users SET password_hash = ? WHERE id = ?",
+                    "UPDATE users SET password_hash = ?, auth_version = auth_version + 1 WHERE id = ?",
                     (generate_password_hash(new_password), int(user["id"])),
                 )
                 db.commit()
@@ -2559,6 +2729,8 @@ def profile_view():
                 )
                 user = get_user_by_id(int(user["id"]))
                 g.current_user = user
+                login_user(user)
+                record_security_event("user_password_updated", actor_user_id=int(user["id"]))
                 avatar_url = asset_url(user["avatar_path"]) if user["avatar_path"] else None
         else:
             file = request.files.get("avatar")
@@ -2720,6 +2892,9 @@ def register_view():
             "nickname": nickname_value,
         })
 
+        if not consume_rate_limit("user-registration", get_request_identity(), AUTH_REGISTER_RATE_LIMIT, AUTH_REGISTER_RATE_WINDOW_SECONDS):
+            record_security_event("user_registration_rate_limited")
+            errors.append("Trop de créations de compte. Réessaie dans une heure.")
         if not email_value or "@" not in email_value:
             errors.append("Entre une adresse e-mail valide.")
         if not nickname_value:
@@ -2731,8 +2906,8 @@ def register_view():
                 limit = 0
             if limit and len(nickname_value) > limit:
                 errors.append(f"Ton surnom doit faire au maximum {limit} caractères.")
-        if not password_value or len(password_value) < 8:
-            errors.append("Ton mot de passe doit faire au moins 8 caractères.")
+        if not password_value:
+            errors.append("Choisis un mot de passe.")
         if password_value != password_confirm:
             errors.append("Les deux mots de passe ne correspondent pas.")
 
@@ -2754,6 +2929,7 @@ def register_view():
                 errors.append("Impossible de créer le compte. Réessaie avec d'autres identifiants.")
             else:
                 login_user(user)
+                record_security_event("user_registered", actor_user_id=int(user["id"]))
                 return redirect(url_for("home"))
 
     return render_template(
@@ -2818,17 +2994,17 @@ def auth_google_callback():
     db = get_db()
     existing = db.execute("SELECT * FROM users WHERE google_id = ?", (google_id,)).fetchone()
     if existing:
+        next_url = safe_next_url(session.get("google_next"))
         login_user(existing)
-        session.pop(GOOGLE_PENDING_SESSION_KEY, None)
-        next_url = safe_next_url(session.pop("google_next", None))
+        record_security_event("user_login_succeeded", actor_user_id=int(existing["id"]), details={"provider": "google"})
         return redirect(next_url or url_for("home"))
 
     email_user = find_user_by_email(email)
     if email_user:
         if email_user["google_id"] == google_id:
+            next_url = safe_next_url(session.get("google_next"))
             login_user(email_user)
-            session.pop(GOOGLE_PENDING_SESSION_KEY, None)
-            next_url = safe_next_url(session.pop("google_next", None))
+            record_security_event("user_login_succeeded", actor_user_id=int(email_user["id"]), details={"provider": "google"})
             return redirect(next_url or url_for("home"))
         return redirect(url_for("login_view", error="email_in_use"))
 
@@ -2879,9 +3055,9 @@ def google_complete():
             except sqlite3.IntegrityError:
                 errors.append("Impossible d'enregistrer ton compte Google. Réessaie plus tard.")
             else:
+                next_url = safe_next_url(session.get("google_next"))
                 login_user(user)
-                session.pop(GOOGLE_PENDING_SESSION_KEY, None)
-                next_url = safe_next_url(session.pop("google_next", None))
+                record_security_event("user_registered", actor_user_id=int(user["id"]), details={"provider": "google"})
                 return redirect(next_url or url_for("home"))
 
     return render_template(
@@ -2897,6 +3073,16 @@ def google_complete():
 @app.get("/api/health")
 def health():
     return jsonify({"ok": True, "ts": int(time.time())})
+
+
+@app.get("/api/csrf")
+def api_csrf():
+    """Return the current session's CSRF token for a page restored from cache."""
+    response = jsonify({"token": get_csrf_token()})
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers.add("Vary", "Cookie")
+    return response
 
 
 @app.get("/robots.txt")
@@ -2930,15 +3116,24 @@ def admin_login():
         login = (request.form.get("login") or "").strip()
         password = request.form.get("password") or ""
         creds = get_admin_credentials()
-        if (
+        if not consume_rate_limit("admin-login", get_request_identity(), ADMIN_LOGIN_RATE_LIMIT, ADMIN_LOGIN_RATE_WINDOW_SECONDS):
+            record_security_event("admin_login_rate_limited")
+            error = "Trop de tentatives. Réessaie dans quelques minutes."
+        elif (
             creds["password_hash"]
             and login == creds["login"]
             and check_password_hash(creds["password_hash"], password)
         ):
+            session.clear()
             session[ADMIN_SESSION_KEY] = True
+            session[ADMIN_AUTH_VERSION_SESSION_KEY] = get_admin_auth_version()
+            session[CSRF_SESSION_KEY] = secrets.token_urlsafe(32)
+            record_security_event("admin_login_succeeded")
             next_url = safe_next_url(request.args.get("next"))
             return redirect(next_url or url_for("admin"))
-        error = "Identifiants invalides"
+        else:
+            record_security_event("admin_login_failed")
+            error = "Identifiants invalides"
 
     return render_template("admin_login.html", app_name=APP_NAME, error=error)
 
@@ -2946,6 +3141,7 @@ def admin_login():
 @app.post("/admin/logout")
 @require_admin
 def admin_logout():
+    record_security_event("admin_logout")
     session.pop(ADMIN_SESSION_KEY, None)
     return redirect(url_for("admin_login"))
 

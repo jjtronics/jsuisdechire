@@ -100,6 +100,36 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Identifiants invalides", response.get_data(as_text=True))
 
+    def test_session_api_tracks_login_and_logout_without_page_reload(self):
+        """The PWA uses this endpoint to correct a restored stale HTML page."""
+        with app_module.app.app_context():
+            user = app_module.create_user(
+                login="session-sync-user",
+                email="session-sync@example.test",
+                nickname="Session Sync",
+                password="ok",
+            )
+
+        login = self.client.post(
+            "/login",
+            data={
+                "csrf_token": self.csrf_token,
+                "login": "session-sync-user",
+                "password": "ok",
+            },
+            follow_redirects=False,
+        )
+        self.assertEqual(login.status_code, 302)
+        session_payload = self.client.get("/api/session", headers={"Cache-Control": "no-cache"}).get_json()
+        self.assertEqual(session_payload["user"]["id"], int(user["id"]))
+        self.assertEqual(session_payload["user"]["nickname"], "Session Sync")
+
+        with self.client.session_transaction() as browser_session:
+            fresh_csrf = browser_session[app_module.CSRF_SESSION_KEY]
+        logout = self.client.post("/logout", data={"csrf_token": fresh_csrf}, follow_redirects=False)
+        self.assertEqual(logout.status_code, 302)
+        self.assertEqual(self.client.get("/api/session").get_json(), {"user": None})
+
     def test_submit_recalculates_total_and_normalizes_values(self):
         response = self.post_json("/api/submit", self.valid_payload())
         self.assertEqual(response.status_code, 200)
@@ -136,6 +166,7 @@ class JsuisDechireAppTests(unittest.TestCase):
             user_id = db.execute("SELECT id FROM users WHERE login = ?", ("feedback-login",)).fetchone()[0]
         with self.client.session_transaction() as browser_session:
             browser_session[app_module.USER_SESSION_KEY] = user_id
+            browser_session[app_module.USER_AUTH_VERSION_SESSION_KEY] = 1
 
         payload = {
             "run_id": "feedback-run-1234",
@@ -164,6 +195,7 @@ class JsuisDechireAppTests(unittest.TestCase):
 
         with self.client.session_transaction() as browser_session:
             browser_session[app_module.ADMIN_SESSION_KEY] = True
+            browser_session[app_module.ADMIN_AUTH_VERSION_SESSION_KEY] = 1
         admin_feedback = self.client.get("/api/admin/feedback")
         self.assertEqual(admin_feedback.status_code, 200)
         data = admin_feedback.get_json()
@@ -195,6 +227,7 @@ class JsuisDechireAppTests(unittest.TestCase):
     def test_feedback_can_be_disabled_from_admin_settings(self):
         with self.client.session_transaction() as browser_session:
             browser_session[app_module.ADMIN_SESSION_KEY] = True
+            browser_session[app_module.ADMIN_AUTH_VERSION_SESSION_KEY] = 1
         setting_response = self.client.post(
             "/api/admin/settings",
             json={"session_feedback_enabled": False},
@@ -229,6 +262,7 @@ class JsuisDechireAppTests(unittest.TestCase):
 
         with self.client.session_transaction() as browser_session:
             browser_session[app_module.ADMIN_SESSION_KEY] = True
+            browser_session[app_module.ADMIN_AUTH_VERSION_SESSION_KEY] = 1
         response = self.client.post("/api/admin/smtp-test", json={}, headers=headers)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "incomplete")
@@ -243,6 +277,7 @@ class JsuisDechireAppTests(unittest.TestCase):
 
         with self.client.session_transaction() as browser_session:
             browser_session[app_module.ADMIN_SESSION_KEY] = True
+            browser_session[app_module.ADMIN_AUTH_VERSION_SESSION_KEY] = 1
         admin_html = self.client.get("/admin").get_data(as_text=True)
         self.assertNotIn(secret, admin_html)
         self.assertIn("admin.fields.email.password_placeholder", admin_html)
@@ -261,6 +296,7 @@ class JsuisDechireAppTests(unittest.TestCase):
     def test_admin_settings_reject_incoherent_weights(self):
         with self.client.session_transaction() as browser_session:
             browser_session[app_module.ADMIN_SESSION_KEY] = True
+            browser_session[app_module.ADMIN_AUTH_VERSION_SESSION_KEY] = 1
         response = self.client.post(
             "/api/admin/settings",
             json={"str_acc_weight": 0.8, "str_speed_weight": 0.8},
@@ -272,6 +308,7 @@ class JsuisDechireAppTests(unittest.TestCase):
     def test_smtp_test_email_rejects_invalid_recipient_without_sending(self):
         with self.client.session_transaction() as browser_session:
             browser_session[app_module.ADMIN_SESSION_KEY] = True
+            browser_session[app_module.ADMIN_AUTH_VERSION_SESSION_KEY] = 1
         response = self.client.post(
             "/api/admin/smtp-test-email",
             json={"recipient": "not-an-email"},

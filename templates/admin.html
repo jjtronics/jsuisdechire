@@ -1038,6 +1038,20 @@ document.addEventListener('DOMContentLoaded', () => {
     previewSettings[enabledKey] = true;
     previewSettings.session_total_games = 1;
 
+    const previewUrl = `${route}?admin_preview=1&preview_nonce=${Date.now()}`;
+    const previewPayload = JSON.stringify({
+      source: 'jsd-admin-preview-v1',
+      settings: previewSettings
+    });
+    // Android may hand a newly-opened game tab to the installed PWA. Keep a
+    // mobile preview in the current browser tab so its temporary config follows it.
+    const mobilePreview = window.matchMedia('(max-width: 767px)').matches || navigator.maxTouchPoints > 0;
+    if (mobilePreview){
+      window.name = previewPayload;
+      window.location.assign(previewUrl);
+      return;
+    }
+
     const previewWindow = window.open('about:blank', '_blank');
     if (!previewWindow){
       msg.className = 'w-full text-xs font-semibold text-rose-300 lg:w-auto';
@@ -1045,11 +1059,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    previewWindow.name = JSON.stringify({
-      source: 'jsd-admin-preview-v1',
-      settings: previewSettings
-    });
-    previewWindow.location.href = `${route}?admin_preview=1`;
+    previewWindow.name = previewPayload;
+    // A unique preview URL bypasses any stale page held by the PWA cache.
+    previewWindow.location.href = previewUrl;
     msg.className = 'w-full text-xs text-indigo-200 lg:w-auto';
     msg.textContent = translateOrFallback('admin.preview.opened', 'Aperçu ouvert avec les valeurs actuelles.');
   }
@@ -1477,16 +1489,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btn.dataset.action === 'reset'){
         const passwordDialog = await openAdminDialog({
           title: translateOrFallback('admin.users.reset_password', 'Réinitialiser le mot de passe'),
-          message: translateOrFallback('admin.users.prompt_new_password', 'Nouveau mot de passe (8 caractères minimum) :'),
+          message: translateOrFallback('admin.users.prompt_new_password', 'Nouveau mot de passe :'),
           confirmLabel: translateOrFallback('admin.users.reset_password', 'Réinitialiser'),
           icon: '🔐',
           input: {
             type: 'password',
             label: translateOrFallback('admin.credentials.new_password_label', 'Nouveau mot de passe'),
-            placeholder: translateOrFallback('admin.credentials.new_password_placeholder', '8 caractères minimum'),
+            placeholder: translateOrFallback('admin.credentials.new_password_placeholder', 'Nouveau mot de passe'),
             autocomplete: 'new-password'
           },
-          validate: value => value.trim().length >= 8 || translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.')
+          validate: value => value.trim().length > 0 || translateOrFallback('admin.users.password_required', 'Un mot de passe est requis.')
         });
         if (!passwordDialog || !passwordDialog.confirmed) return;
         const password = passwordDialog.value;
@@ -1499,8 +1511,8 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           if (!resp.ok){
             const data = await resp.json().catch(()=>({}));
-            if (data && data.error === 'password_too_short'){
-              setUserMessage(translateOrFallback('admin.users.password_too_short', 'Le mot de passe doit contenir au moins 8 caractères.'));
+            if (data && data.error === 'password_required'){
+              setUserMessage(translateOrFallback('admin.users.password_required', 'Un mot de passe est requis.'));
             }
             throw new Error('reset_failed');
           }

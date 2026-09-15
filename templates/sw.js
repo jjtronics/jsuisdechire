@@ -1,6 +1,5 @@
 const CACHE = 'jsd-cache-v{{ asset_version }}';
 const PRECACHE = [
-  '/',
   '/credits',
   '/jj-hub',
   '/leaderboard',
@@ -35,6 +34,22 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+
+  // HTML contains the login state and CSRF data. Never place a navigation in
+  // Cache Storage: an anonymous home page must not reappear after login, nor
+  // an authenticated one after logout.
+  if (event.request.mode === 'navigate' || url.searchParams.has('admin_preview')) {
+    event.respondWith(
+      // `reload` also bypasses an HTML response cached before this protection
+      // existed, which is exactly the login/logout transition we must repair.
+      fetch(event.request, { cache: 'reload' })
+        .catch(() => new Response('Connexion nécessaire pour ouvrir cette page hors ligne.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        })),
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

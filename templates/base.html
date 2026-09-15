@@ -50,9 +50,15 @@
       window.jsdConfig = window.jsdConfig || {};
       window.jsdConfig.settings = {{ app_settings | tojson | safe }};
       window.jsdCsrfToken = {{ csrf_token | tojson }};
+      const adminPreviewRequested = new URLSearchParams(window.location.search).get('admin_preview') === '1';
+      // Mobile browsers do not consistently preserve window.name for a popup/new tab.
+      // The query parameter is the durable signal that this page is an admin preview.
+      if (adminPreviewRequested) {
+        window.jsdConfig.preview = true;
+      }
       try {
         const previewPayload = JSON.parse(window.name || '{}');
-        if (previewPayload.source === 'jsd-admin-preview-v1' && previewPayload.settings && typeof previewPayload.settings === 'object') {
+        if (adminPreviewRequested && previewPayload.source === 'jsd-admin-preview-v1' && previewPayload.settings && typeof previewPayload.settings === 'object') {
             window.jsdConfig.settings = { ...window.jsdConfig.settings, ...previewPayload.settings };
             window.jsdConfig.preview = true;
             const previewStorage = new Map(Object.entries(previewPayload.storage || {}));
@@ -93,6 +99,10 @@
               }
               nativeRemoveItem.call(this, key);
             };
+        } else if (previewPayload.source === 'jsd-admin-preview-v1') {
+            // A mobile preview stays in the current tab. Its temporary one-game
+            // settings must never survive into a normal player session.
+            window.name = '';
         }
       } catch (err) {}
       const nativeFetch = window.fetch.bind(window);
@@ -282,6 +292,7 @@
           <div class="flex items-center gap-2 flex-wrap justify-end">
             <select id="langSelect" aria-label="Langue" title="Langue" data-i18n-attr="aria-label:nav.language_label,title:nav.language_label" class="text-sm rounded-lg border bg-white/80 dark:bg-slate-800 dark:border-slate-700 px-2 py-1"></select>
             <a href="/leaderboard" class="text-sm px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700" data-i18n="nav.leaderboard">Top</a>
+            <div id="accountNav">
             {% if current_user_payload %}
             <div class="relative">
               <button
@@ -334,6 +345,7 @@
               </div>
             </div>
             {% endif %}
+            </div>
           </div>
         </div>
       </nav>
@@ -413,7 +425,123 @@
         try { localStorage.setItem('jsd:nick', window.jsdCurrentUser.nickname); } catch (err) {}
       }
 
+      const renderAccountNavigation = (user) => {
+        const host = document.getElementById('accountNav');
+        if (!host) return;
+        host.replaceChildren();
+        if (!user || !user.nickname) return;
+
+        const shell = document.createElement('div');
+        shell.className = 'relative';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'group inline-flex items-center focus:outline-none';
+        button.setAttribute('aria-haspopup', 'true');
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-label', `Mon compte (${user.nickname})`);
+        const avatar = document.createElement('span');
+        avatar.className = 'inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/50 bg-gradient-to-br from-rose-100 via-rose-200 to-rose-300 text-sm font-semibold text-white shadow-lg transition group-hover:scale-[1.03] dark:border-white/10 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900';
+        if (user.avatar_url) {
+          const image = document.createElement('img');
+          image.src = user.avatar_url;
+          image.alt = `Avatar de ${user.nickname}`;
+          image.className = 'h-full w-full object-cover';
+          avatar.append(image);
+        } else {
+          avatar.textContent = user.nickname.slice(0, 1).toUpperCase();
+        }
+        button.append(avatar);
+
+        const menu = document.createElement('div');
+        menu.className = 'hidden absolute right-0 mt-2 w-40 rounded-lg border border-rose-100/60 bg-white/95 py-2 text-sm shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-800/95';
+        const profile = document.createElement('a');
+        profile.href = '/profile';
+        profile.className = 'block px-4 py-2 text-rose-600 hover:bg-rose-50 dark:text-rose-200 dark:hover:bg-slate-700';
+        profile.textContent = 'Mon profil';
+        const logout = document.createElement('form');
+        logout.method = 'post';
+        logout.action = '/logout';
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrf_token';
+        csrf.value = window.jsdCsrfToken || '';
+        const logoutButton = document.createElement('button');
+        logoutButton.type = 'submit';
+        logoutButton.className = 'block w-full px-4 py-2 text-left text-rose-600 hover:bg-rose-50 dark:text-rose-200 dark:hover:bg-slate-700';
+        logoutButton.textContent = 'Se déconnecter';
+        logout.append(csrf, logoutButton);
+        menu.append(profile, logout);
+        const closeOnOutside = (event) => {
+          if (!shell.contains(event.target)) {
+            menu.classList.add('hidden');
+            button.setAttribute('aria-expanded', 'false');
+            document.removeEventListener('click', closeOnOutside);
+          }
+        };
+        button.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const hidden = menu.classList.toggle('hidden');
+          button.setAttribute('aria-expanded', String(!hidden));
+          if (!hidden) document.addEventListener('click', closeOnOutside);
+          else document.removeEventListener('click', closeOnOutside);
+        });
+        shell.append(button, menu);
+        host.append(shell);
+      };
+
+      window.jsdSyncAuth = async () => {
+        try {
+          const response = await nativeFetch('/api/session', { cache: 'no-store', credentials: 'same-origin' });
+          if (!response.ok) return window.jsdCurrentUser || null;
+          const payload = await response.json();
+          window.jsdCurrentUser = payload && payload.user ? payload.user : null;
+          if (window.jsdCurrentUser && window.jsdCurrentUser.nickname) {
+            try { localStorage.setItem('jsd:nick', window.jsdCurrentUser.nickname); } catch (err) {}
+          }
+          renderAccountNavigation(window.jsdCurrentUser);
+          document.dispatchEvent(new CustomEvent('jsd:authchange', { detail: window.jsdCurrentUser }));
+          return window.jsdCurrentUser;
+        } catch (err) {
+          return window.jsdCurrentUser || null;
+        }
+      };
+
+      // A PWA can restore a form that was rendered before a login, logout, or
+      // deployment. Refresh the token immediately before native form posts so
+      // that a stale hidden field can never cause a false CSRF failure.
+      let csrfRefresh = null;
+      const refreshCsrfToken = () => {
+        if (!csrfRefresh) {
+          csrfRefresh = nativeFetch('/api/csrf', { cache: 'no-store', credentials: 'same-origin' })
+            .then((response) => response.ok ? response.json() : null)
+            .then((payload) => {
+              if (!payload || typeof payload.token !== 'string' || !payload.token) return false;
+              window.jsdCsrfToken = payload.token;
+              document.querySelectorAll('input[name="csrf_token"]').forEach((input) => {
+                input.value = payload.token;
+              });
+              return true;
+            })
+            .catch(() => false)
+            .finally(() => { csrfRefresh = null; });
+        }
+        return csrfRefresh;
+      };
+
       document.addEventListener('DOMContentLoaded', () => {
+        window.jsdSyncAuth();
+        refreshCsrfToken();
+        document.querySelectorAll('form[method="post"], form[method="POST"]').forEach((form) => {
+          if (!form.querySelector('input[name="csrf_token"]')) return;
+          let submitting = false;
+          form.addEventListener('submit', async (event) => {
+            if (submitting) return;
+            event.preventDefault();
+            submitting = true;
+            await refreshCsrfToken();
+            HTMLFormElement.prototype.submit.call(form);
+          });
+        });
         const btn = document.getElementById('themeToggle');
         if (btn) {
           btn.addEventListener('click', () => {

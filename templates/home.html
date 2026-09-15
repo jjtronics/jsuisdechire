@@ -5,22 +5,22 @@
 {% set wasted_count = counters.get('wasted', 0) %}
 {% set cheater_count = counters.get('cheater', 0) %}
 <div class="mb-4 flex w-full flex-row flex-wrap items-center gap-2 sm:flex-row sm:justify-start">
-  {% if not current_user_payload %}
-  <a
-    href="{{ url_for('login_view') }}"
-    class="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white/70 px-3 py-1.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/40 dark:bg-slate-900/40 dark:text-rose-200 dark:hover:bg-slate-800"
-    data-i18n="home.login_button"
-  >
-    Se connecter
-  </a>
-  <a
-    href="{{ url_for('register_view') }}"
-    class="inline-flex items-center justify-center rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700"
-    data-i18n="home.register_button"
-  >
-    S'inscrire
-  </a>
-  {% endif %}
+  <div id="homeGuestActions" class="contents{% if current_user_payload %} hidden{% endif %}">
+    <a
+      href="{{ url_for('login_view') }}"
+      class="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white/70 px-3 py-1.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/40 dark:bg-slate-900/40 dark:text-rose-200 dark:hover:bg-slate-800"
+      data-i18n="home.login_button"
+    >
+      Se connecter
+    </a>
+    <a
+      href="{{ url_for('register_view') }}"
+      class="inline-flex items-center justify-center rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700"
+      data-i18n="home.register_button"
+    >
+      S'inscrire
+    </a>
+  </div>
   <div class="flex flex-row flex-wrap items-center gap-1 rounded-xl border border-white/60 bg-white/70 px-2 py-1 text-[11px] font-semibold text-gray-700 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/50 dark:text-slate-200">
     <span class="flex items-center gap-1 rounded-lg bg-emerald-100/80 px-2 py-0.5 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
       <span class="tabular-nums">{{ clean_count }}</span>
@@ -53,17 +53,15 @@
       <a id="startTests" href="/t1" class="px-4 py-2 rounded-xl bg-black text-white" data-i18n="home.cta_start">Commencer</a>
       <a href="/leaderboard" class="px-4 py-2 rounded-xl border" data-i18n="home.cta_leaderboard">Voir le classement</a>
     </div>
-    {% if current_user_payload %}
-    <div class="mt-3 inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+    <div id="verifiedNickname" class="mt-3 inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200{% if not current_user_payload %} hidden{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
       </svg>
       <span class="inline-flex items-baseline gap-1">
         <span data-i18n="home.verified_nickname">Ton pseudo vérifié :</span>
-        <strong class="font-semibold">{{ current_user_payload.nickname }}</strong>
+        <strong id="verifiedNicknameValue" class="font-semibold">{{ current_user_payload.nickname if current_user_payload else '' }}</strong>
       </span>
     </div>
-    {% endif %}
   </section>
 </div>
 <div id="nicknameModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-4">
@@ -90,7 +88,6 @@
     const t = window.i18n || ((key) => key);
     const sessionApi = window.jsdSession || {};
     const flowApi = window.jsdFlow || null;
-    const currentUser = window.jsdCurrentUser || null;
     const getNicknameMaxLength = typeof sessionApi.getNicknameMaxLength === 'function' ? sessionApi.getNicknameMaxLength : () => 0;
     const sanitizeNickname = typeof sessionApi.sanitizeNickname === 'function' ? sessionApi.sanitizeNickname : (value) => (value || '').trim();
     const nicknameMaxLength = getNicknameMaxLength();
@@ -121,6 +118,15 @@
     } else {
       input.removeAttribute('maxlength');
     }
+
+    const syncHomeAccountState = (user) => {
+      document.getElementById('homeGuestActions')?.classList.toggle('hidden', !!(user && user.nickname));
+      document.getElementById('verifiedNickname')?.classList.toggle('hidden', !(user && user.nickname));
+      const nickname = document.getElementById('verifiedNicknameValue');
+      if (nickname) nickname.textContent = user && user.nickname ? user.nickname : '';
+    };
+    syncHomeAccountState(window.jsdCurrentUser || null);
+    document.addEventListener('jsd:authchange', (event) => syncHomeAccountState(event.detail));
 
     function showError(messageKey){
       errorEl.textContent = t(messageKey);
@@ -197,8 +203,15 @@
       window.location.href = computeStartRoute();
     }
 
-    startLink.addEventListener('click', (event) => {
+    startLink.addEventListener('click', async (event) => {
       event.preventDefault();
+      // The visible page can have been restored by the PWA while the session
+      // changed in another navigation. Ask the server before deciding whether
+      // a nickname is needed; this is state synchronization, not a reload.
+      if (typeof window.jsdSyncAuth === 'function'){
+        await window.jsdSyncAuth();
+      }
+      const currentUser = window.jsdCurrentUser || null;
       if (currentUser && currentUser.nickname){
         try { localStorage.setItem('jsd:nick', currentUser.nickname); } catch (err) {}
         resetProgress();

@@ -1,5 +1,6 @@
 (function(){
-  if (window.jsdConfig && window.jsdConfig.preview){
+  const isAdminPreview = new URLSearchParams(window.location.search).get('admin_preview') === '1';
+  if (isAdminPreview || (window.jsdConfig && window.jsdConfig.preview)){
     return;
   }
   const HOME_ROUTE = '/';
@@ -124,6 +125,28 @@
       }
       return;
     }
+    // A completed game is final for this run. Reloading it or using Back must
+    // continue the sequence instead of opening a second attempt.
+    if (isCompleted(currentTestId)){
+      const nextIncomplete = sequence.slice(index + 1).find((id) => !isCompleted(id));
+      const redirect = nextIncomplete ? routeForTest(nextIncomplete) : RESULTS_ROUTE;
+      if (path !== redirect){
+        location.replace(redirect);
+      }
+      return;
+    }
+    // Every game writes its completion marker when its score is final. Some
+    // games own a bespoke transition; this common watcher covers the rest so
+    // a player always advances without needing to click a secondary button.
+    let advancing = false;
+    const advanceAfterCompletion = () => {
+      if (advancing || !isCompleted(currentTestId)) return;
+      advancing = true;
+      const nextIncomplete = sequence.slice(index + 1).find((id) => !isCompleted(id));
+      const redirect = nextIncomplete ? routeForTest(nextIncomplete) : RESULTS_ROUTE;
+      window.setTimeout(() => location.replace(redirect), 700);
+    };
+    window.setInterval(advanceAfterCompletion, 250);
     return;
   }
 
