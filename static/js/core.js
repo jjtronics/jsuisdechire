@@ -34,20 +34,6 @@
 
   const path = location.pathname;
   const hasNickname = !!(localStorage.getItem('jsd:nick') || '').trim();
-  const done = {
-    t1: localStorage.getItem('jsd:done:t1') === '1',
-    t2: localStorage.getItem('jsd:done:t2') === '1',
-    t3: localStorage.getItem('jsd:done:t3') === '1',
-    t4: localStorage.getItem('jsd:done:t4') === '1',
-    t5: localStorage.getItem('jsd:done:t5') === '1',
-    t6: localStorage.getItem('jsd:done:t6') === '1',
-    t7: localStorage.getItem('jsd:done:t7') === '1',
-    t8: localStorage.getItem('jsd:done:t8') === '1',
-    t9: localStorage.getItem('jsd:done:t9') === '1',
-    t10: localStorage.getItem('jsd:done:t10') === '1',
-  };
-  const skippedT4 = localStorage.getItem('jsd:skip:t4') === '1';
-
   function routeForTest(id){
     if (window.jsdFlow && typeof window.jsdFlow.routeFor === 'function'){
       return window.jsdFlow.routeFor(id);
@@ -64,9 +50,10 @@
 
   function isCompleted(id){
     if (id === 't4'){
-      return !!(done.t4 || skippedT4);
+      return localStorage.getItem('jsd:done:t4') === '1'
+        || localStorage.getItem('jsd:skip:t4') === '1';
     }
-    return !!done[id];
+    return localStorage.getItem(`jsd:done:${id}`) === '1';
   }
 
   function getSequence(){
