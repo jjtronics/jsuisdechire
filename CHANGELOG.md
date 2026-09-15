@@ -1,5 +1,12 @@
 # Journal des changements
 
+## 16 septembre 2026 — Ajustement responsive de l’accueil
+
+### UX & thèmes
+
+- Les actions « Commencer », « Voir le classement » et « Entraînement » utilisent une grille responsive : elles s’empilent proprement sur mobile et restent alignées sur écran large, sans débordement horizontal.
+- Le bouton « Commencer » adopte désormais un contraste et des états de survol adaptés aux thèmes clair et sombre.
+
 ## 16 septembre 2026 — Dino Dash, entraînement et gestion du dernier score
 
 ### Expérience joueur
