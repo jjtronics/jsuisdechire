@@ -36,7 +36,7 @@
   const guide = el('div', 't8-guide');
   const ball = el('div', 't8-ball');
   stage.append(hitZone, cup, guide, ball);
-  const instruction = el('div', 't8-instruction', t('t8.aim', null, 'Glisse depuis la balle vers la cible, puis relâche.'));
+  const instruction = el('div', 't8-instruction', 'Tire le grand cercle en arrière, puis relâche : la balle part dans l’autre sens.');
   const power = el('div', 't8-power'); const powerHead = el('div', 't8-power-head'); const powerValue = el('span', '', '0%'); const meter = el('div', 't8-meter'); const meterFill = el('div', 't8-meter-fill'); powerHead.append(el('span', '', t('t8.power', null, 'Puissance')), powerValue); meter.append(meterFill); power.append(powerHead, meter);
   game.append(hud, stage, instruction, power); root.replaceChildren(game);
   const state = { phase: 'ready', attempt: 0, hits: 0, last: performance.now(), ball: null, aim: null, cup: { x: 0, y: 0, width: 0, vx: config.cupSpeed } };
