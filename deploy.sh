@@ -244,33 +244,6 @@ if ! run_root grep -Eq '^SECRET_KEY=.{32,}$' /etc/jsuisdechire.env 2>/dev/null; 
   unset SECRET_KEY_VALUE
 fi
 
-if [[ -n "${ADMIN_CREDENTIALS_REMOTE}" ]]; then
-  echo "Mise à jour des identifiants admin de production..."
-  run_root test -f "$ADMIN_CREDENTIALS_REMOTE"
-  ADMIN_CREDENTIALS_STAGED="${STAGING_DIR}/admin-credentials.json"
-  run_root install -o "$REMOTE_APP_USER" -g "$REMOTE_APP_GROUP" -m 0600 "$ADMIN_CREDENTIALS_REMOTE" "$ADMIN_CREDENTIALS_STAGED"
-  (
-    cd "$REMOTE_APP_DIR"
-    FLASK_ENV=development run_app "$REMOTE_APP_DIR/.venv/bin/python" - "$ADMIN_CREDENTIALS_STAGED" <<'PY'
-import json
-import sys
-
-import app
-
-with open(sys.argv[1], encoding="utf-8") as handle:
-    credentials = json.load(handle)
-
-with app.app.app_context():
-    app.init_db()
-    app.set_admin_credentials(
-        login=credentials["login"],
-        password_hash=credentials["password_hash"],
-    )
-    print("Compte admin configuré :", credentials["login"])
-PY
-  )
-  run_root rm -f "$ADMIN_CREDENTIALS_REMOTE"
-fi
 run_root systemctl daemon-reload
 run_root systemctl enable "$REMOTE_SERVICE"
 
@@ -310,6 +283,37 @@ fi
 
 echo "Service actif : ${REMOTE_SERVICE} (PID ${CURRENT_MAIN_PID})"
 echo "Backup : ${BACKUP_PATH}"
+
+# This provisioning step is optional.  Keep it after the verified service
+# restart so a credential error cannot leave the newly installed application
+# code unloaded in Gunicorn.
+if [[ -n "${ADMIN_CREDENTIALS_REMOTE}" ]]; then
+  echo "Mise à jour des identifiants admin de production..."
+  run_root test -f "$ADMIN_CREDENTIALS_REMOTE"
+  ADMIN_CREDENTIALS_STAGED="${STAGING_DIR}/admin-credentials.json"
+  run_root install -o "$REMOTE_APP_USER" -g "$REMOTE_APP_GROUP" -m 0600 "$ADMIN_CREDENTIALS_REMOTE" "$ADMIN_CREDENTIALS_STAGED"
+  (
+    cd "$REMOTE_APP_DIR"
+    FLASK_ENV=development run_app "$REMOTE_APP_DIR/.venv/bin/python" - "$ADMIN_CREDENTIALS_STAGED" <<'PY'
+import json
+import sys
+
+import app
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    credentials = json.load(handle)
+
+with app.app.app_context():
+    app.init_db()
+    app.set_admin_credentials(
+        login=credentials["login"],
+        password_hash=credentials["password_hash"],
+    )
+    print("Compte admin configuré :", credentials["login"])
+PY
+  )
+  run_root rm -f "$ADMIN_CREDENTIALS_REMOTE"
+fi
 REMOTE_SCRIPT
 
 if [[ "$RUN_HTTP_CHECKS" == "1" ]]; then
