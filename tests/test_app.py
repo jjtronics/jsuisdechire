@@ -74,6 +74,15 @@ class JsuisDechireAppTests(unittest.TestCase):
         self.assertIn("jsd-cache-v", service_worker.get_data(as_text=True))
         self.assertIn("Cache-Control", service_worker.headers)
 
+    def test_all_training_pages_load_result_screen_script(self):
+        for game in range(1, 12):
+            with self.subTest(game=game):
+                response = self.client.get(f"/t{game}?training=1")
+                self.assertEqual(response.status_code, 200)
+                self.assertIn('/static/js/training.js?v=', response.get_data(as_text=True))
+        with self.client.get('/static/js/training.js') as response:
+            self.assertEqual(response.status_code, 200)
+
     def test_signed_in_player_can_delete_latest_score_with_daily_limit(self):
         unique = str(id(self))
         with app_module.app.app_context():

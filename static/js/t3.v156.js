@@ -201,10 +201,11 @@
     localStorage.setItem("jsd:prs", JSON.stringify(payload));
     localStorage.setItem("jsd:done:t3","1");
     document.getElementById("next").classList.remove("opacity-50","pointer-events-none");
-    const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t3') : '/t4';
-    setTimeout(()=>{ location.href = nextRoute; }, 600);
     setCountdown(0);
     detach();
+    if (window.jsdConfig && window.jsdConfig.training) return;
+    const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t3') : '/t4';
+    setTimeout(()=>{ location.href = nextRoute; }, 600);
   }
 
   function tryCapture(e){

@@ -6,6 +6,7 @@
   const G = 9.80665; // m/s^2 per g
   const t=(window.i18n)||((key,vars)=>key);
   const el=(t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h) e.innerHTML=h; return e;};
+  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
   const box=document.getElementById("t4");
   const style=document.createElement("style");
   style.textContent=`
@@ -13,24 +14,12 @@
     #t4 .t4-start{min-height:3.25rem;min-width:13rem;margin-top:1rem;border-radius:16px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);color:#fff;font-size:1rem;font-weight:950;box-shadow:0 16px 28px -18px rgba(37,99,235,.9);}
     #t4 .t4-level{width:100%;max-width:30rem;margin:1rem auto 0;padding:1rem;border:1px solid rgba(14,165,233,.18);border-radius:22px;background:linear-gradient(135deg,rgba(240,249,255,.92),rgba(238,242,255,.82));box-shadow:0 18px 36px -28px rgba(30,64,175,.7);}
     #t4 .t4-motion-wrap{text-align:center;}
-    #t4 .t4-beer-scene{--tilt:0deg;--spill:0;--slosh:0;position:relative;height:12rem;overflow:hidden;border-radius:1rem;background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.9),transparent 28%),linear-gradient(180deg,#dff7ff,#bfe8fb 62%,#8bd0ec);box-shadow:inset 0 -1rem rgba(8,145,178,.12),inset 0 1px rgba(255,255,255,.8);}
-    #t4 .t4-beer-scene::before{content:'';position:absolute;z-index:0;left:-10%;right:-10%;bottom:1.15rem;height:2.1rem;border-radius:50%;background:linear-gradient(180deg,rgba(14,116,144,.15),rgba(8,145,178,.28));transform:perspective(11rem) rotateX(58deg);}
-    #t4 .t4-beer-scene::after{content:'';position:absolute;z-index:0;left:0;right:0;bottom:0;height:1.35rem;background:linear-gradient(#0e7490,#155e75);box-shadow:inset 0 .18rem rgba(255,255,255,.15);}
-    #t4 .t4-mug-wrap{position:absolute;z-index:2;left:50%;bottom:1.2rem;width:7.1rem;height:9.1rem;transform:translateX(-50%) rotate(var(--tilt));transform-origin:50% 92%;transition:transform 100ms cubic-bezier(.2,.85,.3,1);filter:drop-shadow(0 .6rem .45rem rgba(8,47,73,.28));}
-    #t4 .t4-mug{position:absolute;left:1rem;bottom:0;width:4.8rem;height:7rem;overflow:hidden;border:3px solid #fef3c7;border-radius:.65rem .65rem 1.25rem 1.25rem;background:linear-gradient(100deg,rgba(255,255,255,.65),rgba(255,255,255,.12) 30%,rgba(255,255,255,.32) 72%,rgba(255,255,255,.08));box-shadow:inset .4rem 0 rgba(255,255,255,.28),inset -.35rem 0 rgba(120,53,15,.2),0 .3rem 0 #92400e;}
-    #t4 .t4-mug::before{content:'';position:absolute;z-index:3;left:-.18rem;right:-.18rem;top:-.38rem;height:1.05rem;border:3px solid #fff7ed;border-radius:50%;background:#fffdf5;box-shadow:0 .15rem .15rem rgba(120,53,15,.18);}
-    #t4 .t4-beer{position:absolute;z-index:1;left:.25rem;right:.25rem;bottom:.2rem;height:5.6rem;border-radius:.3rem .3rem .9rem .9rem;background:linear-gradient(90deg,#fcd34d,#f59e0b 42%,#b45309);box-shadow:inset .35rem 0 rgba(255,255,255,.22),inset -.35rem 0 rgba(120,53,15,.2);transform:translateY(calc(var(--slosh) * -0.12rem));transition:transform 90ms ease;}
-    #t4 .t4-beer::before{content:'';position:absolute;left:0;right:0;top:-.16rem;height:.48rem;border-radius:50%;background:#fef3c7;box-shadow:0 .08rem .12rem rgba(120,53,15,.16);}
-    #t4 .t4-mug-handle{position:absolute;z-index:0;right:.05rem;top:2.2rem;width:2.15rem;height:3.2rem;border:.65rem solid #fbbf24;border-left:0;border-radius:0 1.5rem 1.5rem 0;box-shadow:inset -.15rem 0 #92400e;}
-    #t4 .t4-spill{position:absolute;z-index:1;left:calc(50% + 2.1rem);bottom:5.2rem;width:3.8rem;height:1.1rem;border-radius:65% 35% 60% 40%;background:linear-gradient(90deg,rgba(251,191,36,.9),rgba(217,119,6,.85));opacity:var(--spill);transform:rotate(var(--tilt)) scaleX(var(--spill));transform-origin:left center;transition:opacity 100ms ease,transform 100ms ease;filter:drop-shadow(0 .2rem .1rem rgba(120,53,15,.18));}
-    #t4 .t4-drop{position:absolute;z-index:1;width:.62rem;height:.86rem;border-radius:60% 40% 60% 40%;background:#fbbf24;opacity:var(--spill);transition:opacity 100ms ease;}
-    #t4 .t4-drop-one{left:calc(50% + 4rem);bottom:3.9rem;transform:translateY(calc(var(--spill) * 1.15rem)) rotate(28deg);}
-    #t4 .t4-drop-two{left:calc(50% - 4.5rem);bottom:3.3rem;transform:translateY(calc(var(--spill) * .65rem)) rotate(-24deg);}
+    #t4 .t4-beer-scene{position:relative;aspect-ratio:24/17;overflow:hidden;border-radius:1.1rem;background:#11262d;box-shadow:0 12px 32px -18px rgba(8,35,39,.6);}
+    #t4 .t4-beer-svg{display:block;width:100%;height:100%;}
     #t4 .t4-motion-value{margin:.65rem 0 0;color:#0c4a6e;font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;}
     #t4 .t4-fallback{width:100%;margin-top:1rem;}
     html.dark #t4 .t4-instruction{border-color:rgba(56,189,248,.25);background:rgba(14,116,144,.16);color:#bae6fd;}
     html.dark #t4 .t4-level{border-color:rgba(56,189,248,.22);background:linear-gradient(135deg,rgba(14,116,144,.16),rgba(49,46,129,.2));}
-    html.dark #t4 .t4-beer-scene{background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.12),transparent 28%),linear-gradient(180deg,#164e63,#155e75 62%,#0f172a);box-shadow:inset 0 -1rem rgba(2,6,23,.24),inset 0 1px rgba(255,255,255,.12);}
     html.dark #t4 .t4-motion-value{color:#bae6fd;}
   `;
   document.head.appendChild(style);
@@ -40,15 +29,8 @@
   const motionWrap=el("div","t4-motion-wrap w-full");
   const motionLabel=el("p","text-xs font-black uppercase tracking-[.14em] text-sky-700 dark:text-sky-200",t("t4.motion_indicator_label"));
   const beerScene=el("div","t4-beer-scene mt-2","");
-  const spill=el("span","t4-spill");
-  const dropOne=el("span","t4-drop t4-drop-one");
-  const dropTwo=el("span","t4-drop t4-drop-two");
-  const mugWrap=el("span","t4-mug-wrap");
-  const handle=el("span","t4-mug-handle");
-  const mug=el("span","t4-mug");
-  mug.append(el("span","t4-beer")); mugWrap.append(handle,mug);
+  const beer=window.jsdBeer.create(beerScene);
   const motionValue=el("p","t4-motion-value",t("t4.motion_indicator_value",{value:"0.000"}));
-  beerScene.append(spill,dropOne,dropTwo,mugWrap);
   motionWrap.append(motionLabel,beerScene,motionValue);
   levelWrap.append(motionWrap);
   const fallbackWrap=el("div","t4-fallback hidden mt-3");
@@ -131,15 +113,7 @@
     const std=currentLiveStd();
     const low=Number.isFinite(ST.low_good)?Math.max(0,ST.low_good):0;
     const high=Number.isFinite(ST.high_bad)?Math.max(low+1e-3,ST.high_bad):low+0.05;
-    let score;
-    // The live bar intentionally uses the short window without the scoring
-    // floor, so even a small movement is visible immediately.
-    score = 1 - (std / Math.max(1e-6, high));
-    score = Math.max(0, Math.min(1, score));
-    const spillAmount=clamp((1-score)*1.25,0,1);
-    beerScene.style.setProperty('--tilt',`${visualLean.toFixed(1)}deg`);
-    beerScene.style.setProperty('--spill',spillAmount.toFixed(2));
-    beerScene.style.setProperty('--slosh',Math.min(1,(1-score)*1.8).toFixed(2));
+    beer.motion(visualLean,clamp(std/high,0,1));
     motionValue.textContent=t('t4.motion_indicator_value',{value:std.toFixed(3)});
   }
 
@@ -253,8 +227,10 @@
         note = accIG ? "mode:accIG-total" : "mode:acc-total";
       }
     }
-    if (magG!=null){
-      const nextLean=clamp(visualAccelerationX*55,-17,17);
+    if (Number.isFinite(magG)){
+      // Gravity drives a held tilt as well as transient linear movement.
+      const gravityX=accIG && Number.isFinite(accIG.x) ? accIG.x/G : 0;
+      const nextLean=clamp(gravityX*42+visualAccelerationX*55,-38,38);
       visualLean += (nextLean-visualLean)*.42;
       pushVal(magG);
       updateMotionIndicator();
@@ -271,6 +247,7 @@
   function stopAll(reason){
     if (watchdog){ clearInterval(watchdog); watchdog=null; }
     if (endTimer){ clearTimeout(endTimer); endTimer=null; }
+    beer.stop();
     detachAll(); updateStatus('stop:'+reason);
   }
 
@@ -309,12 +286,14 @@
     }
     btn.textContent=t('t4.fallback_status_done');
     document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
+    if (window.jsdConfig && window.jsdConfig.training) return;
     const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t4') : '/t5';
     setTimeout(()=>{ location.href = nextRoute; }, 600);
   }
 
   function startFallback(){
     if (finished) return;
+    beer.stop();
     fallbackMode=true;
     cheatState={detected:false};
     levelWrap.classList.add('hidden');
@@ -333,12 +312,17 @@
     const fbStatus=el('div','mt-2 text-center text-sm',t('t4.fallback_status_ready'));
     area.append(circle); fallbackWrap.append(area, fbStatus); fallbackWrap.classList.remove('hidden');
 
-    let running=false, points=[]; let center=null; let timer=null; let fallbackStart=0;
+    let running=false, points=[]; let center=null; let timer=null; let sampleTimer=null;
+    let fallbackStart=0, lastPoint=null;
     const dist=(a,b)=>Math.hypot(a.x-b.x, a.y-b.y);
     function finishTouch(){
       if (finished) return;
-      running=false; clearTimeout(timer);
-      if (points.length<32){ fbStatus.textContent=t('t4.fallback_status_short'); return; }
+      running=false; clearTimeout(timer); clearInterval(sampleTimer);
+      // Stability is sampled over time, even with a perfectly still finger.
+      // A short tap must not count as a full attempt.
+      if (performance.now()-fallbackStart < ST.duration*.9 || points.length<2){
+        fbStatus.textContent=t('t4.fallback_status_short'); return;
+      }
       const dists=points.map(p=>dist(p, center));
       const mean=dists.reduce((a,b)=>a+b,0)/dists.length;
       const variance=dists.reduce((a,b)=>a+Math.pow(b-mean,2),0)/dists.length;
@@ -359,6 +343,7 @@
       }
       fbStatus.textContent=t('t4.fallback_status_done');
       document.getElementById('next').classList.remove('opacity-50','pointer-events-none');
+      if (window.jsdConfig && window.jsdConfig.training) return;
       const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t4') : '/t5';
       setTimeout(()=>{ location.href = nextRoute; }, 600);
     }
@@ -367,22 +352,28 @@
     area.addEventListener('gesturestart', e=>e.preventDefault());
 
     area.addEventListener('pointerdown',(e)=>{
+      if (running || finished) return;
       e.preventDefault();
       area.setPointerCapture(e.pointerId);
       const r=area.getBoundingClientRect();
       center={x:r.width/2, y:r.height/2};
-      points=[{x:e.clientX-r.left, y:e.clientY-r.top, ts:performance.now()}];
+      lastPoint={x:e.clientX-r.left, y:e.clientY-r.top};
+      points=[{...lastPoint, ts:performance.now()}];
       fallbackStart=performance.now();
       running=true; fbStatus.textContent=t('t4.fallback_status_running');
+      sampleTimer=setInterval(()=>{
+        if(running) points.push({...lastPoint,ts:performance.now()});
+      }, 33);
       timer=setTimeout(finishTouch, ST.duration);
     }, {passive:false});
     area.addEventListener('pointermove',(e)=>{
       if(!running) return;
       e.preventDefault();
       const r=area.getBoundingClientRect();
-      points.push({x:e.clientX-r.left, y:e.clientY-r.top, ts:performance.now()});
+      lastPoint={x:e.clientX-r.left, y:e.clientY-r.top};
     }, {passive:false});
     ['pointerup','pointercancel','lostpointercapture'].forEach(type=>area.addEventListener(type,(e)=>{ e.preventDefault(); if(running) finishTouch(); }, {passive:false}));
+    window.addEventListener('pagehide',()=>{clearTimeout(timer);clearInterval(sampleTimer);});
   }
 
   async function start(){
@@ -391,6 +382,7 @@
     cheatState={detected:false};
     resetStats();
     visualLean=0;
+    beer.reset();
     fallbackMode=false;
     gEst={x:0,y:0,z:0}; gInit=false;
     btn.textContent=t('t4.button_measuring');
@@ -419,6 +411,7 @@
     }
 
     attachBasic();
+    beer.start();
     measureStart=performance.now();
 
     const t0=performance.now();
@@ -437,6 +430,7 @@
     }, ST.duration);
   }
 
+  window.addEventListener('pagehide',()=>beer.stop());
   btn.addEventListener('click', start);
   updateMotionIndicator();
   updateStatus();

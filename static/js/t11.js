@@ -110,6 +110,52 @@
   const setStatus = (key, params) => { status.textContent = t(key, params || {}); };
   const clearItems = () => { state.items.forEach(item => item.el.remove()); state.items = []; };
   const isJumping = () => state.jumpY > 0 || state.jumpVelocity > 0;
+  // Collision boxes deliberately follow the painted parts, rather than the
+  // rectangular DOM containers.  This is especially important for cactus arms
+  // and the empty space around the beer/person illustrations.
+  const boxesOverlap = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  const makeBox = (x, y, width, height, shape) => ({
+    left: x + width * shape.x,
+    right: x + width * (shape.x + shape.width),
+    top: y + height * shape.y,
+    bottom: y + height * (shape.y + shape.height),
+  });
+  const dinoHitbox = () => {
+    const width = dino.offsetWidth;
+    const height = dino.offsetHeight;
+    // offsetTop is the resting layout position: transforms do not change it.
+    return makeBox(dino.offsetLeft, dino.offsetTop - state.jumpY, width, height, {
+      x: .15, y: .18, width: .68, height: .70,
+    });
+  };
+  const obstacleHitboxes = (item) => {
+    const x = item.x;
+    const y = item.el.offsetTop;
+    const width = item.width;
+    const height = item.height;
+    const shapes = {
+      // The cactus is split into trunk and arms so its transparent corners and
+      // the space between its arms are not treated as solid.
+      normal: [
+        {x:.16,y:-.10,width:.68,height:1.10},
+        {x:.04,y:.19,width:.35,height:.57}, {x:.61,y:.19,width:.35,height:.57},
+      ],
+      wide: [
+        {x:.14,y:.04,width:.72,height:.96},
+        {x:.04,y:.22,width:.37,height:.55}, {x:.59,y:.22,width:.37,height:.55},
+      ],
+      // Emoji fonts retain a little platform-dependent padding; keep only the
+      // visible central portion of the beer.
+      small: [{x:.14,y:.10,width:.72,height:.82}],
+      // Person: head, torso, outstretched arms and legs are independent areas.
+      tall: [
+        {x:.27,y:.02,width:.46,height:.34}, {x:.28,y:.32,width:.44,height:.39},
+        {x:.05,y:.40,width:.31,height:.12}, {x:.65,y:.40,width:.30,height:.12},
+        {x:.29,y:.67,width:.16,height:.31}, {x:.55,y:.67,width:.16,height:.31},
+      ],
+    };
+    return (shapes[item.variant] || shapes.normal).map(shape => makeBox(x, y, width, height, shape));
+  };
   const scoreForCurrentRun = () => {
     const expectedDistance = Math.max(1, (cfg.duration / 1000) * (cfg.initialSpeed / 100));
     const distanceRatio = clamp(state.distance / expectedDistance, 0, 1);
@@ -188,7 +234,7 @@
     element.style.left = `${x}px`;
     stage.appendChild(element);
     state.obstacles += 1;
-    state.items.push({el:element,x,hit:false,resolved:false,speedFactor,width:0,height:0});
+    state.items.push({el:element,x,variant,hit:false,resolved:false,speedFactor,width:0,height:0});
     const item = state.items[state.items.length - 1];
     item.width = element.offsetWidth || (variant === 'wide' ? 58 : 34);
     item.height = element.offsetHeight || ({small:41,tall:68,wide:49}[variant] || 54);
@@ -269,15 +315,14 @@
       renderDino();
     }
     state.distance += speed * dt / 100;
-    const dinoLeft = stage.clientWidth * 0.12;
+    const dinoBox = dinoHitbox();
     state.items.forEach(item => {
       item.x -= speed * item.speedFactor * dt;
       item.el.style.left = `${item.x}px`;
-      const obstacleRight = item.x + item.width;
-      const dinoRight = dinoLeft + 68;
-      const clearsObstacle = state.jumpY > Math.max(24, item.height - 11);
-      if (!item.hit && obstacleRight > dinoLeft + 12 && item.x < dinoRight && !clearsObstacle) hitObstacle(item);
-      if (!item.resolved && obstacleRight < dinoLeft + 4) resolveObstacle(item, true);
+      const hitboxes = obstacleHitboxes(item);
+      const obstacleRight = Math.max(...hitboxes.map(box => box.right));
+      if (!item.hit && hitboxes.some(box => boxesOverlap(dinoBox, box))) hitObstacle(item);
+      if (!item.resolved && obstacleRight < dinoBox.left) resolveObstacle(item, true);
       if (item.x < -70) item.el.remove();
     });
     state.items = state.items.filter(item => item.x >= -70);

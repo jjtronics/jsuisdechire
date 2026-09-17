@@ -27,6 +27,7 @@
   - 🦖 *Dino Dash (t11)* – Tiens ton téléphone en main et saute réellement pour faire bondir le dino au-dessus des cactus.
 - **Parties personnalisables** : si l'option est activée dans l'admin, le joueur choisit les mini-jeux de sa partie depuis une grille mobile illustrée ; la carte cartoon aléatoire est identifiée comme carte 01.
 - **Mode entraînement** (`/training`) : le joueur peut tester n'importe quel mini-jeu avant une vraie partie. Les jeux désactivés restent accessibles avec un badge « bêta » et ne sont pas proposés dans les parties officielles.
+- **Fin d’entraînement** : chacun des onze jeux affiche son score sur 100, avec « Rejouer » pour relancer le même jeu à zéro et « Retour à la salle d’entraînement ». Les scores restent temporaires, sans impact sur la partie normale ni sur le classement. L’enchaînement automatique reste réservé aux parties normales.
 - **Dernier score supprimable** : les joueurs connectés peuvent retirer leur dernier score enregistré depuis les résultats ou leur profil, dans la limite quotidienne configurable par l'administration (3 suppressions par défaut).
 - **Tableaux compacts** : le classement global et l'historique du profil affichent les 11 mini-jeux avec des en-têtes verticaux pour conserver une largeur lisible.
 - **Résultats stylés** avec résumé, détails par test et bouton de partage.
@@ -84,6 +85,13 @@ Contrôles avant livraison :
 python -m unittest discover -s tests -v
 npm run test:js
 ```
+
+Les parcours complets dans Chrome (score, retour, deuxième partie via « Rejouer »
+et enchaînement des parties normales) sont décrits dans
+[tests/BROWSER_TESTS.md](tests/BROWSER_TESTS.md). Ils utilisent une base temporaire,
+les vrais scripts de jeu et des durées réduites. Équilibre est testé avec des
+capteurs simulés et en mode tactile ; cela ne remplace pas un contrôle sur téléphone
+réel ni la vérification de la version déployée.
 
 ### 🚚 Déploiement
 
@@ -160,6 +168,7 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
   - 🦖 *Dino Dash (t11)* – Hold your phone and jump in real life to make the dino leap over obstacles.
 - **Custom sessions**: when enabled in the admin console, players can choose their games from a mobile-friendly illustrated grid; the random cartoon card is numbered 01.
 - **Training mode** (`/training`): try every mini-game before starting an official run. Disabled games remain available with a beta badge and stay excluded from official sessions.
+- **Practice results**: all eleven games show a score out of 100, with “Play again” to restart the same practice game from scratch and “Back to the training room”. Practice scores are temporary and do not affect normal sessions or the leaderboard; normal games still advance automatically.
 - **Latest-score deletion**: signed-in players can remove their latest saved score from the results screen or profile, subject to the configurable daily limit (3 by default).
 - **Compact score tables**: the global leaderboard and profile history include all 11 games with clean vertical game headers.
 - **Optional feedback**: after the final score, players can rate every game they played from 1 to 5 stars and describe the difficulty, with their score shown on each card.
@@ -251,6 +260,7 @@ MIT License (see [LICENSE](LICENSE)).
   - 🚗 *Guida sobria (t7)* – Cambia corsia ed evita gli ostacoli senza accumulare collisioni.
   - 🧠 *Memoria (t5)* – Ripeti le sequenze limitando errori e tempo di risposta.
 - **Partite personalizzabili**: se attivata dall'admin, la selezione dei giochi avviene da una griglia illustrata ottimizzata per smartphone, oppure tramite estrazione casuale.
+- **Allenamento** (`/training`): tutti gli undici giochi mostrano il punteggio su 100, con « Gioca di nuovo » per ricominciare lo stesso gioco da zero e « Torna alla sala di allenamento ». I punteggi sono temporanei e non modificano la partita normale né la classifica; nelle partite normali i giochi continuano a susseguirsi automaticamente.
 - **Schermata risultati stilosa** con riepilogo, dettagli per test e pulsante di condivisione.
 - **Flusso più semplice**: dopo la fine di un test non è possibile rigiocarlo per errore; la partita passa al gioco successivo o al punteggio finale.
 - **Feedback facoltativo**: dopo il punteggio finale, il giocatore può valutare ogni mini-gioco provato da 1 a 5 stelle e indicare la difficoltà, con il punteggio ottenuto visibile su ogni scheda.

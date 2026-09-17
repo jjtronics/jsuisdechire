@@ -81,6 +81,11 @@ require_command scp
 require_command tar
 require_file app.py
 require_file templates/base.html
+require_file templates/training.html
+require_file templates/t4.html
+require_file static/js/training.js
+require_file static/js/t4-beer.js
+require_file static/js/t4.v157.js
 require_file templates/t6.html
 require_file templates/t7.html
 require_file templates/t8.html
@@ -220,7 +225,7 @@ if [[ -e "${STAGING_DIR}/data.sqlite" ]]; then
   exit 1
 fi
 
-for required_file in app.py templates/base.html templates/t6.html templates/t7.html templates/t8.html templates/t9.html templates/t10.html static/js/t6.js static/js/t7.js static/js/t8.js static/js/t8-aim.js static/js/t9.js static/js/t10.js static/icons/icon-192.png static/icons/icon-512.png static/css/tailwind.css systemd/jsuisdechire.service; do
+for required_file in app.py templates/base.html templates/training.html templates/t4.html templates/t6.html templates/t7.html templates/t8.html templates/t9.html templates/t10.html static/js/training.js static/js/t4-beer.js static/js/t4.v157.js static/js/t6.js static/js/t7.js static/js/t8.js static/js/t8-aim.js static/js/t9.js static/js/t10.js static/icons/icon-192.png static/icons/icon-512.png static/css/tailwind.css systemd/jsuisdechire.service; do
   if [[ ! -f "${STAGING_DIR}/${required_file}" ]]; then
     echo "Fichier absent de l'archive : ${required_file}" >&2
     exit 1
@@ -319,7 +324,7 @@ REMOTE_SCRIPT
 if [[ "$RUN_HTTP_CHECKS" == "1" ]]; then
   require_command curl
   echo "Contrôles HTTP publics..."
-  for route in / /t6 /t7 /t8 /t9 /t10 /jj-hub /static/branding/logo-horizontal.png /static/branding/logo-horizontal.webp /static/icons/icon-192.png /static/icons/icon-512.png; do
+  for route in / /training /t1 /t2 /t3 /t4 /t5 /t6 /t7 /t8 /t9 /t10 /t11 /static/js/training.js /static/js/t4-beer.js /jj-hub /static/branding/logo-horizontal.png /static/branding/logo-horizontal.webp /static/icons/icon-192.png /static/icons/icon-512.png; do
     code="$(curl -L -sS --max-time "$HTTP_TIMEOUT" -o /dev/null -w '%{http_code}' "${PUBLIC_URL}${route}")"
     echo "${code} ${route}"
     if [[ "$code" != "200" ]]; then

@@ -1,5 +1,21 @@
 # Journal des changements
 
+## 17 septembre 2026 — Résultats d’entraînement, rejouer et corrections des jeux
+
+### Expérience joueur
+
+- Les onze mini-jeux d’entraînement affichent leur score sur 100 dans un écran de fin commun, avec « Rejouer » et « Retour à la salle d’entraînement », en français, anglais et italien.
+- « Rejouer » recharge le même jeu en mode entraînement et réinitialise son état et son score temporaire. Le résultat reste affiché jusqu’au choix du joueur ; aucun score d’entraînement n’est soumis au classement. L’enchaînement automatique des parties normales est conservé.
+- Équilibre : remplacement du rendu de la bière par une scène SVG avec surface du liquide horizontale, écoulement depuis le bord du verre et flaques qui grossissent selon le volume renversé. Correction de l’animation liée aux mouvements et de la mesure tactile lorsqu’un doigt reste immobile.
+- Dino Dash : zones de collision composées de plusieurs rectangles ajustés aux différentes parties des obstacles, pour réduire les collisions dans leurs espaces vides.
+
+### Vérification et livraison
+
+- Ajout de tests JavaScript pour le liquide et les résultats d’entraînement, et d’un contrôle Flask du chargement du script sur les onze jeux.
+- Parcours navigateur reproductibles documentés dans [tests/BROWSER_TESTS.md](tests/BROWSER_TESTS.md) : onze jeux en entraînement avec une deuxième partie via « Rejouer », onze en partie normale et les deux modes d’Équilibre. Les durées sont réduites et les capteurs simulés ; les scores sont calculés par les jeux.
+- Le script de déploiement contrôle la présence des nouveaux scripts et les onze routes de jeu.
+- Ces changements sont vérifiés localement. Leur publication Git ne constitue pas un déploiement sur le site public ; voir [AUDIT.md](AUDIT.md).
+
 ## 16 septembre 2026 — Ajustement responsive de l’accueil
 
 ### UX & thèmes

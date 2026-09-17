@@ -359,6 +359,7 @@
     grid.classList.add('is-complete');
     startWrap.classList.add('is-hidden');
     setMessage(translate('t5.done_message', { score }, `Mémoire terminée ✔ Score ${score}/100`), 'success');
+    if (window.jsdConfig && window.jsdConfig.training) return;
     const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t5') : '/results';
     setTimeout(() => { location.href = nextRoute; }, 900);
   }

@@ -146,6 +146,9 @@
 
   async function submitScore(options){
     options = options || {};
+    if (window.jsdConfig && window.jsdConfig.training){
+      return { status: 'training' };
+    }
     if (window.jsdConfig && window.jsdConfig.preview){
       return { status: 'preview' };
     }

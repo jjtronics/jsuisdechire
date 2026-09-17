@@ -103,6 +103,7 @@
     area.classList.add("opacity-60");
     area.style.cursor="default";
     area.textContent=t("t1.done");
+    if (window.jsdConfig && window.jsdConfig.training) return;
     const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t1') : '/t2';
     setTimeout(()=>{ location.href = nextRoute; },600);
   }

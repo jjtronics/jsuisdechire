@@ -245,6 +245,8 @@
       const nextEl = options.nextSelector ? document.querySelector(options.nextSelector) : null;
       if (nextEl){
         nextEl.setAttribute('href', TRAINING_ROUTE);
+        nextEl.setAttribute('data-i18n', 'training.return');
+        nextEl.textContent = window.i18n('training.return');
         nextEl.classList.remove('pointer-events-none', 'opacity-50');
       }
       const backEl = options.backSelector ? document.querySelector(options.backSelector) : null;

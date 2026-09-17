@@ -118,6 +118,7 @@
     localStorage.setItem("jsd:done:t2","1");
     const next=document.getElementById("next");
     if(next){next.classList.remove("opacity-50","pointer-events-none");}
+    if (window.jsdConfig && window.jsdConfig.training) return;
     const nextRoute = flow && typeof flow.nextRoute === 'function' ? flow.nextRoute('t2') : '/t3';
     setTimeout(()=>{ location.href = nextRoute; }, 500);
   }

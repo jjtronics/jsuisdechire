@@ -7,6 +7,33 @@ Ce document consigne les problèmes constatés pendant le tour du site et les co
 
 ## Évolutions livrées après l’audit
 
+### Contrôle des fins d’entraînement — 16 septembre 2026 (correctif local, non déployé)
+
+- Le site public contrôlé servait encore l’ancienne redirection d’Équilibre :
+  `/static/js/training.js` répondait **404** et la page `/t4?training=1` ne le chargeait pas.
+  Le contrôle local ne validait donc pas le comportement en ligne.
+- Un parcours complet a aussi reproduit un bug du mode tactile d’Équilibre :
+  maintenir un doigt immobile pendant toute la durée affichait « Mesure trop courte ».
+  La mesure échantillonne désormais la position à intervalles réguliers ; un appui
+  interrompu trop tôt reste refusé.
+- **24 parcours navigateur locaux réussis** sur les vrais templates Flask : onze
+  jeux en entraînement, onze en partie normale, plus Équilibre tactile dans les deux
+  modes. Les jeux calculent eux-mêmes les scores ; aucun résultat n’est injecté.
+  Les durées/manches sont réduites par la configuration de test et les capteurs simulés.
+- Vérifications : score et retour à la salle, maintien de l’écran jusqu’au clic,
+  absence de soumission en entraînement, enchaînement automatique en partie normale,
+  absence d’exception JavaScript. Les 30 tests JavaScript et 16 tests Flask passent.
+- Ajout de « Rejouer » à l’écran de score des onze jeux d’entraînement : recharge
+  du même jeu et remise à zéro du score temporaire, sans modifier la partie normale.
+  Les 24 parcours navigateur ont été rejoués avec une deuxième partie complète
+  après ce bouton pour chaque entraînement, y compris les deux modes d’Équilibre.
+- Les contrôles de déploiement exigent désormais les fichiers du résultat
+  d’entraînement et vérifient les onze routes de jeu. Procédure reproductible :
+  [tests/BROWSER_TESTS.md](tests/BROWSER_TESTS.md).
+
+Les résultats ci-dessus concernent le dépôt local. Une mise en ligne et un contrôle
+des assets publics restent nécessaires pour corriger le site public.
+
 - Création du JJ HUB dans le footer, avec six cartes dans l’ordre de JJTRONICS : GitHub, JJTRONICS, SondaStream, TestiCool, Guinadi et JsuisDechire.
 - Ajout du script [`deploy.sh`](deploy.sh), avec archive sélective, sauvegarde distante, restauration possible, redémarrage systemd et contrôles HTTP.
 - Intégration de la marque : logo horizontal complet en couleur et transparent dans l’en-tête, petit pictogramme dans le footer et dans la carte JsuisDechire du JJ HUB.
