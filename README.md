@@ -38,6 +38,7 @@
 - **Panneau admin** (`/admin`) pour configurer les paramètres ou purger la base.
 - **Mode hors-ligne léger** grâce au service worker et aux assets versionnés.
 - **I18n dynamique** (via `static/js/i18n.js`) + thème clair/sombre 🎚️.
+- **JJ HUB** (`/jj-hub`) : sept cartes pour explorer GitHub, JJTRONICS, SondaStream, TestiCool, AI Midnight, Guinadi et JsuisDechire. La carte AI Midnight reprend le logo officiel et les textes du hub d’AiMidnight.fr, avec des traductions FR/EN/IT.
 
 ### 🛠️ Stack & architecture
 - **Backend** : Flask + SQLite (`data.sqlite`).

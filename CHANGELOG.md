@@ -1,5 +1,12 @@
 # Journal des changements
 
+## 10 octobre 2026 — AI Midnight dans le JJ HUB
+
+- La page `/jj-hub` affiche désormais sept cartes, dans le même ordre que le hub d’AiMidnight.fr : GitHub, JJTRONICS, SondaStream, TestiCool, AI Midnight, Guinadi et JsuisDechire.
+- Ajout de la carte AI Midnight avec son logo officiel hébergé localement, sa description et un lien vers `https://aimidnight.fr/`. Les textes sont disponibles en français, anglais et italien.
+- Reconstruction de la feuille Tailwind pour le fond sombre du logo.
+- Vérification locale : page et logo en HTTP 200, sept cartes dans l’ordre attendu, liens AI Midnight et syntaxe JavaScript valides. Les tests Flask passent à 15/16 ; le test d’authentification restant échoue car le Python 3.9 local ne fournit pas `hashlib.scrypt`.
+
 ## 17 septembre 2026 — Résultats d’entraînement, rejouer et corrections des jeux
 
 ### Expérience joueur
