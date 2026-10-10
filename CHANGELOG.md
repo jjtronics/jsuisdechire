@@ -1,5 +1,13 @@
 # Journal des changements
 
+## 10 octobre 2026 — Badge AI Midnight dans le pied de page
+
+- Ajout du badge dynamique AI Midnight sous les liens « Crédits » et « JJ HUB » dans le pied de page commun à toutes les pages. Cet emplacement rend l’indice accessible sans distraire pendant les mini-jeux.
+- Badge de 32 px de haut, centré sur mobile et aligné à gauche sur ordinateur, avec chargement différé et ouverture du lien dans un nouvel onglet (`noopener noreferrer`). Le SVG est chargé directement depuis `https://aimidnight.fr/badge/current.svg` pour afficher l’indice courant.
+- La langue du badge, son texte alternatif et le lien de destination suivent la sélection FR/EN/IT grâce aux traductions existantes. Reconstruction de la feuille Tailwind.
+- Vérification locale : 16 tests Flask sous Python 3.12 et 30 tests JavaScript réussis ; chargement du badge vérifié dans les trois langues, rendu mobile sans débordement horizontal et contrôle visuel des thèmes clair et sombre.
+- Captures : [ordinateur, thème clair](output/playwright/badge-desktop.png), [mobile](output/playwright/badge-mobile.png), [ordinateur, thème sombre](output/playwright/badge-desktop-dark.png). La publication Git ne déploie pas le site public.
+
 ## 10 octobre 2026 — AI Midnight dans le JJ HUB
 
 - La page `/jj-hub` affiche désormais sept cartes, dans le même ordre que le hub d’AiMidnight.fr : GitHub, JJTRONICS, SondaStream, TestiCool, AI Midnight, Guinadi et JsuisDechire.

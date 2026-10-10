@@ -38,6 +38,7 @@
 - **Panneau admin** (`/admin`) pour configurer les paramètres ou purger la base.
 - **Mode hors-ligne léger** grâce au service worker et aux assets versionnés.
 - **I18n dynamique** (via `static/js/i18n.js`) + thème clair/sombre 🎚️.
+- **Badge AI Midnight** : indice courant affiché dans le pied de page de toutes les pages, sous « Crédits » et « JJ HUB ». Le badge SVG distant conserve une hauteur de 32 px et adapte sa langue et son lien à la sélection FR/EN/IT ; un clic ouvre AI Midnight dans un nouvel onglet.
 - **JJ HUB** (`/jj-hub`) : sept cartes pour explorer GitHub, JJTRONICS, SondaStream, TestiCool, AI Midnight, Guinadi et JsuisDechire. La carte AI Midnight reprend le logo officiel et les textes du hub d’AiMidnight.fr, avec des traductions FR/EN/IT.
 
 ### 🛠️ Stack & architecture
@@ -180,6 +181,7 @@ Le projet est sous licence MIT (voir [LICENSE](LICENSE)).
 - **Admin console** (`/admin`) to tweak settings or wipe the database.
 - **Offline-friendly** thanks to a service worker and versioned assets.
 - **Dynamic i18n** (see `static/js/i18n.js`) + light/dark theme toggle.
+- **AI Midnight badge**: the current index appears in every page’s footer, below “Credits” and “JJ HUB”. The remote SVG badge stays 32 px high and follows the selected FR/EN/IT language for both its image and destination; clicking it opens AI Midnight in a new tab.
 
 ### 🛠️ Stack & architecture
 - **Backend**: Flask + SQLite (`data.sqlite`).
@@ -270,6 +272,7 @@ MIT License (see [LICENSE](LICENSE)).
 - **Pannello admin** (`/admin`) per ritoccare i parametri o pulire il database.
 - **Modalità offline parziale** grazie al service worker e agli asset versionati.
 - **I18n dinamica** (`static/js/i18n.js`) + switch tema chiaro/scuro.
+- **Badge AI Midnight**: l’indice corrente compare nel footer di tutte le pagine, sotto « Crediti » e « JJ HUB ». Il badge SVG remoto mantiene un’altezza di 32 px e adatta lingua e collegamento alla selezione FR/EN/IT; un clic apre AI Midnight in una nuova scheda.
 
 ### 🛠️ Stack & architettura
 - **Backend**: Flask + SQLite (`data.sqlite`).
